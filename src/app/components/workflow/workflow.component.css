@@ -1,0 +1,153 @@
+.wf {
+  padding: 120px 0;
+  background: #FAFAF8;
+}
+
+.wf-container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.wf-header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+
+.wf-badge {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0F766E;
+  background: rgba(15, 118, 110, 0.06);
+  padding: 7px 16px;
+  border-radius: 100px;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.wf-heading {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #111111;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.wf-steps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+}
+
+.wf-card {
+  flex: 1;
+  max-width: 250px;
+  background: #FFFFFF;
+  border: 1px solid #F0F0F0;
+  border-radius: 24px;
+  padding: 36px 28px 32px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wf-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.wf-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(15, 118, 110, 0.10);
+  color: #0F766E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 20px;
+  border: 1px solid rgba(15, 118, 110, 0.12);
+}
+
+.wf-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111111;
+  margin: 0 0 8px;
+}
+
+.wf-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #6F6F73;
+  margin: 0;
+}
+
+.wf-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.wf-line::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #E0E0E0;
+  position: absolute;
+  top: 64px;
+}
+
+@media (max-width: 1024px) {
+  .wf-heading {
+    font-size: 34px;
+  }
+
+  .wf-line {
+    width: 24px;
+  }
+
+  .wf-card {
+    padding: 28px 20px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .wf {
+    padding: 80px 0;
+  }
+
+  .wf-steps {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .wf-card {
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .wf-line {
+    width: auto;
+    height: 28px;
+  }
+
+  .wf-line::before {
+    width: 2px;
+    height: 100%;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .wf-heading {
+    font-size: 28px;
+  }
+}
