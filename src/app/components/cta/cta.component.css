@@ -1,12 +1,21 @@
 .cta {
-  padding: 140px 24px 120px;
+  padding: 120px 24px;
   display: flex;
   justify-content: center;
+  background: #FAFAF8;
+}
+
+.cta-container {
+  max-width: 720px;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #F0F0F0;
+  border-radius: 32px;
+  padding: 64px 48px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .cta-box {
-  max-width: 640px;
-  width: 100%;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -40,7 +49,7 @@
   font-size: 15px;
   font-weight: 500;
   color: #FFFFFF;
-  background: linear-gradient(135deg, #0F766E, #0D9488);
+  background: #0F766E;
   border: none;
   border-radius: 18px;
   cursor: pointer;
@@ -48,6 +57,7 @@
 }
 
 .cta-primary:hover {
+  background: #115E59;
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(15, 118, 110, 0.25);
 }
@@ -72,6 +82,11 @@
 @media (max-width: 768px) {
   .cta {
     padding: 80px 20px 60px;
+  }
+
+  .cta-container {
+    padding: 40px 24px;
+    border-radius: 24px;
   }
 
   .cta-box h2 {
