@@ -1,1 +1,29 @@
-<p>navbar works!</p>
+<nav class="navbar" [class.scrolled]="scrolled">
+  <div class="nav-inner">
+    <span class="nav-logo">HireSwipe</span>
+
+    <div class="nav-links" [class.open]="menuOpen">
+      <a href="#home" (click)="closeMenu()">Home</a>
+      <a href="#about" (click)="closeMenu()">About</a>
+      <a href="#how-it-works" (click)="closeMenu()">How It Works</a>
+      <a href="#solution" (click)="closeMenu()">Solution</a>
+      <a href="#contact" (click)="closeMenu()">Contact</a>
+      <div class="mobile-auth">
+        <button class="login-btn">Login</button>
+        <button class="signup-btn">Get Started</button>
+      </div>
+    </div>
+
+    <div class="nav-auth">
+      <button class="login-btn">Login</button>
+      <button class="signup-btn">Get Started</button>
+    </div>
+
+    <button class="hamburger" (click)="toggleMenu()">
+      <i class="lucide lucide-menu" *ngIf="!menuOpen"></i>
+      <i class="lucide lucide-x" *ngIf="menuOpen"></i>
+    </button>
+  </div>
+
+  <div class="nav-overlay" [class.open]="menuOpen" (click)="closeMenu()"></div>
+</nav>
