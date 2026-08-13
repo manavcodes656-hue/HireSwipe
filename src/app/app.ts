@@ -6,7 +6,6 @@ import { FeaturesComponent } from './components/features/features.component';
 import { SolutionComponent } from './components/solution/solution.component';
 import { WorkflowComponent } from './components/workflow/workflow.component';
 import { StatsComponent } from './components/stats/stats.component';
-import { TestimonialsComponent } from './components/testimonials/testimonials.component';
 import { CtaComponent } from './components/cta/cta.component';
 import { FooterComponent } from './components/footer/footer.component';
 
@@ -20,7 +19,6 @@ import { FooterComponent } from './components/footer/footer.component';
     SolutionComponent,
     WorkflowComponent,
     StatsComponent,
-    TestimonialsComponent,
     CtaComponent,
     FooterComponent,
   ],

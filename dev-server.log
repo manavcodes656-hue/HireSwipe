@@ -1,0 +1,473 @@
+
+> hireswipe@0.0.0 start
+> ng serve
+
+❯ Building...
+✔ Building...
+Initial chunk files | Names         |  Raw size
+main.js             | main          | 158.87 kB | 
+styles.css          | styles        |   1.07 kB | 
+
+                    | Initial total | 159.93 kB
+
+Application bundle generation complete. [3.995 seconds] - 2026-08-13T04:50:51.477Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4200[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names  |  Raw size
+styles.css          | styles | 999 bytes | 
+
+Application bundle generation complete. [0.021 seconds] - 2026-08-13T05:15:08.154Z
+
+Stylesheet update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.548 seconds] - 2026-08-13T05:15:21.441Z
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:15:38:
+[37m      15 │ ...ref="#home" [class.active]="[32mactiveId[37m === 'home'" (click)="close...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:16:39:
+[37m      16 │ ...ef="#about" [class.active]="[32mactiveId[37m === 'about'" (click)="clos...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:17:46:
+[37m      17 │ ...w-it-works" [class.active]="[32mactiveId[37m === 'how-it-works'" (click...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:18:42:
+[37m      18 │ ..."#workflow" [class.active]="[32mactiveId[37m === 'workflow'" (click)="c...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:19:42:
+[37m      19 │ ..."#solution" [class.active]="[32mactiveId[37m === 'solution'" (click)="c...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:20:41:
+[37m      20 │ ...="#contact" [class.active]="[32mactiveId[37m === 'contact'" (click)="cl...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.333 seconds] - 2026-08-13T05:15:26.647Z
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:15:38:
+[37m      15 │ ...ref="#home" [class.active]="[32mactiveId[37m === 'home'" (click)="close...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:16:39:
+[37m      16 │ ...ef="#about" [class.active]="[32mactiveId[37m === 'about'" (click)="clos...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:17:46:
+[37m      17 │ ...w-it-works" [class.active]="[32mactiveId[37m === 'how-it-works'" (click...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:18:42:
+[37m      18 │ ..."#workflow" [class.active]="[32mactiveId[37m === 'workflow'" (click)="c...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:19:42:
+[37m      19 │ ..."#solution" [class.active]="[32mactiveId[37m === 'solution'" (click)="c...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'activeId' does not exist on type 'NavbarComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/navbar/navbar.component.html:20:41:
+[37m      20 │ ...="#contact" [class.active]="[32mactiveId[37m === 'contact'" (click)="cl...
+         ╵                                [32m~~~~~~~~[0m
+
+  Error occurs in the template of component NavbarComponent.
+
+    src/app/components/navbar/navbar.component.ts:7:15:
+[37m      7 │   templateUrl: [32m'./navbar.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names         |  Raw size
+main.js             | main          | 161.09 kB | 
+styles.css          | styles        | 999 bytes | 
+
+                    | Initial total | 162.09 kB
+
+Application bundle generation complete. [0.241 seconds] - 2026-08-13T05:15:27.920Z
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 159.13 kB | 
+
+Application bundle generation complete. [0.304 seconds] - 2026-08-13T05:15:49.581Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 154.30 kB | 
+
+Application bundle generation complete. [0.217 seconds] - 2026-08-13T05:16:06.664Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 153.57 kB | 
+
+Application bundle generation complete. [0.081 seconds] - 2026-08-13T05:16:15.435Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 150.88 kB | 
+
+Application bundle generation complete. [0.302 seconds] - 2026-08-13T05:16:20.571Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 150.48 kB | 
+
+Application bundle generation complete. [0.207 seconds] - 2026-08-13T05:16:30.730Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 149.48 kB | 
+
+Application bundle generation complete. [0.252 seconds] - 2026-08-13T05:16:34.083Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 148.71 kB | 
+
+Application bundle generation complete. [0.203 seconds] - 2026-08-13T05:16:54.778Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 147.37 kB | 
+
+Application bundle generation complete. [0.229 seconds] - 2026-08-13T05:16:57.788Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 146.74 kB | 
+
+Application bundle generation complete. [0.171 seconds] - 2026-08-13T05:16:58.897Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 145.79 kB | 
+
+Application bundle generation complete. [0.430 seconds] - 2026-08-13T05:17:01.474Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 144.41 kB | 
+
+Application bundle generation complete. [0.221 seconds] - 2026-08-13T05:17:13.594Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 141.98 kB | 
+
+Application bundle generation complete. [0.235 seconds] - 2026-08-13T05:17:18.448Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 140.35 kB | 
+
+Application bundle generation complete. [0.178 seconds] - 2026-08-13T05:17:30.807Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 136.74 kB | 
+
+Application bundle generation complete. [0.197 seconds] - 2026-08-13T05:17:34.181Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 136.97 kB | 
+
+Application bundle generation complete. [0.188 seconds] - 2026-08-13T05:17:37.095Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 136.96 kB | 
+
+Application bundle generation complete. [0.232 seconds] - 2026-08-13T05:17:41.653Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 136.96 kB | 
+
+Application bundle generation complete. [0.209 seconds] - 2026-08-13T05:19:54.182Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 136.96 kB | 
+
+Application bundle generation complete. [0.196 seconds] - 2026-08-13T05:19:54.980Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 136.96 kB | 
+
+Application bundle generation complete. [0.220 seconds] - 2026-08-13T05:19:56.060Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names  | Raw size
+styles.css          | styles |  1.15 kB | 
+
+Application bundle generation complete. [0.050 seconds] - 2026-08-13T06:08:14.647Z
+
+Stylesheet update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 147.46 kB | 
+
+Application bundle generation complete. [0.698 seconds] - 2026-08-13T06:13:03.539Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 147.93 kB | 
+
+Application bundle generation complete. [0.486 seconds] - 2026-08-13T06:15:08.312Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 158.47 kB | 
+
+Application bundle generation complete. [0.167 seconds] - 2026-08-13T06:16:33.533Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 160.29 kB | 
+
+Application bundle generation complete. [0.178 seconds] - 2026-08-13T06:16:59.195Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 166.83 kB | 
+
+Application bundle generation complete. [0.204 seconds] - 2026-08-13T06:18:11.681Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 170.11 kB | 
+
+Application bundle generation complete. [0.310 seconds] - 2026-08-13T06:19:30.609Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 174.27 kB | 
+
+Application bundle generation complete. [0.255 seconds] - 2026-08-13T06:20:41.030Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 174.79 kB | 
+
+Application bundle generation complete. [0.397 seconds] - 2026-08-13T06:21:20.370Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 178.79 kB | 
+
+Application bundle generation complete. [0.297 seconds] - 2026-08-13T06:22:25.271Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 179.54 kB | 
+
+Application bundle generation complete. [0.249 seconds] - 2026-08-13T06:23:16.855Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 184.97 kB | 
+
+Application bundle generation complete. [0.289 seconds] - 2026-08-13T06:24:22.579Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 184.48 kB | 
+
+Application bundle generation complete. [0.303 seconds] - 2026-08-13T06:25:26.642Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 186.00 kB | 
+
+Application bundle generation complete. [0.251 seconds] - 2026-08-13T06:26:41.905Z
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 186.35 kB | 
+
+Application bundle generation complete. [0.259 seconds] - 2026-08-13T06:27:43.812Z
+
+Component update sent to client(s).

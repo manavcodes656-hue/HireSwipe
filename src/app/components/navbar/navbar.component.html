@@ -1,25 +1,35 @@
 <nav class="navbar" [class.scrolled]="scrolled">
   <div class="nav-inner">
-    <span class="nav-logo">HireSwipe</span>
+    <a class="nav-logo" href="#home" (click)="closeMenu()">
+      <span class="logo-mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3.2" y="4.5" width="11" height="15" rx="2.5" transform="rotate(-7 8.7 12)"/>
+          <rect x="9.8" y="4.5" width="11" height="15" rx="2.5" transform="rotate(7 15.3 12)"/>
+          <path d="M17.5 8.6l2.4 2.4-2.4 2.4"/>
+        </svg>
+      </span>
+      HireSwipe
+    </a>
 
     <div class="nav-links" [class.open]="menuOpen">
-      <a href="#home" (click)="closeMenu()">Home</a>
-      <a href="#about" (click)="closeMenu()">About</a>
-      <a href="#how-it-works" (click)="closeMenu()">How It Works</a>
-      <a href="#solution" (click)="closeMenu()">Solution</a>
-      <a href="#contact" (click)="closeMenu()">Contact</a>
+      <a href="#home" [class.active]="activeId === 'home'" (click)="closeMenu()">Home</a>
+      <a href="#about" [class.active]="activeId === 'about'" (click)="closeMenu()">About</a>
+      <a href="#how-it-works" [class.active]="activeId === 'how-it-works'" (click)="closeMenu()">How It Works</a>
+      <a href="#workflow" [class.active]="activeId === 'workflow'" (click)="closeMenu()">Workflow / Statistics</a>
+      <a href="#solution" [class.active]="activeId === 'solution'" (click)="closeMenu()">Solution</a>
+      <a href="#contact" [class.active]="activeId === 'contact'" (click)="closeMenu()">Contact</a>
       <div class="mobile-auth">
-        <button class="login-btn">Login</button>
-        <button class="signup-btn">Get Started</button>
+        <button class="login-btn" type="button">Login</button>
+        <button class="signup-btn" type="button">Get Started</button>
       </div>
     </div>
 
     <div class="nav-auth">
-      <button class="login-btn">Login</button>
-      <button class="signup-btn">Get Started</button>
+      <button class="login-btn" type="button">Login</button>
+      <button class="signup-btn" type="button">Get Started</button>
     </div>
 
-    <button class="hamburger" (click)="toggleMenu()">
+    <button class="hamburger" type="button" (click)="toggleMenu()" aria-label="Toggle menu">
       <i class="lucide lucide-menu" *ngIf="!menuOpen"></i>
       <i class="lucide lucide-x" *ngIf="menuOpen"></i>
     </button>

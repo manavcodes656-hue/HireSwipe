@@ -1,45 +1,94 @@
-<section class="how">
+<section class="how" id="how-it-works">
   <div class="how-container">
     <div class="how-header">
-      <span class="how-badge">How It Works</span>
+      <span class="how-label">How It Works</span>
       <h2 class="how-heading">Three simple steps to your next role</h2>
     </div>
+    
     <div class="how-steps">
-      <div class="step-card">
-        <span class="step-count">01</span>
-        <span class="step-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="10" width="16" height="11" rx="2"/>
-            <path d="M8 21V7l4-4 4 4v14"/>
-          </svg>
-        </span>
-        <h3 class="step-title">Discover companies</h3>
-        <p class="step-text">Browse curated companies that match your skills and preferences in real-time.</p>
+      <!-- Step 1 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">01</span>
+          <span class="step-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+        </div>
+        <h3 class="step-title">Discover</h3>
+        <p class="step-text">Browse curated roles that match your skills and preferences in real-time.</p>
       </div>
-      <span class="step-connector"></span>
-      <div class="step-card">
-        <span class="step-count">02</span>
-        <span class="step-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12h18"/>
-            <path d="M8 17l-5-5 5-5"/>
-            <path d="M16 7l5 5-5 5"/>
-          </svg>
-        </span>
+      
+      <!-- Step 2 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-num">02</span>
+          <span class="step-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 3L21 7L17 11"/><path d="M3 17L7 21L3 25"/>
+              <path d="M21 7H9a5 5 0 0 0-5 5v3"/>
+              <path d="M3 17h12a5 5 0 0 0 5-5V9"/>
+            </svg>
+          </span>
+        </div>
         <h3 class="step-title">Swipe</h3>
         <p class="step-text">Swipe right to apply instantly. Swipe left to pass. It's that simple.</p>
       </div>
-      <span class="step-connector"></span>
-      <div class="step-card">
-        <span class="step-count">03</span>
-        <span class="step-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            <path d="M9 12l2 2 4-4"/>
-          </svg>
-        </span>
-        <h3 class="step-title">Get matched</h3>
-        <p class="step-text">Receive interview invites from companies that swipe right on you too.</p>
+      
+      <!-- Step 3 -->
+      <div class="step step-match-container">
+        <div class="step-head">
+          <span class="step-num">03</span>
+          <span class="step-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </span>
+        </div>
+        <h3 class="step-title">Match</h3>
+        <p class="step-text">Our automated system sends your profile instantly. If you match their criteria, they reach out.</p>
+
+        <!-- Automated System Flow Detail -->
+        <div class="automated-flow-box">
+          <div class="flow-title">AUTOMATED SYSTEM FEATURE</div>
+          <div class="flow-items">
+            <div class="flow-item">
+              <span class="flow-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+              </span>
+              <span>Profile sent automatically</span>
+            </div>
+            <div class="flow-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+            <div class="flow-item">
+              <span class="flow-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </span>
+              <span>Companies review criteria</span>
+            </div>
+            <div class="flow-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+            <div class="flow-item">
+              <span class="flow-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 21h18M3 10h18M5 6h14M19 21V10M5 21V10M9 21V14h6v7M9 10V6M15 10V6"/>
+                </svg>
+              </span>
+              <span>Direct match contact</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
