@@ -32,16 +32,10 @@
   color: var(--text);
 }
 
-.logo-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.footer-logo-img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
 }
 
 .footer-desc {

@@ -38,16 +38,15 @@
   justify-self: start;
 }
 
-.logo-mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.nav-logo-img {
+  height: 54px;
+  width: auto;
+  object-fit: contain;
+  transition: height 0.3s ease;
+}
+
+.navbar.scrolled .nav-logo-img {
+  height: 44px;
 }
 
 .nav-links {
