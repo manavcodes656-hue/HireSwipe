@@ -18,7 +18,7 @@
 }
 
 .nav-inner {
-  max-width: 1180px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 32px;
   display: grid;
@@ -38,6 +38,13 @@
   text-decoration: none;
   justify-self: start;
   user-select: none;
+}
+
+.nav-logo-img {
+  height: 44px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .logo-mark {
@@ -69,6 +76,7 @@
   padding: 6px 2px;
   transition: color 0.18s ease;
   letter-spacing: -0.1px;
+  white-space: nowrap;
 }
 
 .nav-links a:hover {
