@@ -5,76 +5,96 @@
         <span class="about-label">About HireSwipe</span>
         <h2 class="about-heading">Your next career move, simplified</h2>
         <p class="about-text">
-          HireSwipe uses smart matching to connect you with roles that actually fit your skills, experience, and preferences. No more endless scrolling through irrelevant listings.
+          HireSwipe replaces tedious application forms with intelligent matching. Find roles that truly fit your skills, experience, and goals — curated directly from verified engineering teams.
         </p>
+        
         <div class="about-highlights">
           <div class="highlight-item">
-            <span class="highlight-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            <span class="highlight-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1"/>
+                <circle cx="12" cy="12" r="3"/>
               </svg>
             </span>
-            <div>
+            <div class="highlight-content">
               <strong>AI Matching</strong>
-              <p>Our algorithm finds roles that match your unique profile and career goals.</p>
+              <p>Our algorithm evaluates compatibility across technical stack, seniority, and compensation preferences.</p>
             </div>
           </div>
+
           <div class="highlight-item">
-            <span class="highlight-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11"/>
+            <span class="highlight-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+                <path d="M5 7v10" stroke-dasharray="2 2"/>
               </svg>
             </span>
-            <div>
+            <div class="highlight-content">
               <strong>One Swipe Apply</strong>
-              <p>Apply to positions instantly with a single swipe. No tedious form filling.</p>
+              <p>Express interest in seconds. Your verified profile and resume are forwarded directly to the hiring team.</p>
             </div>
           </div>
+
           <div class="highlight-item">
-            <span class="highlight-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <span class="highlight-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
               </svg>
             </span>
-            <div>
+            <div class="highlight-content">
               <strong>Verified Companies</strong>
-              <p>Every company on our platform is vetted for legitimate hiring practices.</p>
+              <p>Every hiring partner is authenticated, ensuring genuine roles with transparent compensation bands.</p>
             </div>
           </div>
         </div>
       </div>
+
       <div class="about-right">
         <div class="about-visual">
           <!-- Top Card: Your Profile -->
           <div class="vis-card vis-profile">
-            <div class="vis-avatar">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+            <div class="vis-avatar" aria-hidden="true">
+              <svg viewBox="0 0 40 40" width="38" height="38" fill="none">
+                <rect width="40" height="40" rx="20" fill="#f0fdfa"/>
+                <circle cx="20" cy="14.5" r="5.5" fill="#0f766e"/>
+                <path d="M9 33.5c0-5.8 4.9-10.5 11-10.5s11 4.7 11 10.5" fill="#0f766e" opacity="0.85"/>
+                <rect x="15" y="13.5" width="4" height="2.2" rx="0.8" fill="#ffffff"/>
+                <rect x="21" y="13.5" width="4" height="2.2" rx="0.8" fill="#ffffff"/>
+                <line x1="19" y1="14.6" x2="21" y2="14.6" stroke="#ffffff" stroke-width="0.8"/>
               </svg>
             </div>
             <div class="vis-card-text">
-              <strong>Your Profile</strong>
-              <span>Frontend Developer · 4+ yrs · Bengaluru</span>
+              <div class="vis-card-header">
+                <strong>Your Profile</strong>
+                <span class="vis-status-badge">Active</span>
+              </div>
+              <span>Frontend Developer · TypeScript &amp; React · Bengaluru</span>
             </div>
           </div>
 
-          <!-- Connector Line with Animated Pulse Dots -->
-          <div class="vis-connect">
-            <span class="vis-dot"></span>
-            <div class="vis-line-container">
-              <span class="vis-connector"></span>
-              <span class="vis-flowing-dot"></span>
+          <!-- Connector Flow with Signal Indicator -->
+          <div class="vis-connect" aria-hidden="true">
+            <div class="vis-track">
+              <span class="vis-line"></span>
+              <span class="vis-signal-dot"></span>
             </div>
-            <span class="vis-dot"></span>
+            <span class="vis-pill">Automated Matching</span>
+            <div class="vis-track">
+              <span class="vis-line"></span>
+              <span class="vis-signal-dot" style="animation-delay: 1s;"></span>
+            </div>
           </div>
 
           <!-- Bottom Card: Matched Companies -->
           <div class="vis-card vis-companies">
+            <div class="vis-companies-header">
+              <strong>Matched Companies</strong>
+              <span class="vis-count-badge">4 Direct Matches</span>
+            </div>
             <div class="vis-logos-row">
               <!-- Google -->
-              <span class="vis-logo-circle">
+              <span class="vis-logo-circle" title="Google">
                 <svg viewBox="0 0 24 24" width="16" height="16">
                   <path fill="#EA4335" d="M12 5.04c1.67 0 3.19.57 4.37 1.71l3.27-3.27C17.65 1.58 14.99 1 12 1 7.35 1 3.39 3.67 1.39 7.56l3.89 3.02c1.02-3.14 3.96-5.54 6.72-5.54z"/>
                   <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.44c-.28 1.48-1.07 2.73-2.31 3.57l3.58 2.78c2.09-1.93 3.3-4.77 3.3-7.79z"/>
@@ -83,7 +103,7 @@
                 </svg>
               </span>
               <!-- Microsoft -->
-              <span class="vis-logo-circle">
+              <span class="vis-logo-circle" title="Microsoft">
                 <svg viewBox="0 0 23 23" width="14" height="14">
                   <rect x="0" y="0" width="10.5" height="10.5" fill="#f25022"/>
                   <rect x="11.5" y="0" width="10.5" height="10.5" fill="#7fba00"/>
@@ -92,22 +112,18 @@
                 </svg>
               </span>
               <!-- Amazon -->
-              <span class="vis-logo-circle">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="#000000">
+              <span class="vis-logo-circle" title="Amazon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="#0f172a">
                   <path d="M15.93 15.65c-.88-.41-2.07-.63-3.15-.63-1.46 0-3 .42-3.83 1.15-.55.49-.81 1.14-.81 1.83 0 1.25.9 2.1 2.37 2.1 1.34 0 2.65-.63 3.32-1.74h.1V19.4c0 .88.42 1.3 1.11 1.3.55 0 1.04-.32 1.33-.76.49-.78.47-1.92.47-2.85v-5c0-1.49-.68-2.5-1.93-2.5-.96 0-1.93.55-2.27 1.54h-.1C12.44 10.15 11.23 9.6 10 9.6c-2 0-3.4 1.35-3.4 3.2 0 1.81 1.14 2.85 3.03 2.85 1 0 2.16-.41 2.83-1.07h.1l.14.71a1.26 1.26 0 001.27 1.05c.53 0 1.04-.31 1.34-.73.49-.75.46-1.87.46-2.73v-2.1c0-1 .47-1.46 1.14-1.46.7 0 1 .49 1 1.4v2.75c0 1.08-.2 2.21-.88 2.88zm-3.32 1.62c0 1-.76 1.5-1.58 1.5s-1.3-.43-1.3-1.12c0-1 .73-1.38 1.87-1.38h1v1z"/>
-                  <path d="M4 22s5 2 13 1c1.5-.2 3-.7 3.5-1.2l-.5-1c-.5.3-1.5.7-3 .8C11 22 7 20 4 19.5z" fill="#f90"/>
+                  <path d="M4 22s5 2 13 1c1.5-.2 3-.7 3.5-1.2l-.5-1c-.5.3-1.5.7-3 .8C11 22 7 20 4 19.5z" fill="#f59e0b"/>
                 </svg>
               </span>
               <!-- OpenAI -->
-              <span class="vis-logo-circle" style="background: #0f766e; color: #ffffff;">
+              <span class="vis-logo-circle vis-logo-openai" title="OpenAI">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                   <path d="M21.73 11.59l-1.96-1.13a.13.13 0 00-.19.06l-1.01 1.76a2.63 2.63 0 01-1.33 1.17l-1.78.47a.13.13 0 00-.08.19l1.13 1.95c.51.88 1.35 1.53 2.36 1.8l2.06.55a.13.13 0 00.15-.09l.8-2.99a5.16 5.16 0 00-.15-3.77zM2.27 12.41l1.96 1.13a.13.13 0 00.19-.06l1.01-1.76c.26-.45.64-.81 1.1-.1.17L8.3 11.25a.13.13 0 00.08-.19l-1.13-1.95a5.16 5.16 0 00-2.36-1.8l-2.06-.55a.13.13 0 00-.15.09l-.8 2.99a5.16 5.16 0 00.15 3.77zM11.59 2.27l1.13 1.96a.13.13 0 00.06.19l1.76-1.01a2.63 2.63 0 011.17-1.33l.47-1.78a.13.13 0 00-.19-.08l-1.95 1.13c-.88.51-1.53 1.35-1.8 2.36l-.55 2.06a.13.13 0 00.09.15l2.99.8a5.16 5.16 0 003.77-.15zM12.41 21.73l-1.13-1.96a.13.13 0 00-.06-.19l-1.76 1.01a2.63 2.63 0 01-1.17 1.33l-.47 1.78a.13.13 0 00.19.08l1.95-1.13c.88-.51 1.53-1.35 1.8-2.36l.55-2.06a.13.13 0 00-.09-.15l-2.99-.8a5.16 5.16 0 00-3.77.15zM21.73 12.41l-1.13-1.95a.13.13 0 00-.19-.06l-1.76 1.01a2.63 2.63 0 01-1.33-1.17l-.55-2.06a.13.13 0 00-.15-.09l.8 2.99a5.16 5.16 0 00.15 3.77l1.96 1.13a.13.13 0 00.19.06l1.01-1.76c.26-.45.64-.81 1.1-.1l1.78-.47a.13.13 0 00.08-.19zM2.27 11.59l1.13 1.95a.13.13 0 00.19.06l1.76-1.01a2.63 2.63 0 011.33 1.17l.55 2.06a.13.13 0 00.15.09l-.8-2.99a5.16 5.16 0 00-.15-3.77l-1.96-1.13a.13.13 0 00-.19-.06l-1.01 1.76c-.26.45-.64.81-1.1.1l-1.78.47a.13.13 0 00-.08.19z"/>
                 </svg>
               </span>
-            </div>
-            <div class="vis-card-text" style="align-items: center; text-align: center; width: 100%;">
-              <strong>Matched Companies</strong>
-              <span>Real-time connections with top employers</span>
             </div>
           </div>
         </div>

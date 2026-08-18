@@ -1,5 +1,5 @@
 .solution {
-  padding: 100px 0;
+  padding: 88px 0;
   background: var(--bg);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -13,8 +13,8 @@
 
 .solution-grid {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 72px;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 64px;
   align-items: center;
 }
 
@@ -22,69 +22,70 @@
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .solution-heading {
-  font-size: clamp(32px, 3.4vw, 42px);
+  font-size: clamp(30px, 3.2vw, 40px);
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.18;
   letter-spacing: -0.03em;
   color: var(--text);
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .solution-text {
-  font-size: 16.5px;
-  line-height: 1.7;
+  font-size: 15.5px;
+  line-height: 1.65;
   color: var(--secondary);
-  margin-bottom: 36px;
+  margin-bottom: 32px;
   max-width: 480px;
 }
 
 .solution-benefits {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .benefit-item {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   align-items: flex-start;
 }
 
 .benefit-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
   background: var(--accent-soft);
   color: var(--accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   flex-shrink: 0;
+  border: 1px solid rgba(15, 118, 110, 0.12);
 }
 
-.benefit-item div strong {
-  font-size: 15.5px;
+.benefit-content strong {
+  font-size: 15px;
   font-weight: 600;
   color: var(--text);
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
-.benefit-item div p {
-  font-size: 14.5px;
-  line-height: 1.6;
+.benefit-content p {
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--secondary);
   margin: 0;
 }
 
+/* Right Side UI Cards Visual */
 .solution-right {
   display: flex;
   justify-content: center;
@@ -94,91 +95,161 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   max-width: 360px;
 }
 
-.sol-flow-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.sol-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px 18px;
+  border-radius: 12px;
+  padding: 12px 16px;
   box-shadow: var(--shadow-sm);
   width: 100%;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.sol-flow-card:hover {
+.sol-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.sol-highlight-card {
-  border-left: 3px solid var(--accent);
-}
-
-.sol-flow-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--border);
-  color: var(--secondary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.sol-icon-accent {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.sol-flow-desc {
+.sol-card-header {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
-.sol-flow-desc strong {
-  font-size: 14px;
+.sol-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sol-badge-group strong {
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
 
-.sol-flow-desc span {
-  font-size: 12.5px;
-  color: var(--secondary);
-  line-height: 1.3;
+.sol-dot-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
-.sol-flow-arrow {
+.sol-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-tint);
+  border: 1px solid rgba(15, 118, 110, 0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.sol-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sol-role-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.sol-pill-list {
+  display: flex;
+  gap: 5px;
+  margin: 2px 0;
+}
+
+.sol-pill-list span {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--secondary);
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.sol-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--secondary);
+}
+
+/* Highlight Card */
+.sol-card-highlight {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-tint);
+}
+
+.sol-spark-icon {
+  color: var(--accent);
+  display: inline-flex;
+}
+
+.sol-match-score {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.sol-desc-text {
+  font-size: 12px;
+  color: var(--secondary);
+  line-height: 1.35;
+}
+
+/* Success Result Card */
+.sol-card-success {
+  border-left: 3px solid var(--accent-light);
+}
+
+.sol-success-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-tint);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sol-status-label {
+  font-size: 11px;
+  color: var(--secondary);
+}
+
+.sol-time-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sol-connector-arrow {
   color: var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
-  height: 24px;
+  height: 18px;
 }
 
-@media (max-width: 1024px) {
-  .solution-grid {
-    gap: 48px;
-  }
-}
-
-@media (max-width: 768px) {
-  .solution {
-    padding: 72px 0;
-  }
-
+/* Responsive */
+@media (max-width: 960px) {
   .solution-grid {
     grid-template-columns: 1fr;
-    gap: 44px;
+    gap: 48px;
   }
 
   .solution-text {
@@ -186,7 +257,12 @@
   }
 
   .solution-visual {
-    order: -1;
     max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .solution {
+    padding: 64px 0;
   }
 }

@@ -1,7 +1,7 @@
 .stats {
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 40px 0 88px;
+  padding: 48px 0;
 }
 
 .stats-container {
@@ -11,8 +11,9 @@
 }
 
 .stats-list {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
 }
 
 .stat {
@@ -20,8 +21,15 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  flex: 1;
   text-align: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.stat:hover {
+  transform: translateY(-2px);
+  background: var(--bg);
 }
 
 .stat + .stat {
@@ -31,53 +39,41 @@
 .stat-main {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .stat-icon-circle {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  background: var(--accent-soft);
+  border-radius: 8px;
+  background: var(--accent-tint);
+  border: 1px solid rgba(15, 118, 110, 0.14);
   color: var(--accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .stat-number {
-  font-size: 38px;
+  font-size: 32px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--text);
   line-height: 1.1;
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--secondary);
 }
 
-@media (max-width: 1024px) {
-  .stat-number {
-    font-size: 32px;
-  }
-}
-
-@media (max-width: 768px) {
-  .stats {
-    padding: 32px 0 64px;
-  }
-
+/* Responsive */
+@media (max-width: 960px) {
   .stats-list {
-    flex-wrap: wrap;
-    gap: 32px 0;
-  }
-
-  .stat {
-    width: 50%;
-    flex: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px 16px;
   }
 
   .stat + .stat {
@@ -89,17 +85,21 @@
   }
 }
 
-@media (max-width: 480px) {
-  .stats-list {
-    flex-direction: column;
-    gap: 28px;
+@media (max-width: 520px) {
+  .stats {
+    padding: 36px 0;
   }
 
-  .stat {
-    width: 100%;
+  .stats-list {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .stat:nth-child(even) {
     border-left: none;
+  }
+
+  .stat-number {
+    font-size: 28px;
   }
 }
