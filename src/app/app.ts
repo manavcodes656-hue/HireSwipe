@@ -1,27 +1,9 @@
 import { Component } from '@angular/core';
-import { NavbarComponent } from './components/navbar/navbar.component';
-import { HeroComponent } from './components/hero/hero.component';
-import { ProblemComponent } from './components/problem/problem.component';
-import { FeaturesComponent } from './components/features/features.component';
-import { SolutionComponent } from './components/solution/solution.component';
-import { WorkflowComponent } from './components/workflow/workflow.component';
-import { StatsComponent } from './components/stats/stats.component';
-import { CtaComponent } from './components/cta/cta.component';
-import { FooterComponent } from './components/footer/footer.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [
-    NavbarComponent,
-    HeroComponent,
-    ProblemComponent,
-    FeaturesComponent,
-    SolutionComponent,
-    WorkflowComponent,
-    StatsComponent,
-    CtaComponent,
-    FooterComponent,
-  ],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

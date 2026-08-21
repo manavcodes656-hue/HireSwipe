@@ -12,14 +12,14 @@
       <a href="#solution" [class.active]="activeId === 'solution'" (click)="closeMenu()">Solution</a>
       <a href="#contact" [class.active]="activeId === 'contact'" (click)="closeMenu()">Contact</a>
       <div class="mobile-auth">
-        <button class="login-btn" type="button">Login</button>
-        <button class="signup-btn" type="button">Get Started</button>
+        <button class="login-btn" type="button" routerLink="/login" (click)="closeMenu()">Login</button>
+        <button class="signup-btn" type="button" routerLink="/login" (click)="closeMenu()">Get Started</button>
       </div>
     </div>
 
     <div class="nav-auth">
-      <button class="login-btn" type="button">Login</button>
-      <button class="signup-btn" type="button">Get Started</button>
+      <button class="login-btn" type="button" routerLink="/login">Login</button>
+      <button class="signup-btn" type="button" routerLink="/login">Get Started</button>
     </div>
 
     <button class="hamburger" type="button" (click)="toggleMenu()" aria-label="Toggle menu">

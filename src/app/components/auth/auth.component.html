@@ -1,0 +1,506 @@
+<div class="auth-page">
+  <!-- Minimal Auth Header -->
+  <header class="auth-header">
+    <div class="auth-header-inner">
+      <a routerLink="/" class="auth-brand" aria-label="HireSwipe Home">
+        <img src="logo.png" alt="HireSwipe" class="auth-brand-logo" />
+      </a>
+      <a routerLink="/" class="auth-back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Back to HireSwipe</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Auth Main Container -->
+  <main class="auth-main">
+    <div class="auth-container">
+      
+      <!-- Left Column: Authentication Form -->
+      <div class="auth-form-card">
+        
+        <!-- Welcome & Role Selector -->
+        <div class="auth-intro">
+          <h1 class="auth-intro-title">Welcome to HireSwipe</h1>
+          <p class="auth-intro-desc">Choose how you want to use HireSwipe.</p>
+          
+          <div class="role-selector" role="radiogroup" aria-label="User role">
+            <button
+              type="button"
+              class="role-card"
+              [class.active]="role === 'jobseeker'"
+              (click)="setRole('jobseeker')"
+              role="radio"
+              [attr.aria-checked]="role === 'jobseeker'"
+              id="role-jobseeker"
+            >
+              <div class="role-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </div>
+              <div class="role-text">
+                <span class="role-label">JOB SEEKER</span>
+                <span class="role-hint">Find your next opportunity</span>
+              </div>
+              <div class="role-indicator" aria-hidden="true">
+                <span class="indicator-dot"></span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              class="role-card"
+              [class.active]="role === 'company'"
+              (click)="setRole('company')"
+              role="radio"
+              [attr.aria-checked]="role === 'company'"
+              id="role-company"
+            >
+              <div class="role-icon-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 21h18"></path>
+                  <path d="M19 21v-4"></path>
+                  <path d="M19 13a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v8"></path>
+                  <path d="M9 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+                </svg>
+              </div>
+              <div class="role-text">
+                <span class="role-label">COMPANY</span>
+                <span class="role-hint">Find the right talent</span>
+              </div>
+              <div class="role-indicator" aria-hidden="true">
+                <span class="indicator-dot"></span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Form Heading & Supporting Text -->
+        <div class="form-header">
+          <h2 class="form-title" id="form-heading">
+            <ng-container *ngIf="mode === 'login'">Welcome back</ng-container>
+            <ng-container *ngIf="mode === 'signup'">
+              {{ role === 'jobseeker' ? 'Create your account' : 'Create company account' }}
+            </ng-container>
+          </h2>
+          <p class="form-subtitle">
+            <ng-container *ngIf="mode === 'login' && role === 'jobseeker'">
+              Sign in to continue finding your next opportunity.
+            </ng-container>
+            <ng-container *ngIf="mode === 'login' && role === 'company'">
+              Sign in to manage your hiring process.
+            </ng-container>
+            <ng-container *ngIf="mode === 'signup' && role === 'jobseeker'">
+              Create your profile and start discovering opportunities matched to you.
+            </ng-container>
+            <ng-container *ngIf="mode === 'signup' && role === 'company'">
+              Create your company account and start finding the right talent.
+            </ng-container>
+          </p>
+        </div>
+
+        <!-- Inline Success Feedback (Placeholder state) -->
+        <div class="success-banner" *ngIf="successMessage" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>{{ successMessage }}</span>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+          <!-- Email / Work Email -->
+          <div class="form-field">
+            <label for="login-email" class="field-label">
+              {{ role === 'jobseeker' ? 'Email' : 'Work Email' }}
+            </label>
+            <div class="input-wrapper" [class.error]="isFieldInvalid('email')">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </span>
+              <input
+                id="login-email"
+                type="email"
+                formControlName="email"
+                [placeholder]="role === 'jobseeker' ? 'alex.morgan@example.com' : 'hiring@company.com'"
+                autocomplete="email"
+                class="form-input"
+                [attr.aria-invalid]="isFieldInvalid('email')"
+                [attr.aria-describedby]="isFieldInvalid('email') ? 'login-email-err' : null"
+              />
+            </div>
+            <p *ngIf="isFieldInvalid('email')" id="login-email-err" class="error-msg" role="alert">
+              {{ getFieldError('email') }}
+            </p>
+          </div>
+
+          <!-- Password -->
+          <div class="form-field">
+            <div class="field-label-row">
+              <label for="login-password" class="field-label">Password</label>
+              <button type="button" class="text-btn forgot-btn">Forgot password?</button>
+            </div>
+            <div class="input-wrapper" [class.error]="isFieldInvalid('password')">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </span>
+              <input
+                id="login-password"
+                type="password"
+                formControlName="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                class="form-input"
+                [attr.aria-invalid]="isFieldInvalid('password')"
+                [attr.aria-describedby]="isFieldInvalid('password') ? 'login-pwd-err' : null"
+              />
+            </div>
+            <p *ngIf="isFieldInvalid('password')" id="login-pwd-err" class="error-msg" role="alert">
+              {{ getFieldError('password') }}
+            </p>
+          </div>
+
+          <!-- Remember Me -->
+          <div class="form-options">
+            <label class="checkbox-label" for="login-remember">
+              <input type="checkbox" id="login-remember" formControlName="rememberMe" class="form-checkbox" />
+              <span>Remember me</span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="submit-btn" id="login-submit-btn">
+            <span>Sign In</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+
+          <!-- Divider -->
+          <div class="auth-divider" role="separator" aria-label="or sign in with">
+            <span class="divider-line"></span>
+            <span class="divider-text">OR</span>
+            <span class="divider-line"></span>
+          </div>
+
+          <!-- Google Auth -->
+          <button type="button" class="google-btn" (click)="onGoogleAuth()" id="google-login-btn">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path fill="#EA4335" d="M12 5.04c1.67 0 3.19.57 4.37 1.71l3.27-3.27C17.65 1.58 14.99 1 12 1 7.35 1 3.39 3.67 1.39 7.56l3.89 3.02c1.02-3.14 3.96-5.54 6.72-5.54z"/>
+              <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.44c-.28 1.48-1.07 2.73-2.31 3.57l3.58 2.78c2.09-1.93 3.3-4.77 3.3-7.79z"/>
+              <path fill="#FBBC05" d="M5.28 14.42c-.25-.76-.4-1.57-.4-2.42s.15-1.66.4-2.42L1.39 6.54C.5 8.18 0 10.02 0 12s.5 3.82 1.39 5.46l3.89-3.04z"/>
+              <path fill="#34A853" d="M12 23c3.24 0 5.97-1.08 7.96-2.91l-3.58-2.78c-.99.66-2.26 1.06-3.71 1.06-3.02 0-5.59-2.03-6.5-4.78L1.28 16.6C3.28 20.33 7.24 23 12 23z"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+          <!-- Toggle Mode -->
+          <div class="auth-switch">
+            <span>Don't have an account?</span>
+            <button
+              type="button"
+              class="switch-link"
+              (click)="setMode('signup')"
+              id="switch-to-signup"
+            >
+              {{ role === 'jobseeker' ? 'Create account' : 'Register your company' }}
+            </button>
+          </div>
+        </form>
+
+        <!-- SIGN UP FORM -->
+        <form *ngIf="mode === 'signup'" [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+          <!-- Full Name / Company Name -->
+          <div class="form-field">
+            <label for="signup-name" class="field-label">
+              {{ role === 'jobseeker' ? 'Full Name' : 'Company Name' }}
+            </label>
+            <div class="input-wrapper" [class.error]="isFieldInvalid('fullName')">
+              <span class="input-icon" aria-hidden="true">
+                <svg *ngIf="role === 'jobseeker'" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <svg *ngIf="role === 'company'" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </span>
+              <input
+                id="signup-name"
+                type="text"
+                formControlName="fullName"
+                [placeholder]="role === 'jobseeker' ? 'Alex Morgan' : 'Acme Technologies Inc.'"
+                [autocomplete]="role === 'jobseeker' ? 'name' : 'organization'"
+                class="form-input"
+                [attr.aria-invalid]="isFieldInvalid('fullName')"
+                [attr.aria-describedby]="isFieldInvalid('fullName') ? 'signup-name-err' : null"
+              />
+            </div>
+            <p *ngIf="isFieldInvalid('fullName')" id="signup-name-err" class="error-msg" role="alert">
+              {{ getFieldError('fullName') }}
+            </p>
+          </div>
+
+          <!-- Email / Work Email -->
+          <div class="form-field">
+            <label for="signup-email" class="field-label">
+              {{ role === 'jobseeker' ? 'Email' : 'Work Email' }}
+            </label>
+            <div class="input-wrapper" [class.error]="isFieldInvalid('email')">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </span>
+              <input
+                id="signup-email"
+                type="email"
+                formControlName="email"
+                [placeholder]="role === 'jobseeker' ? 'alex.morgan@example.com' : 'talent@acme.com'"
+                autocomplete="email"
+                class="form-input"
+                [attr.aria-invalid]="isFieldInvalid('email')"
+                [attr.aria-describedby]="isFieldInvalid('email') ? 'signup-email-err' : null"
+              />
+            </div>
+            <p *ngIf="isFieldInvalid('email')" id="signup-email-err" class="error-msg" role="alert">
+              {{ getFieldError('email') }}
+            </p>
+          </div>
+
+          <!-- Password -->
+          <div class="form-field">
+            <label for="signup-password" class="field-label">Password</label>
+            <div class="input-wrapper" [class.error]="isFieldInvalid('password')">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </span>
+              <input
+                id="signup-password"
+                type="password"
+                formControlName="password"
+                placeholder="At least 8 characters"
+                autocomplete="new-password"
+                class="form-input"
+                [attr.aria-invalid]="isFieldInvalid('password')"
+                [attr.aria-describedby]="isFieldInvalid('password') ? 'signup-pwd-err' : null"
+              />
+            </div>
+            <p *ngIf="isFieldInvalid('password')" id="signup-pwd-err" class="error-msg" role="alert">
+              {{ getFieldError('password') }}
+            </p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-field">
+            <label for="signup-confirm-password" class="field-label">Confirm Password</label>
+            <div class="input-wrapper" [class.error]="isFieldInvalid('confirmPassword')">
+              <span class="input-icon" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </span>
+              <input
+                id="signup-confirm-password"
+                type="password"
+                formControlName="confirmPassword"
+                placeholder="Re-enter password"
+                autocomplete="new-password"
+                class="form-input"
+                [attr.aria-invalid]="isFieldInvalid('confirmPassword')"
+                [attr.aria-describedby]="isFieldInvalid('confirmPassword') ? 'signup-cpwd-err' : null"
+              />
+            </div>
+            <p *ngIf="isFieldInvalid('confirmPassword')" id="signup-cpwd-err" class="error-msg" role="alert">
+              {{ getFieldError('confirmPassword') }}
+            </p>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="submit-btn" id="signup-submit-btn">
+            <span>{{ role === 'jobseeker' ? 'Create Account' : 'Create Company Account' }}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+
+          <!-- Divider -->
+          <div class="auth-divider" role="separator" aria-label="or sign up with">
+            <span class="divider-line"></span>
+            <span class="divider-text">OR</span>
+            <span class="divider-line"></span>
+          </div>
+
+          <!-- Google Auth -->
+          <button type="button" class="google-btn" (click)="onGoogleAuth()" id="google-signup-btn">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path fill="#EA4335" d="M12 5.04c1.67 0 3.19.57 4.37 1.71l3.27-3.27C17.65 1.58 14.99 1 12 1 7.35 1 3.39 3.67 1.39 7.56l3.89 3.02c1.02-3.14 3.96-5.54 6.72-5.54z"/>
+              <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.44c-.28 1.48-1.07 2.73-2.31 3.57l3.58 2.78c2.09-1.93 3.3-4.77 3.3-7.79z"/>
+              <path fill="#FBBC05" d="M5.28 14.42c-.25-.76-.4-1.57-.4-2.42s.15-1.66.4-2.42L1.39 6.54C.5 8.18 0 10.02 0 12s.5 3.82 1.39 5.46l3.89-3.04z"/>
+              <path fill="#34A853" d="M12 23c3.24 0 5.97-1.08 7.96-2.91l-3.58-2.78c-.99.66-2.26 1.06-3.71 1.06-3.02 0-5.59-2.03-6.5-4.78L1.28 16.6C3.28 20.33 7.24 23 12 23z"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+          <!-- Toggle Mode -->
+          <div class="auth-switch">
+            <span>Already have an account?</span>
+            <button
+              type="button"
+              class="switch-link"
+              (click)="setMode('login')"
+              id="switch-to-login"
+            >
+              Sign in
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+      <!-- Right Column: HireSwipe Product Visual -->
+      <div class="auth-visual-panel" aria-hidden="true">
+        <div class="visual-content">
+          <div class="visual-badge">
+            <span class="badge-dot"></span>
+            <span>Intelligent Matching Engine</span>
+          </div>
+
+          <h2 class="visual-heading">
+            {{ role === 'jobseeker' ? 'Connect with opportunities that fit your ambition.' : 'Discover verified talent evaluated for your stack.' }}
+          </h2>
+          <p class="visual-subtext">
+            {{ role === 'jobseeker' ? 'One swipe matches your skill profile directly with engineering leads and hiring managers.' : 'Filter by verified tech stacks, salary expectations, and location with high-signal candidate cards.' }}
+          </p>
+
+          <!-- Interactive Style Card Preview -->
+          <div class="preview-card-wrapper">
+            <div class="preview-card">
+              <div class="preview-card-top">
+                <div class="company-brand-row">
+                  <div class="brand-avatar">
+                    <svg viewBox="0 0 24 24" width="22" height="22">
+                      <path fill="#EA4335" d="M12 5.04c1.67 0 3.19.57 4.37 1.71l3.27-3.27C17.65 1.58 14.99 1 12 1 7.35 1 3.39 3.67 1.39 7.56l3.89 3.02c1.02-3.14 3.96-5.54 6.72-5.54z"/>
+                      <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.27H12v4.51h6.44c-.28 1.48-1.07 2.73-2.31 3.57l3.58 2.78c2.09-1.93 3.3-4.77 3.3-7.79z"/>
+                      <path fill="#FBBC05" d="M5.28 14.42c-.25-.76-.4-1.57-.4-2.42s.15-1.66.4-2.42L1.39 6.54C.5 8.18 0 10.02 0 12s.5 3.82 1.39 5.46l3.89-3.04z"/>
+                      <path fill="#34A853" d="M12 23c3.24 0 5.97-1.08 7.96-2.91l-3.58-2.78c-.99.66-2.26 1.06-3.71 1.06-3.02 0-5.59-2.03-6.5-4.78L1.28 16.6C3.28 20.33 7.24 23 12 23z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="brand-name-wrap">
+                      <strong>Google</strong>
+                      <span class="verified-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.2 14.2l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4-7 7z"/>
+                        </svg>
+                      </span>
+                    </div>
+                    <span class="brand-type">Verified Employer</span>
+                  </div>
+                </div>
+                <div class="match-score-badge">
+                  <span>96% Match</span>
+                </div>
+              </div>
+
+              <h3 class="preview-role-title">Senior Full Stack Engineer</h3>
+              
+              <div class="preview-meta-row">
+                <span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  Bengaluru (Hybrid)
+                </span>
+                <span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                  </svg>
+                  Full-time
+                </span>
+              </div>
+
+              <div class="preview-tags">
+                <span class="tag">TypeScript</span>
+                <span class="tag">Angular</span>
+                <span class="tag">Node.js</span>
+                <span class="tag">Cloud</span>
+              </div>
+
+              <div class="preview-comp">
+                <span class="comp-label">Salary Band</span>
+                <span class="comp-val">₹28–42 LPA</span>
+              </div>
+
+              <!-- Swipe Controls Mock -->
+              <div class="preview-swipe-action">
+                <div class="mock-action-btn mock-pass">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span>Pass</span>
+                </div>
+                <div class="mock-action-btn mock-apply">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Apply Match</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtle background card stack layers -->
+            <div class="card-layer card-layer-1"></div>
+            <div class="card-layer card-layer-2"></div>
+          </div>
+
+          <!-- Feature Highlights -->
+          <div class="visual-features">
+            <div class="feat-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Zero spam direct connections</span>
+            </div>
+            <div class="feat-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Transparent compensation details</span>
+            </div>
+            <div class="feat-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Mutual match confirmation</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
