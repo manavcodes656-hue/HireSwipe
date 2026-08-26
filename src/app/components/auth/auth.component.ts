@@ -1,10 +1,37 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 export type AuthRole = 'jobseeker' | 'company';
 export type AuthMode = 'login' | 'signup';
+
+export interface CompanyCard {
+  id: string;
+  company: string;
+  typeLabel: string;
+  matchScore: string;
+  roleTitle: string;
+  location: string;
+  employmentType: string;
+  tags: string[];
+  salary: string;
+  logoType: 'google' | 'microsoft' | 'amazon' | 'meta' | 'apple';
+}
+
+export interface CandidateCard {
+  id: string;
+  name: string;
+  initials: string;
+  experience: string;
+  matchScore: string;
+  roleTitle: string;
+  location: string;
+  availability: string;
+  tags: string[];
+  salary: string;
+  avatarColor: string;
+}
 
 function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -23,7 +50,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.css',
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent implements OnInit, OnDestroy {
   role: AuthRole = 'jobseeker';
   mode: AuthMode = 'login';
 
@@ -33,6 +60,147 @@ export class AuthComponent implements OnInit {
   submitted = false;
   successMessage = '';
 
+  // Stacked Card Rotation State
+  activeCompanyIndex = 0;
+  activeCandidateIndex = 0;
+  readonly stackIndices = [0, 1, 2, 3, 4];
+  private autoCycleTimer: any = null;
+
+  get activeCardIndex(): number {
+    return this.role === 'jobseeker' ? this.activeCompanyIndex : this.activeCandidateIndex;
+  }
+
+  companyCards: CompanyCard[] = [
+    {
+      id: 'c1',
+      company: 'Google',
+      typeLabel: 'Verified Employer',
+      matchScore: '96%',
+      roleTitle: 'Senior Full Stack Engineer',
+      location: 'Bengaluru (Hybrid)',
+      employmentType: 'Full-time',
+      tags: ['TypeScript', 'Angular', 'Node.js', 'Cloud'],
+      salary: '₹28–42 LPA',
+      logoType: 'google',
+    },
+    {
+      id: 'c2',
+      company: 'Microsoft',
+      typeLabel: 'Verified Employer',
+      matchScore: '98%',
+      roleTitle: 'Senior Cloud Solutions Architect',
+      location: 'Hyderabad (Hybrid)',
+      employmentType: 'Full-time',
+      tags: ['Azure', 'Distributed Systems', 'C#', 'DevOps'],
+      salary: '₹32–48 LPA',
+      logoType: 'microsoft',
+    },
+    {
+      id: 'c3',
+      company: 'Amazon',
+      typeLabel: 'Verified Employer',
+      matchScore: '94%',
+      roleTitle: 'Lead Frontend Systems Engineer',
+      location: 'Bengaluru (On-site)',
+      employmentType: 'Full-time',
+      tags: ['React', 'TypeScript', 'Next.js', 'Web Perf'],
+      salary: '₹30–45 LPA',
+      logoType: 'amazon',
+    },
+    {
+      id: 'c4',
+      company: 'Meta',
+      typeLabel: 'Verified Employer',
+      matchScore: '97%',
+      roleTitle: 'Staff Infrastructure Engineer',
+      location: 'Remote / Bengaluru',
+      employmentType: 'Full-time',
+      tags: ['GraphQL', 'Rust', 'Distributed DB', 'Scale'],
+      salary: '₹36–54 LPA',
+      logoType: 'meta',
+    },
+    {
+      id: 'c5',
+      company: 'Apple',
+      typeLabel: 'Verified Employer',
+      matchScore: '95%',
+      roleTitle: 'iOS Core Platform Engineer',
+      location: 'Hyderabad (Hybrid)',
+      employmentType: 'Full-time',
+      tags: ['Swift', 'SwiftUI', 'CoreData', 'Metal'],
+      salary: '₹34–50 LPA',
+      logoType: 'apple',
+    },
+  ];
+
+  candidateCards: CandidateCard[] = [
+    {
+      id: 'u1',
+      name: 'Alex Morgan',
+      initials: 'AM',
+      experience: '5+ Years Experience',
+      matchScore: '98%',
+      roleTitle: 'Senior Frontend Developer',
+      location: 'Bengaluru (Hybrid)',
+      availability: 'Immediate (15 Days)',
+      tags: ['React', 'TypeScript', 'Next.js', 'TailwindCSS'],
+      salary: '₹28–36 LPA',
+      avatarColor: 'teal',
+    },
+    {
+      id: 'u2',
+      name: 'Priya Sharma',
+      initials: 'PS',
+      experience: '7+ Years Experience',
+      matchScore: '97%',
+      roleTitle: 'Backend Systems Architect',
+      location: 'Hyderabad (Remote)',
+      availability: 'Available in 30 Days',
+      tags: ['Go', 'Kubernetes', 'gRPC', 'PostgreSQL'],
+      salary: '₹38–48 LPA',
+      avatarColor: 'indigo',
+    },
+    {
+      id: 'u3',
+      name: 'David Chen',
+      initials: 'DC',
+      experience: '4+ Years Experience',
+      matchScore: '95%',
+      roleTitle: 'Full Stack Engineer',
+      location: 'Bengaluru (On-site)',
+      availability: 'Immediate',
+      tags: ['Angular', 'Node.js', 'PostgreSQL', 'AWS'],
+      salary: '₹24–32 LPA',
+      avatarColor: 'emerald',
+    },
+    {
+      id: 'u4',
+      name: 'Sarah Jenkins',
+      initials: 'SJ',
+      experience: '6+ Years Experience',
+      matchScore: '96%',
+      roleTitle: 'Lead UI/UX Product Designer',
+      location: 'Remote',
+      availability: 'Available in 15 Days',
+      tags: ['Design Systems', 'Figma', 'UX Research', 'Prototyping'],
+      salary: '₹26–35 LPA',
+      avatarColor: 'amber',
+    },
+    {
+      id: 'u5',
+      name: 'Rohan Mehta',
+      initials: 'RM',
+      experience: '4+ Years Experience',
+      matchScore: '94%',
+      roleTitle: 'Data & Machine Learning Engineer',
+      location: 'Gurugram (Hybrid)',
+      availability: 'Available in 30 Days',
+      tags: ['Python', 'PyTorch', 'FastAPI', 'MLOps'],
+      salary: '₹30–42 LPA',
+      avatarColor: 'sky',
+    },
+  ];
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -41,6 +209,7 @@ export class AuthComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForms();
+    this.startAutoCycle();
 
     this.route.queryParams.subscribe((params) => {
       if (params['role'] === 'company' || params['role'] === 'employer') {
@@ -55,6 +224,52 @@ export class AuthComponent implements OnInit {
         this.mode = 'login';
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.stopAutoCycle();
+  }
+
+  startAutoCycle(): void {
+    this.stopAutoCycle();
+    this.autoCycleTimer = setInterval(() => {
+      if (this.role === 'jobseeker') {
+        this.nextCompanyCard();
+      } else {
+        this.nextCandidateCard();
+      }
+    }, 3800);
+  }
+
+  stopAutoCycle(): void {
+    if (this.autoCycleTimer) {
+      clearInterval(this.autoCycleTimer);
+      this.autoCycleTimer = null;
+    }
+  }
+
+  nextCompanyCard(): void {
+    this.activeCompanyIndex = (this.activeCompanyIndex + 1) % this.companyCards.length;
+  }
+
+  nextCandidateCard(): void {
+    this.activeCandidateIndex = (this.activeCandidateIndex + 1) % this.candidateCards.length;
+  }
+
+  getVisibleCompanyCards(): { card: CompanyCard; pos: number }[] {
+    const total = this.companyCards.length;
+    return [0, 1, 2].map((offset) => ({
+      card: this.companyCards[(this.activeCompanyIndex + offset) % total],
+      pos: offset,
+    }));
+  }
+
+  getVisibleCandidateCards(): { card: CandidateCard; pos: number }[] {
+    const total = this.candidateCards.length;
+    return [0, 1, 2].map((offset) => ({
+      card: this.candidateCards[(this.activeCandidateIndex + offset) % total],
+      pos: offset,
+    }));
   }
 
   private initForms(): void {

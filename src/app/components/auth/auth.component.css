@@ -539,17 +539,53 @@
 /* Preview Card Stack */
 .preview-card-wrapper {
   position: relative;
-  margin: 12px 0;
+  margin: 12px 0 10px;
+  min-height: 315px;
 }
 
 .preview-card {
-  position: relative;
-  z-index: 3;
   background: #ffffff;
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 14px;
   padding: 22px;
   box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.07);
+}
+
+.preview-card-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.5s ease;
+  transform-origin: center bottom;
+}
+
+.preview-card-stack.pos-0 {
+  position: relative;
+  z-index: 3;
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.preview-card-stack.pos-1 {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  transform: translateY(10px) scale(0.96);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.preview-card-stack.pos-2 {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  transform: translateY(20px) scale(0.92);
+  opacity: 0.32;
+  pointer-events: none;
 }
 
 .preview-card-top {
@@ -574,7 +610,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
+
+.candidate-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border, #e2e8f0);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.avatar-teal { background: #f0fdf4; color: #0f766e; border-color: #bbf7d0; }
+.avatar-indigo { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+.avatar-emerald { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.avatar-amber { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.avatar-sky { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
 
 .brand-name-wrap {
   display: flex;
@@ -699,29 +756,27 @@
   color: #ffffff;
 }
 
-/* Underneath visual card layers */
-.card-layer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: #ffffff;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 14px;
+/* Stack Indicator Dots */
+.stack-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
 }
 
-.card-layer-1 {
-  top: 8px;
-  transform: scale(0.96);
-  opacity: 0.6;
-  z-index: 2;
+.stack-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.3s ease;
 }
 
-.card-layer-2 {
-  top: 16px;
-  transform: scale(0.92);
-  opacity: 0.3;
-  z-index: 1;
+.stack-dot.active {
+  width: 18px;
+  border-radius: 10px;
+  background: var(--accent, #0f766e);
 }
 
 /* Feature checklist */
