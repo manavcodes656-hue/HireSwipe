@@ -211,6 +211,17 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.initForms();
     this.startAutoCycle();
 
+    this.route.url.subscribe((segments) => {
+      if (segments.length > 0) {
+        const path = segments[0].path;
+        if (path === 'signup') {
+          this.mode = 'signup';
+        } else if (path === 'login') {
+          this.mode = 'login';
+        }
+      }
+    });
+
     this.route.queryParams.subscribe((params) => {
       if (params['role'] === 'company' || params['role'] === 'employer') {
         this.role = 'company';

@@ -5,5 +5,6 @@ import { AuthComponent } from './components/auth/auth.component';
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: AuthComponent },
+  { path: 'signup', component: AuthComponent },
   { path: '**', redirectTo: '' },
 ];

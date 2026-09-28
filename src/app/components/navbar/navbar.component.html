@@ -13,13 +13,13 @@
       <a href="#contact" [class.active]="activeId === 'contact'" (click)="closeMenu()">Contact</a>
       <div class="mobile-auth">
         <button class="login-btn" type="button" routerLink="/login" (click)="closeMenu()">Login</button>
-        <button class="signup-btn" type="button" routerLink="/login" (click)="closeMenu()">Get Started</button>
+        <button class="signup-btn" type="button" routerLink="/signup" (click)="closeMenu()">Get Started</button>
       </div>
     </div>
 
     <div class="nav-auth">
       <button class="login-btn" type="button" routerLink="/login">Login</button>
-      <button class="signup-btn" type="button" routerLink="/login">Get Started</button>
+      <button class="signup-btn" type="button" routerLink="/signup">Get Started</button>
     </div>
 
     <button class="hamburger" type="button" (click)="toggleMenu()" aria-label="Toggle menu">
