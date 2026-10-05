@@ -1,0 +1,168 @@
+<div class="dashboard-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Company Recruitment Overview</h1>
+      <p class="page-subtitle">Real-time candidate matches, active postings, and interview pipelines for {{ company?.name }}</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/company/jobs/create" class="btn-primary">
+        <span>+ Post New Job</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Attention Banner ("What needs my attention?") -->
+  <div class="attention-section" *ngIf="attentionItems.length > 0">
+    <div class="attention-header">
+      <div class="att-title">
+        <span class="pulse-dot"></span>
+        <h2>What Needs Your Attention Today</h2>
+      </div>
+      <span class="att-count">{{ attentionItems.length }} Action Items</span>
+    </div>
+
+    <div class="attention-grid">
+      <div *ngFor="let item of attentionItems" class="att-card" [ngClass]="item.type">
+        <span class="att-icon">{{ item.icon }}</span>
+        <div class="att-content">
+          <h4>{{ item.title }}</h4>
+          <p>{{ item.desc }}</p>
+        </div>
+        <a [routerLink]="item.link" class="att-btn">Review Now →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon-box teal">💼</div>
+      <div class="kpi-info">
+        <span class="kpi-label">Active Jobs</span>
+        <span class="kpi-val">{{ activeJobsCount }}</span>
+        <span class="kpi-sub font-teal">Live on candidate swipe feed</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box blue">📥</div>
+      <div class="kpi-info">
+        <span class="kpi-label">Total Applications</span>
+        <span class="kpi-val">{{ totalAppsCount }}</span>
+        <span class="kpi-sub font-blue">+8 new applications this week</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box amber">⭐</div>
+      <div class="kpi-info">
+        <span class="kpi-label">Shortlisted Candidates</span>
+        <span class="kpi-val">{{ shortlistedCount }}</span>
+        <span class="kpi-sub font-amber">High match confidence score</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box emerald">🔥</div>
+      <div class="kpi-info">
+        <span class="kpi-label">Mutual Matches</span>
+        <span class="kpi-val">{{ matchesCount }}</span>
+        <span class="kpi-sub font-emerald">Direct messaging enabled</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box purple">📅</div>
+      <div class="kpi-info">
+        <span class="kpi-label">Upcoming Interviews</span>
+        <span class="kpi-val">{{ upcomingInterviewsCount }}</span>
+        <span class="kpi-sub font-purple">Next session tomorrow</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-main-grid">
+    <!-- Recent Applications Table -->
+    <div class="dash-card col-span-2">
+      <div class="card-header">
+        <h3>Recent Applications</h3>
+        <a routerLink="/company/applications" class="view-all-link">View All Applications →</a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Applied Role</th>
+              <th>Match Score</th>
+              <th>Applied Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let app of applications">
+              <td>
+                <div class="cand-cell">
+                  <img [src]="app.profile?.avatar_url" [alt]="app.profile?.full_name" class="cand-avatar" />
+                  <div>
+                    <div class="cand-name">{{ app.profile?.full_name }}</div>
+                    <div class="cand-loc">{{ app.profile?.location }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="role-title">{{ app.job?.title }}</span>
+              </td>
+              <td>
+                <span class="match-score-pill">{{ app.match_score }}% Match</span>
+              </td>
+              <td>{{ app.applied_at | date:'mediumDate' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="app.status">{{ app.status | titlecase }}</span>
+              </td>
+              <td>
+                <a routerLink="/company/applications" class="table-btn">Review</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active Job Performance Overview -->
+    <div class="dash-card">
+      <div class="card-header">
+        <h3>Job Performance</h3>
+        <a routerLink="/company/jobs" class="view-all-link">Manage Jobs →</a>
+      </div>
+
+      <div class="jobs-perf-list">
+        <div *ngFor="let job of jobs" class="job-perf-item">
+          <div class="jpi-header">
+            <span class="jpi-title">{{ job.title }}</span>
+            <span class="jpi-status" [ngClass]="job.status">{{ job.status | uppercase }}</span>
+          </div>
+          <p class="jpi-meta">{{ job.employment_type | titlecase }} • {{ job.location }}</p>
+          <div class="jpi-stats-row">
+            <div class="jpi-stat">
+              <span class="num">{{ job.views_count }}</span>
+              <span class="lbl">Views</span>
+            </div>
+            <div class="jpi-stat">
+              <span class="num">{{ job.applications_count }}</span>
+              <span class="lbl">Applicants</span>
+            </div>
+            <div class="jpi-stat">
+              <span class="num">{{ job.matches_count }}</span>
+              <span class="lbl">Matches</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

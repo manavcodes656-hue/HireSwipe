@@ -1,0 +1,128 @@
+<div class="job-details-page" *ngIf="job">
+  <!-- Top Breadcrumb & Actions Bar -->
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb">
+        <a routerLink="/company/jobs">← Back to Jobs</a>
+      </div>
+      <div class="title-row">
+        <h1 class="page-title">{{ job.title }}</h1>
+        <span class="status-badge" [ngClass]="job.status">{{ job.status | uppercase }}</span>
+      </div>
+      <p class="page-subtitle">📍 {{ job.location }} ({{ job.remote_type | titlecase }}) • Posted on {{ job.created_at | date:'mediumDate' }}</p>
+    </div>
+
+    <div class="header-actions">
+      <a [routerLink]="['/company/jobs/edit', job.id]" class="btn-secondary">Edit Role</a>
+      <button *ngIf="job.status === 'active'" class="btn-warning" (click)="changeStatus('paused')">Pause Listing</button>
+      <button *ngIf="job.status === 'paused' || job.status === 'draft'" class="btn-primary" (click)="changeStatus('active')">Publish Role</button>
+      <button *ngIf="job.status !== 'closed'" class="btn-danger" (click)="changeStatus('closed')">Close Listing</button>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Row -->
+  <div class="metrics-row">
+    <div class="metric-card">
+      <span class="m-val">{{ job.views_count || 0 }}</span>
+      <span class="m-lbl">Total Candidate Views</span>
+    </div>
+
+    <div class="metric-card">
+      <span class="m-val">{{ jobApplications.length }}</span>
+      <span class="m-lbl">Applications Received</span>
+    </div>
+
+    <div class="metric-card">
+      <span class="m-val">{{ job.matches_count || 0 }}</span>
+      <span class="m-lbl">Swipe Matches</span>
+    </div>
+
+    <div class="metric-card">
+      <span class="m-val">{{ job.openings }}</span>
+      <span class="m-lbl">Target Openings</span>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="details-grid">
+    <!-- Left Column: Description & Qualifications -->
+    <div class="details-main">
+      <div class="section-card">
+        <h3>Role Overview & Responsibilities</h3>
+        <p class="desc-text">{{ job.description }}</p>
+      </div>
+
+      <div class="section-card">
+        <h3>Required Skills & Technologies</h3>
+        <div class="skills-wrap">
+          <span *ngFor="let s of job.skills" class="skill-tag">
+            {{ s.skill_name }}
+          </span>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>Key Qualifications & Requirements</h3>
+        <ul class="req-list">
+          <li *ngFor="let req of job.requirements">{{ req.requirement_text }}</li>
+        </ul>
+      </div>
+
+      <div class="section-card">
+        <h3>Perks & Employee Benefits</h3>
+        <div class="benefits-grid">
+          <div *ngFor="let ben of job.benefits" class="ben-card">
+            <span class="ben-icon">✨</span>
+            <span>{{ ben.benefit_text }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar: Spec summary & Candidates applied -->
+    <div class="details-sidebar">
+      <div class="section-card">
+        <h3>Job Specifications</h3>
+        <div class="spec-list">
+          <div class="spec-item">
+            <span class="lbl">Employment Type</span>
+            <span class="val">{{ job.employment_type | titlecase }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="lbl">Experience Level</span>
+            <span class="val">{{ job.experience_level | titlecase }} ({{ job.experience_min }}–{{ job.experience_max }} yrs)</span>
+          </div>
+          <div class="spec-item">
+            <span class="lbl">Salary Range</span>
+            <span class="val">{{ job.salary_currency }} {{ (job.salary_min / 100000) | number:'1.1-1' }}–{{ (job.salary_max / 100000) | number:'1.1-1' }} LPA</span>
+          </div>
+          <div class="spec-item">
+            <span class="lbl">Deadline</span>
+            <span class="val">{{ job.application_deadline | date:'mediumDate' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Applicant Quick Snapshot -->
+      <div class="section-card">
+        <div class="card-head-row">
+          <h3>Recent Applicants</h3>
+          <a routerLink="/company/applications" class="link-sm">View All</a>
+        </div>
+        <div class="applicant-list" *ngIf="jobApplications.length > 0">
+          <div *ngFor="let app of jobApplications" class="app-item">
+            <img [src]="app.profile?.avatar_url" [alt]="app.profile?.full_name" class="app-avatar" />
+            <div class="app-info">
+              <span class="app-name">{{ app.profile?.full_name }}</span>
+              <span class="app-score">{{ app.match_score }}% Match</span>
+            </div>
+            <a routerLink="/company/applications" class="btn-xs">Review</a>
+          </div>
+        </div>
+        <div *ngIf="jobApplications.length === 0" class="no-apps">
+          No applicants yet for this posting.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

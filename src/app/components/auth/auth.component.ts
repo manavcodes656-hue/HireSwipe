@@ -325,16 +325,25 @@ export class AuthComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const formVal = this.currentForm.value;
-    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
-    const actionName = this.mode === 'login' ? 'Signed in' : 'Account created';
-
-    this.successMessage = `${actionName} successfully as ${roleName} (${formVal.email}). Form validation passed.`;
+    // Navigate based on role + mode
+    if (this.role === 'company') {
+      if (this.mode === 'signup') {
+        this.router.navigate(['/company/onboarding']);
+      } else {
+        this.router.navigate(['/company/dashboard']);
+      }
+    } else {
+      // jobseeker flow (placeholder)
+      this.router.navigate(['/']);
+    }
   }
 
   onGoogleAuth(): void {
-    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
-    this.successMessage = `Google authentication initiated for ${roleName}. Ready for OAuth integration.`;
+    if (this.role === 'company') {
+      this.router.navigate(['/company/dashboard']);
+    } else {
+      this.router.navigate(['/']);
+    }
   }
 
   isFieldInvalid(fieldName: string): boolean {

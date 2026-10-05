@@ -1,0 +1,153 @@
+<div class="interviews-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Interview Schedule</h1>
+      <p class="page-subtitle">Schedule candidate rounds, manage video meeting links, and update interview outcomes</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openScheduleModal()">
+      + Schedule New Interview
+    </button>
+  </div>
+
+  <!-- Tabs Filter -->
+  <div class="tabs-card">
+    <button class="tab-btn" [class.active]="activeTab === 'scheduled'" (click)="setTab('scheduled')">
+      Upcoming Sessions
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'completed'" (click)="setTab('completed')">
+      Completed Rounds
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'cancelled'" (click)="setTab('cancelled')">
+      Cancelled
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="setTab('all')">
+      All Sessions
+    </button>
+  </div>
+
+  <!-- Interview Cards Grid -->
+  <div class="interviews-grid" *ngIf="filteredInterviews.length > 0">
+    <div *ngFor="let item of filteredInterviews" class="interview-card">
+      <div class="ic-header">
+        <span class="status-badge" [ngClass]="item.status">{{ item.status | uppercase }}</span>
+        <span class="date-chip">📅 {{ item.date }} at {{ item.time }} ({{ item.duration_minutes }} Mins)</span>
+      </div>
+
+      <div class="ic-body">
+        <div class="cand-row">
+          <img [src]="item.candidate_avatar" [alt]="item.candidate_name" class="cand-avatar" />
+          <div>
+            <h3 class="cand-name">{{ item.candidate_name }}</h3>
+            <p class="role-lbl">Role: <strong>{{ item.job_title }}</strong></p>
+          </div>
+        </div>
+
+        <div class="detail-rows">
+          <div class="dr-item">
+            <span class="lbl">Interviewers:</span>
+            <span class="val">{{ item.recruiter_name }}</span>
+          </div>
+
+          <div class="dr-item">
+            <span class="lbl">Location / Platform:</span>
+            <span class="val">{{ item.location }}</span>
+          </div>
+
+          <div class="dr-item" *ngIf="item.meeting_link">
+            <span class="lbl">Meeting Link:</span>
+            <a [href]="item.meeting_link" target="_blank" class="val-link">{{ item.meeting_link }}</a>
+          </div>
+
+          <div class="dr-item" *ngIf="item.notes">
+            <span class="lbl">Agenda / Notes:</span>
+            <p class="val-notes">{{ item.notes }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ic-actions">
+        <button *ngIf="item.status === 'scheduled'" type="button" class="btn-sm complete" (click)="markCompleted(item)">
+          ✓ Mark Completed
+        </button>
+        <button *ngIf="item.status === 'scheduled'" type="button" class="btn-sm reschedule" (click)="reschedule(item)">
+          🔄 Reschedule
+        </button>
+        <button *ngIf="item.status === 'scheduled'" type="button" class="btn-sm cancel" (click)="markCancelled(item)">
+          ✕ Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredInterviews.length === 0" class="empty-state">
+    <div class="empty-icon">📅</div>
+    <h3>No Interviews Found</h3>
+    <p>There are no interviews listed under the selected status tab.</p>
+  </div>
+
+  <!-- Schedule Modal -->
+  <div class="modal-backdrop" *ngIf="isScheduleModalOpen" (click)="closeScheduleModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Schedule Candidate Interview</h2>
+        <button type="button" class="close-btn" (click)="closeScheduleModal()">✕</button>
+      </div>
+
+      <form [formGroup]="scheduleForm" (ngSubmit)="submitSchedule()" class="modal-body">
+        <div class="form-group">
+          <label>Select Candidate & Application *</label>
+          <select formControlName="application_id">
+            <option value="" disabled>Select Applicant</option>
+            <option *ngFor="let app of applications" [value]="app.id">
+              {{ app.profile?.full_name }} — {{ app.job?.title }}
+            </option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Interview Date *</label>
+            <input type="date" formControlName="date" />
+          </div>
+          <div class="form-group">
+            <label>Time (IST) *</label>
+            <input type="time" formControlName="time" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Duration (Minutes) *</label>
+            <select formControlName="duration_minutes">
+              <option [value]="30">30 Minutes</option>
+              <option [value]="45">45 Minutes</option>
+              <option [value]="60">60 Minutes (1 Hour)</option>
+              <option [value]="90">90 Minutes</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Location / Mode *</label>
+            <input type="text" formControlName="location" placeholder="Google Meet (Virtual)" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Video Meeting Link *</label>
+          <input type="url" formControlName="meeting_link" placeholder="https://meet.google.com/xyz-abc-def" />
+        </div>
+
+        <div class="form-group">
+          <label>Agenda & Preparation Notes</label>
+          <textarea rows="3" formControlName="notes" placeholder="Technical live coding session details..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeScheduleModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Schedule & Notify Candidate →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

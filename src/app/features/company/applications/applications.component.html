@@ -1,0 +1,194 @@
+<div class="applications-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Candidate Applications</h1>
+      <p class="page-subtitle">Review incoming applications, evaluate cover letters, and manage recruitment pipeline status</p>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-card">
+    <div class="status-tabs">
+      <button class="s-tab" [class.active]="activeStatusFilter === 'all'" (click)="setStatusFilter('all')">
+        All <span class="pill">{{ getStatusCount('all') }}</span>
+      </button>
+      <button class="s-tab" [class.active]="activeStatusFilter === 'pending'" (click)="setStatusFilter('pending')">
+        Pending <span class="pill amber">{{ getStatusCount('pending') }}</span>
+      </button>
+      <button class="s-tab" [class.active]="activeStatusFilter === 'reviewing'" (click)="setStatusFilter('reviewing')">
+        Reviewing <span class="pill blue">{{ getStatusCount('reviewing') }}</span>
+      </button>
+      <button class="s-tab" [class.active]="activeStatusFilter === 'shortlisted'" (click)="setStatusFilter('shortlisted')">
+        Shortlisted <span class="pill green">{{ getStatusCount('shortlisted') }}</span>
+      </button>
+      <button class="s-tab" [class.active]="activeStatusFilter === 'interview'" (click)="setStatusFilter('interview')">
+        Interview <span class="pill teal">{{ getStatusCount('interview') }}</span>
+      </button>
+      <button class="s-tab" [class.active]="activeStatusFilter === 'rejected'" (click)="setStatusFilter('rejected')">
+        Rejected <span class="pill red">{{ getStatusCount('rejected') }}</span>
+      </button>
+      <button class="s-tab" [class.active]="activeStatusFilter === 'accepted'" (click)="setStatusFilter('accepted')">
+        Accepted <span class="pill green">{{ getStatusCount('accepted') }}</span>
+      </button>
+    </div>
+
+    <div class="controls-row">
+      <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" placeholder="Search by applicant or role..." [(ngModel)]="searchQuery" />
+      </div>
+
+      <select [(ngModel)]="selectedJobIdFilter" class="job-filter-select">
+        <option value="">All Job Roles</option>
+        <option *ngFor="let j of jobs" [value]="j.id">{{ j.title }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Applications Table -->
+  <div class="table-card" *ngIf="filteredApplications.length > 0">
+    <table class="app-table">
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Applied Job</th>
+          <th>Match Score</th>
+          <th>Applied Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let app of filteredApplications" (click)="openReviewDrawer(app)">
+          <td>
+            <div class="cand-cell">
+              <img [src]="app.profile?.avatar_url" [alt]="app.profile?.full_name" class="cand-avatar" />
+              <div>
+                <div class="cand-name">{{ app.profile?.full_name }}</div>
+                <div class="cand-headline">{{ app.profile?.headline }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="job-title">{{ app.job?.title }}</span>
+          </td>
+          <td>
+            <span class="score-pill">{{ app.match_score }}% Match</span>
+          </td>
+          <td>{{ app.applied_at | date:'mediumDate' }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="app.status">{{ app.status | titlecase }}</span>
+          </td>
+          <td>
+            <button type="button" class="btn-review" (click)="$event.stopPropagation(); openReviewDrawer(app)">
+              Review Application →
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredApplications.length === 0" class="empty-state">
+    <div class="empty-icon">📁</div>
+    <h3>No Applications Found</h3>
+    <p>There are no applications matching the selected criteria.</p>
+  </div>
+
+  <!-- Application Review Detail Drawer (Sections 11 & 12) -->
+  <div class="drawer-backdrop" *ngIf="isReviewDrawerOpen" (click)="closeReviewDrawer()">
+    <div class="drawer-card" (click)="$event.stopPropagation()" *ngIf="selectedApplication">
+      <div class="drawer-header">
+        <div>
+          <h2>Application Review</h2>
+          <p class="dh-sub">Applied for <strong>{{ selectedApplication.job?.title }}</strong></p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeReviewDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Candidate Overview Box -->
+        <div class="cand-hero-box">
+          <img [src]="selectedApplication.profile?.avatar_url" [alt]="selectedApplication.profile?.full_name" class="dh-avatar" />
+          <div class="dh-info">
+            <h3>{{ selectedApplication.profile?.full_name }}</h3>
+            <p>{{ selectedApplication.profile?.headline }}</p>
+            <p class="dh-loc">📍 {{ selectedApplication.profile?.location }} • {{ selectedApplication.profile?.experience_years }} Years Exp</p>
+          </div>
+          <div class="dh-score">
+            <span class="score-num">{{ selectedApplication.match_score }}%</span>
+            <span class="score-lbl">Match Score</span>
+          </div>
+        </div>
+
+        <!-- Current Status Banner -->
+        <div class="status-box">
+          <span>Current Pipeline Status:</span>
+          <span class="status-badge" [ngClass]="selectedApplication.status">{{ selectedApplication.status | uppercase }}</span>
+        </div>
+
+        <!-- Cover Letter -->
+        <div class="section-box" *ngIf="selectedApplication.cover_letter">
+          <h4>Cover Letter / Message</h4>
+          <p class="cover-text">"{{ selectedApplication.cover_letter }}"</p>
+        </div>
+
+        <!-- Candidate Skills -->
+        <div class="section-box">
+          <h4>Verified Technical Skills</h4>
+          <div class="skills-flex">
+            <span *ngFor="let s of selectedApplication.profile?.skills" class="skill-pill">{{ s }}</span>
+          </div>
+        </div>
+
+        <!-- Education -->
+        <div class="section-box">
+          <h4>Education</h4>
+          <p>{{ selectedApplication.profile?.education }}</p>
+        </div>
+
+        <!-- Status Change Control -->
+        <div class="section-box action-panel">
+          <h4>Recruiter Action & Status Update</h4>
+          <p class="action-help">Update candidate status to trigger automated candidate notifications and log notes.</p>
+
+          <div class="notes-input">
+            <label>Internal Notes (Optional)</label>
+            <input type="text" [(ngModel)]="statusNotes" placeholder="e.g. Strong candidate, passed technical code review..." />
+          </div>
+
+          <div class="action-buttons-grid">
+            <button type="button" class="act-btn review" (click)="updateStatus('reviewing')">🔍 Move to Reviewing</button>
+            <button type="button" class="act-btn shortlist" (click)="updateStatus('shortlisted')">⭐ Shortlist Candidate</button>
+            <button type="button" class="act-btn interview" (click)="scheduleInterviewForApp()">📅 Schedule Interview</button>
+            <button type="button" class="act-btn accept" (click)="updateStatus('accepted')">🎉 Accept & Extend Offer</button>
+            <button type="button" class="act-btn reject" (click)="updateStatus('rejected')">✕ Reject Application</button>
+          </div>
+        </div>
+
+        <!-- Status History Timeline -->
+        <div class="section-box">
+          <h4>Application Audit & Status History</h4>
+          <div class="history-timeline">
+            <div *ngFor="let h of selectedApplication.status_history" class="history-item">
+              <div class="h-dot"></div>
+              <div class="h-content">
+                <div class="h-title-row">
+                  <span class="status-badge" [ngClass]="h.status">{{ h.status | uppercase }}</span>
+                  <span class="h-by">by {{ h.changed_by }}</span>
+                  <span class="h-time">{{ h.changed_at | date:'short' }}</span>
+                </div>
+                <p class="h-notes" *ngIf="h.notes">{{ h.notes }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" class="btn-secondary" (click)="closeReviewDrawer()">Close Panel</button>
+      </div>
+    </div>
+  </div>
+</div>

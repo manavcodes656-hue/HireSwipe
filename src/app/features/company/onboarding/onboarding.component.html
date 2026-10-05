@@ -1,0 +1,325 @@
+<div class="onboarding-page">
+  <div class="onboarding-card">
+    <!-- Header -->
+    <div class="ob-header">
+      <div class="ob-brand">
+        <span class="mark">⚡</span>
+        <h2>Company Account Setup</h2>
+      </div>
+      <p class="ob-subtitle">Complete your employer profile to post jobs and swipe top talent on HireSwipe</p>
+    </div>
+
+    <!-- Stepper Tracker -->
+    <div class="stepper">
+      <div
+        *ngFor="let s of [1, 2, 3, 4, 5, 6]"
+        class="step-item"
+        [class.active]="currentStep === s"
+        [class.completed]="currentStep > s"
+        (click)="goToStep(s)"
+      >
+        <div class="step-num">
+          <span *ngIf="currentStep <= s">{{ s }}</span>
+          <svg *ngIf="currentStep > s" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <span class="step-title">
+          {{ s === 1 ? 'Info' : s === 2 ? 'Culture' : s === 3 ? 'Branding' : s === 4 ? 'Recruiter' : s === 5 ? 'Review' : 'Complete' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- STEP 1: Company Information -->
+    <form *ngIf="currentStep === 1" [formGroup]="step1Form" (ngSubmit)="nextStep()" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 1 — Company Information</h3>
+        <p>Basic organization details to verify your employer account</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group col-span-2">
+          <label>Company Name *</label>
+          <input type="text" formControlName="name" placeholder="e.g. TechPulse Innovations" />
+          <span class="err-text" *ngIf="step1Form.get('name')?.touched && step1Form.get('name')?.invalid">Company name is required.</span>
+        </div>
+
+        <div class="form-group">
+          <label>Industry *</label>
+          <select formControlName="industry">
+            <option value="" disabled>Select Industry</option>
+            <option *ngFor="let ind of industries" [value]="ind">{{ ind }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Company Size *</label>
+          <select formControlName="size">
+            <option value="" disabled>Select Size</option>
+            <option *ngFor="let sz of companySizes" [value]="sz">{{ sz }} employees</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Founded Year *</label>
+          <input type="number" formControlName="founded_year" placeholder="e.g. 2019" />
+        </div>
+
+        <div class="form-group">
+          <label>Website URL *</label>
+          <input type="url" formControlName="website" placeholder="https://company.com" />
+        </div>
+
+        <div class="form-group">
+          <label>Work Email *</label>
+          <input type="email" formControlName="email" placeholder="recruiting@company.com" />
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" formControlName="phone" placeholder="+91 98765 43210" />
+        </div>
+
+        <div class="form-group">
+          <label>City *</label>
+          <input type="text" formControlName="city" placeholder="Bengaluru" />
+        </div>
+
+        <div class="form-group">
+          <label>State *</label>
+          <input type="text" formControlName="state" placeholder="Karnataka" />
+        </div>
+
+        <div class="form-group">
+          <label>Country *</label>
+          <input type="text" formControlName="country" placeholder="India" />
+        </div>
+
+        <div class="form-group col-span-2">
+          <label>Primary Location Display *</label>
+          <input type="text" formControlName="location" placeholder="Bengaluru, India" />
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" routerLink="/company/dashboard">Cancel</button>
+        <button type="submit" class="btn-primary">Continue to Step 2 →</button>
+      </div>
+    </form>
+
+    <!-- STEP 2: Company Description -->
+    <form *ngIf="currentStep === 2" [formGroup]="step2Form" (ngSubmit)="nextStep()" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 2 — Company Description & Culture</h3>
+        <p>Tell candidates why your company is a great place to build their career</p>
+      </div>
+
+      <div class="form-stack">
+        <div class="form-group">
+          <label>About Company (Overview) *</label>
+          <textarea rows="4" formControlName="description" placeholder="Describe what your company builds, products, and core technology stack..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Company Culture & Environment *</label>
+          <textarea rows="3" formControlName="culture" placeholder="Describe workplace vibe, hybrid flexibility, autonomy, learning budget..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Mission Statement *</label>
+          <textarea rows="2" formControlName="mission" placeholder="What is your organization overarching mission?"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Core Values (Comma separated) *</label>
+          <input type="text" formControlName="valuesInput" placeholder="Engineering Excellence, Transparency, Customer Obsession" />
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
+        <button type="submit" class="btn-primary">Continue to Branding →</button>
+      </div>
+    </form>
+
+    <!-- STEP 3: Branding -->
+    <div *ngIf="currentStep === 3" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 3 — Company Branding & Visual Identity</h3>
+        <p>Upload your logo and preview how your employer card looks to candidates</p>
+      </div>
+
+      <div class="branding-container">
+        <div class="upload-section">
+          <label class="section-label">Company Logo</label>
+          <div class="logo-upload-box">
+            <img [src]="step3LogoUrl" alt="Company Logo" class="preview-logo" />
+            <div class="upload-btn-wrapper">
+              <button type="button" class="btn-secondary">Upload Logo Image</button>
+              <input type="file" (change)="onLogoUpload($event)" accept="image/*" />
+            </div>
+            <span class="help-text">JPG, PNG or SVG. Max 2MB.</span>
+          </div>
+        </div>
+
+        <!-- Branding Live Card Preview -->
+        <div class="preview-section">
+          <label class="section-label">Employer Card Preview</label>
+          <div class="card-preview">
+            <div class="cp-banner" [style.background-image]="step3BannerUrl ? 'url(' + step3BannerUrl + ')' : 'linear-gradient(135deg, #0f766e 0%, #0d655e 100%)'"></div>
+            <div class="cp-body">
+              <img [src]="step3LogoUrl" alt="Logo" class="cp-logo" />
+              <div class="cp-title-row">
+                <span class="cp-name">{{ step1Form.value.name || 'Company Name' }}</span>
+                <span class="cp-verified">✓ Verified</span>
+              </div>
+              <p class="cp-ind">{{ step1Form.value.industry }} • {{ step1Form.value.location }}</p>
+              <p class="cp-desc">{{ step2Form.value.description || 'Company description preview will render here...' }}</p>
+              <div class="cp-tags">
+                <span class="cp-tag" *ngFor="let val of (step2Form.value.valuesInput?.split(',') || [])">{{ val.trim() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
+        <button type="button" class="btn-primary" (click)="nextStep()">Continue to Recruiter Info →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Recruiter Information -->
+    <form *ngIf="currentStep === 4" [formGroup]="step4Form" (ngSubmit)="nextStep()" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 4 — Primary Recruiter Details</h3>
+        <p>Who will be managing hiring for this organization?</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group col-span-2">
+          <label>Full Name *</label>
+          <input type="text" formControlName="full_name" placeholder="Kshitij Sharma" />
+        </div>
+
+        <div class="form-group">
+          <label>Work Email *</label>
+          <input type="email" formControlName="email" placeholder="kshitij@company.com" />
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" formControlName="phone" placeholder="+91 98765 43210" />
+        </div>
+      </div>
+
+      <div class="role-selection">
+        <label class="section-label">Select Recruiter Role *</label>
+        <div class="role-cards-grid">
+          <label *ngFor="let r of recruiterRoles" class="role-card" [class.selected]="step4Form.value.role === r.value">
+            <input type="radio" formControlName="role" [value]="r.value" />
+            <div class="rc-content">
+              <div class="rc-title">{{ r.label }}</div>
+              <div class="rc-desc">{{ r.desc }}</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
+        <button type="submit" class="btn-primary">Review All Details →</button>
+      </div>
+    </form>
+
+    <!-- STEP 5: Review -->
+    <div *ngIf="currentStep === 5" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 5 — Review Company Details</h3>
+        <p>Verify all entered data before completing your onboarding</p>
+      </div>
+
+      <div class="review-grid">
+        <div class="review-card">
+          <div class="rc-head">
+            <h4>Company Information</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(1)">Edit</button>
+          </div>
+          <div class="rc-body">
+            <p><strong>Name:</strong> {{ step1Form.value.name }}</p>
+            <p><strong>Industry:</strong> {{ step1Form.value.industry }}</p>
+            <p><strong>Size:</strong> {{ step1Form.value.size }}</p>
+            <p><strong>Founded:</strong> {{ step1Form.value.founded_year }}</p>
+            <p><strong>Location:</strong> {{ step1Form.value.location }}</p>
+            <p><strong>Website:</strong> {{ step1Form.value.website }}</p>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <div class="rc-head">
+            <h4>Description & Mission</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(2)">Edit</button>
+          </div>
+          <div class="rc-body">
+            <p><strong>About:</strong> {{ step2Form.value.description }}</p>
+            <p><strong>Mission:</strong> {{ step2Form.value.mission }}</p>
+            <p><strong>Culture:</strong> {{ step2Form.value.culture }}</p>
+          </div>
+        </div>
+
+        <div class="review-card col-span-2">
+          <div class="rc-head">
+            <h4>Recruiter & Account Owner</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(4)">Edit</button>
+          </div>
+          <div class="rc-body inline-flex">
+            <p><strong>Name:</strong> {{ step4Form.value.full_name }}</p>
+            <p><strong>Role:</strong> {{ step4Form.value.role | uppercase }}</p>
+            <p><strong>Email:</strong> {{ step4Form.value.email }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
+        <button type="button" class="btn-primary" (click)="finishOnboarding()">Complete Onboarding & Save ✓</button>
+      </div>
+    </div>
+
+    <!-- STEP 6: Completion -->
+    <div *ngIf="currentStep === 6 || completionPercentage === 100" class="step-content text-center">
+      <div class="completion-box">
+        <div class="success-ring">✓</div>
+        <h3>Company Profile Complete!</h3>
+        <p>Your company profile is {{ completionPercentage }}% complete and ready for recruitment.</p>
+
+        <div class="meter-bar-container">
+          <div class="meter-fill" [style.width.%]="completionPercentage"></div>
+        </div>
+
+        <div class="completion-next-steps">
+          <h4>Recommended Next Steps</h4>
+          <div class="ns-grid">
+            <a routerLink="/company/jobs/create" class="ns-card">
+              <span class="ns-icon">📝</span>
+              <h5>Create First Job</h5>
+              <p>Post an active job listing to start receiving candidate swipes.</p>
+            </a>
+            <a routerLink="/company/team" class="ns-card">
+              <span class="ns-icon">👥</span>
+              <h5>Invite Team</h5>
+              <p>Add hiring managers and recruiters to your dashboard.</p>
+            </a>
+            <a routerLink="/company/dashboard" class="ns-card">
+              <span class="ns-icon">📊</span>
+              <h5>Go to Dashboard</h5>
+              <p>Monitor applications and manage interviews in real-time.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-actions center">
+        <button type="button" class="btn-primary lg" routerLink="/company/dashboard">Go to Company Dashboard →</button>
+      </div>
+    </div>
+  </div>
+</div>

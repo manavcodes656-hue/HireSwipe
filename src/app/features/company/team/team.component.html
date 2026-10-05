@@ -1,0 +1,124 @@
+<div class="team-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Team Management</h1>
+      <p class="page-subtitle">Invite hiring managers, assign recruiter roles, and manage team member access permissions</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openInviteModal()">
+      + Invite Team Member
+    </button>
+  </div>
+
+  <!-- Members Table Card -->
+  <div class="table-card">
+    <div class="card-title">
+      <h3>Active Team Members ({{ members.length }})</h3>
+    </div>
+
+    <table class="team-table">
+      <thead>
+        <tr>
+          <th>Team Member</th>
+          <th>Assigned Role</th>
+          <th>Status</th>
+          <th>Invited / Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of members">
+          <td>
+            <div class="mem-cell">
+              <img [src]="m.profile?.avatar_url" [alt]="m.profile?.full_name" class="mem-avatar" />
+              <div>
+                <div class="mem-name">{{ m.profile?.full_name }}</div>
+                <div class="mem-email">{{ m.profile?.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="role-badge" [ngClass]="m.role">{{ m.role | uppercase }}</span>
+          </td>
+          <td>
+            <span class="status-pill" [ngClass]="m.status">{{ m.status | titlecase }}</span>
+          </td>
+          <td>
+            <span class="date-text">{{ m.joined_at ? ('Joined ' + (m.joined_at | date:'shortDate')) : ('Invited ' + (m.invited_at | date:'shortDate')) }}</span>
+          </td>
+          <td>
+            <button
+              *ngIf="m.role !== 'owner'"
+              type="button"
+              class="btn-toggle"
+              [class.deactivate]="m.status === 'active'"
+              [class.activate]="m.status === 'deactivated'"
+              (click)="toggleStatus(m)"
+            >
+              {{ m.status === 'active' ? 'Deactivate' : 'Activate Member' }}
+            </button>
+            <span *ngIf="m.role === 'owner'" class="owner-lock">Account Owner</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Role Permissions Guide Section -->
+  <div class="section-heading">
+    <h3>Understanding Team Roles & Permissions</h3>
+    <p>Hierarchical access controls for secure recruiting collaboration</p>
+  </div>
+
+  <div class="roles-grid">
+    <div *ngFor="let r of rolesInfo" class="role-guide-card" [ngClass]="r.role">
+      <div class="rg-header">
+        <span class="rg-title">{{ r.title }}</span>
+        <span class="role-badge" [ngClass]="r.role">{{ r.role | uppercase }}</span>
+      </div>
+      <p class="rg-desc">{{ r.desc }}</p>
+
+      <div class="rg-perms">
+        <span class="perm-title">Access Rights:</span>
+        <ul>
+          <li *ngFor="let p of r.permissions">✓ {{ p }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite Modal -->
+  <div class="modal-backdrop" *ngIf="isInviteModalOpen" (click)="closeInviteModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Invite New Team Member</h2>
+        <button type="button" class="close-btn" (click)="closeInviteModal()">✕</button>
+      </div>
+
+      <form [formGroup]="inviteForm" (ngSubmit)="sendInvite()" class="modal-body">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" formControlName="full_name" placeholder="e.g. Rahul Sharma" />
+        </div>
+
+        <div class="form-group">
+          <label>Work Email Address *</label>
+          <input type="email" formControlName="email" placeholder="rahul@company.com" />
+        </div>
+
+        <div class="form-group">
+          <label>Assign Role *</label>
+          <select formControlName="role">
+            <option value="admin">Admin</option>
+            <option value="recruiter">Recruiter</option>
+            <option value="hiring_manager">Hiring Manager</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeInviteModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Send Email Invitation ✉️</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
