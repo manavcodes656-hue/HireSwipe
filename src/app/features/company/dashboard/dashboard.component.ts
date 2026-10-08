@@ -86,7 +86,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         title: `${pendingApps.length} New Application${pendingApps.length > 1 ? 's' : ''} Awaiting Review`,
         desc: `Candidates have swiped right for ${pendingApps[0]?.job?.title || 'your open roles'}.`,
         link: '/company/applications',
-        icon: '📥',
+        icon: 'applications',
         type: 'urgent',
       });
     }
@@ -97,7 +97,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         title: `Upcoming Interview: ${scheduledInts[0].candidate_name}`,
         desc: `Scheduled for ${scheduledInts[0].date} at ${scheduledInts[0].time} (${scheduledInts[0].job_title}).`,
         link: '/company/interviews',
-        icon: '📅',
+        icon: 'interviews',
         type: 'action',
       });
     }
@@ -107,7 +107,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         title: `Company Profile is ${this.company.completion_percentage}% Complete`,
         desc: 'Add company mission and culture details to boost application volume by 35%.',
         link: '/company/onboarding',
-        icon: '⚡',
+        icon: 'profile',
         type: 'info',
       });
     }

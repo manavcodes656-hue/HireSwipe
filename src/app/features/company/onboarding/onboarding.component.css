@@ -461,9 +461,17 @@
   box-shadow: var(--shadow-sm);
   transform: translateY(-2px);
 }
-
 .ns-icon {
-  font-size: 1.75rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  margin-bottom: 0.25rem;
 }
 
 .ns-card h5 {
