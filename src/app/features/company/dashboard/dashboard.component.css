@@ -108,9 +108,32 @@
 .att-card.urgent { border-color: #fecaca; background: #fff5f5; }
 .att-card.action { border-color: #e0f2fe; background: #f0f9ff; }
 .att-card.info { border-color: var(--border); }
-
 .att-icon {
-  font-size: 1.35rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.att-card.urgent .att-icon {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.att-card.action .att-icon {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.15);
+}
+
+.att-card.info .att-icon {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(15, 118, 110, 0.15);
 }
 
 .att-content {
