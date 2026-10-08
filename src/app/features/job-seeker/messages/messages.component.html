@@ -1,0 +1,118 @@
+<div class="chat-app-wrapper">
+  <!-- Left Panel: Conversation List -->
+  <aside class="chat-sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title"><i class="lucide lucide-message-square"></i> Recruiter Messages</h2>
+      <div class="search-box">
+        <i class="lucide lucide-search search-icon"></i>
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="Search conversations..."
+        />
+      </div>
+    </div>
+
+    <div class="conversations-list" *ngIf="filteredConversations().length > 0; else noConvs">
+      <div
+        class="conv-item-card"
+        *ngFor="let c of filteredConversations()"
+        [class.active]="c.id === selectedConversationId()"
+        (click)="selectConversation(c.id)"
+      >
+        <img [src]="c.company_logo" [alt]="c.company_name" class="conv-logo" />
+        <div class="conv-info">
+          <div class="conv-top-row">
+            <span class="company-name">{{ c.company_name }}</span>
+            <span class="conv-time">{{ c.last_message_at }}</span>
+          </div>
+          <span class="role-name">{{ c.job_title }}</span>
+          <p class="last-snippet">{{ c.last_message_snippet }}</p>
+        </div>
+        <span class="unread-badge" *ngIf="c.unread_count > 0">{{ c.unread_count }}</span>
+      </div>
+    </div>
+
+    <ng-template #noConvs>
+      <div class="empty-side-state">
+        <p>No conversations found.</p>
+      </div>
+    </ng-template>
+  </aside>
+
+  <!-- Right Panel: Active Chat Room -->
+  <main class="chat-main" *ngIf="activeConversation(); else noActiveConv">
+    <!-- Active Header -->
+    <header class="chat-header">
+      <img [src]="activeConversation()?.company_logo" [alt]="activeConversation()?.company_name" class="active-logo" />
+      <div class="active-info">
+        <h3>{{ activeConversation()?.company_name }}</h3>
+        <span class="active-sub">{{ activeConversation()?.job_title }} &bull; Direct Recruiting Channel</span>
+      </div>
+      <a routerLink="/job-seeker/matches" class="secondary-btn sm">View Match</a>
+    </header>
+
+    <!-- Message Feed -->
+    <div class="messages-feed">
+      <div
+        class="msg-bubble-wrap"
+        *ngFor="let m of activeMessages()"
+        [class.mine]="m.is_job_seeker"
+      >
+        <div class="msg-bubble">
+          <span class="sender-name" *ngIf="!m.is_job_seeker">{{ m.sender_name }}</span>
+          <p class="msg-text">{{ m.text }}</p>
+
+          <div class="msg-attachments" *ngIf="m.attachments && m.attachments.length > 0">
+            <div class="att-chip" *ngFor="let att of m.attachments">
+              <i class="lucide lucide-paperclip"></i>
+              <span>{{ att.name }} ({{ att.size }})</span>
+            </div>
+          </div>
+
+          <div class="msg-meta">
+            <span class="msg-time">{{ m.created_at }}</span>
+            <i class="lucide lucide-check-check read-icon" *ngIf="m.is_job_seeker"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attachment Preview Bar -->
+    <div class="attachment-preview-bar" *ngIf="attachedFile()">
+      <i class="lucide lucide-file-text"></i>
+      <span>{{ attachedFile()?.name }} ({{ attachedFile()?.size }})</span>
+      <button class="remove-att-btn" (click)="removeAttachment()"><i class="lucide lucide-x"></i></button>
+    </div>
+
+    <!-- Message Input Bar -->
+    <div class="chat-input-bar">
+      <label class="attach-btn" title="Attach file or CV">
+        <i class="lucide lucide-paperclip"></i>
+        <input type="file" (change)="onFileAttachment($event)" class="hidden-file-input" />
+      </label>
+
+      <input
+        type="text"
+        [ngModel]="messageText()"
+        (ngModelChange)="messageText.set($event)"
+        (keyup.enter)="sendMessage()"
+        placeholder="Type a message to recruiter..."
+      />
+
+      <button class="send-btn" (click)="sendMessage()" [disabled]="!messageText().trim() && !attachedFile()">
+        <i class="lucide lucide-send"></i> Send
+      </button>
+    </div>
+  </main>
+
+  <!-- Empty Chat State -->
+  <ng-template #noActiveConv>
+    <main class="chat-main empty-chat-stage">
+      <i class="lucide lucide-message-square empty-chat-icon"></i>
+      <h2>Select a conversation to start chatting</h2>
+      <p>Connect with hiring managers and talent leads directly.</p>
+    </main>
+  </ng-template>
+</div>

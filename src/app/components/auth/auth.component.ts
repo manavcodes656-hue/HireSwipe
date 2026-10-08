@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CompanyDataService } from '../../features/company/services/company-data.service';
 
 export type AuthRole = 'jobseeker' | 'company';
 export type AuthMode = 'login' | 'signup';
@@ -204,8 +205,9 @@ export class AuthComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private router: Router
-  ) {}
+    private router: Router,
+    private companyDataService: CompanyDataService
+  ) { }
 
   ngOnInit(): void {
     this.initForms();
@@ -340,12 +342,55 @@ export class AuthComponent implements OnInit, OnDestroy {
     const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
     const actionName = this.mode === 'login' ? 'Signed in' : 'Account created';
 
-    this.successMessage = `${actionName} successfully as ${roleName} (${formVal.email}). Form validation passed.`;
+    this.successMessage = `${actionName} successfully as ${roleName} (${formVal.email}). Redirecting...`;
+
+    if (this.role === 'jobseeker') {
+      setTimeout(() => {
+        if (this.mode === 'signup') {
+          this.router.navigate(['/job-seeker/onboarding']);
+        } else {
+          this.router.navigate(['/job-seeker/dashboard']);
+        }
+      }, 500);
+    } else if (this.role === 'company') {
+      setTimeout(() => {
+        if (this.mode === 'signup') {
+          this.companyDataService.setOnboardingCompleted(false);
+          this.router.navigate(['/company/onboarding']);
+        } else {
+          if (this.companyDataService.isOnboardingCompleted()) {
+            this.router.navigate(['/company/dashboard']);
+          } else {
+            this.router.navigate(['/company/onboarding']);
+          }
+        }
+      }, 500);
+    }
   }
 
   onGoogleAuth(): void {
     const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
-    this.successMessage = `Google authentication initiated for ${roleName}. Ready for OAuth integration.`;
+    this.successMessage = `Google authentication initiated for ${roleName}. Redirecting...`;
+    setTimeout(() => {
+      if (this.role === 'jobseeker') {
+        if (this.mode === 'signup') {
+          this.router.navigate(['/job-seeker/onboarding']);
+        } else {
+          this.router.navigate(['/job-seeker/dashboard']);
+        }
+      } else {
+        if (this.mode === 'signup') {
+          this.companyDataService.setOnboardingCompleted(false);
+          this.router.navigate(['/company/onboarding']);
+        } else {
+          if (this.companyDataService.isOnboardingCompleted()) {
+            this.router.navigate(['/company/dashboard']);
+          } else {
+            this.router.navigate(['/company/onboarding']);
+          }
+        }
+      }
+    }, 500);
   }
 
   isFieldInvalid(fieldName: string): boolean {

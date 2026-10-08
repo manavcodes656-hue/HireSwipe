@@ -1,0 +1,252 @@
+<div class="profile-page-wrapper">
+  <!-- Toast notification -->
+  <div class="toast-popup" *ngIf="toastMessage()">
+    <i class="lucide lucide-check-circle"></i>
+    <span>{{ toastMessage() }}</span>
+  </div>
+
+  <!-- Hero Profile Banner -->
+  <div class="profile-hero-card">
+    <div class="hero-avatar-wrap">
+      <img *ngIf="jobSeekerService.profile().avatar_url" [src]="jobSeekerService.profile().avatar_url" [alt]="jobSeekerService.profile().full_name" class="profile-avatar" />
+      <div *ngIf="!jobSeekerService.profile().avatar_url" class="profile-avatar avatar-fallback-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      <label class="camera-overlay-badge" title="Change profile photo">
+        <i class="lucide lucide-camera"></i>
+        <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
+      </label>
+      <span class="verified-badge" title="Verified Candidate"><i class="lucide lucide-check"></i></span>
+    </div>
+
+    <div class="hero-details">
+      <div class="hero-title-row">
+        <h2>{{ jobSeekerService.profile().full_name }}</h2>
+        <span class="role-pill">{{ jobSeekerService.jobSeekerProfile().current_job_title }}</span>
+      </div>
+      <p class="headline-text">{{ jobSeekerService.jobSeekerProfile().headline }}</p>
+
+      <div class="meta-row">
+        <span><i class="lucide lucide-map-pin"></i> {{ jobSeekerService.jobSeekerProfile().location }}</span>
+        <span><i class="lucide lucide-mail"></i> {{ jobSeekerService.profile().email }}</span>
+        <span><i class="lucide lucide-phone"></i> {{ jobSeekerService.profile().phone }}</span>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-circle">
+        <span>{{ jobSeekerService.jobSeekerProfile().profile_completion_pct }}%</span>
+      </div>
+      <span class="score-text">Profile Strength</span>
+      <a routerLink="/job-seeker/onboarding" class="secondary-btn sm mt-2">
+        <i class="lucide lucide-sliders"></i> Edit Wizard
+      </a>
+    </div>
+  </div>
+
+  <!-- Profile Sections Grid -->
+  <div class="profile-grid">
+    <!-- 1. Personal & Contact -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3><i class="lucide lucide-user"></i> Personal Details</h3>
+        <button class="icon-btn" (click)="openEditSection('personal')"><i class="lucide lucide-pencil"></i></button>
+      </div>
+      <div class="section-body">
+        <div class="info-row"><strong>Full Name:</strong> <span>{{ jobSeekerService.profile().full_name }}</span></div>
+        <div class="info-row"><strong>Email:</strong> <span>{{ jobSeekerService.profile().email }}</span></div>
+        <div class="info-row"><strong>Phone:</strong> <span>{{ jobSeekerService.profile().phone }}</span></div>
+        <div class="info-row"><strong>Location:</strong> <span>{{ jobSeekerService.jobSeekerProfile().location }}</span></div>
+        <div class="info-row"><strong>City/State/Country:</strong> <span>{{ jobSeekerService.jobSeekerProfile().city }}, {{ jobSeekerService.jobSeekerProfile().state }}, {{ jobSeekerService.jobSeekerProfile().country }}</span></div>
+      </div>
+    </div>
+
+    <!-- 2. Professional Summary & Links -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3><i class="lucide lucide-briefcase"></i> Professional Summary & Links</h3>
+        <button class="icon-btn" (click)="openEditSection('professional')"><i class="lucide lucide-pencil"></i></button>
+      </div>
+      <div class="section-body">
+        <div class="info-row"><strong>Current Company:</strong> <span>{{ jobSeekerService.jobSeekerProfile().current_company }}</span></div>
+        <div class="info-row"><strong>Experience:</strong> <span>{{ jobSeekerService.jobSeekerProfile().years_of_experience }} Years</span></div>
+        <div class="info-row"><strong>Notice Period:</strong> <span>{{ jobSeekerService.jobSeekerProfile().availability }}</span></div>
+        <p class="bio-text"><strong>Bio:</strong> {{ jobSeekerService.jobSeekerProfile().bio }}</p>
+        <div class="links-row">
+          <a [href]="jobSeekerService.jobSeekerProfile().linkedin_url" target="_blank" class="link-btn" *ngIf="jobSeekerService.jobSeekerProfile().linkedin_url">
+            <i class="lucide lucide-linkedin"></i> LinkedIn
+          </a>
+          <a [href]="jobSeekerService.jobSeekerProfile().github_url" target="_blank" class="link-btn" *ngIf="jobSeekerService.jobSeekerProfile().github_url">
+            <i class="lucide lucide-github"></i> GitHub
+          </a>
+          <a [href]="jobSeekerService.jobSeekerProfile().portfolio_url" target="_blank" class="link-btn" *ngIf="jobSeekerService.jobSeekerProfile().portfolio_url">
+            <i class="lucide lucide-globe"></i> Portfolio
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Education -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3><i class="lucide lucide-graduation-cap"></i> Education</h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Manage in Wizard</a>
+      </div>
+      <div class="section-body">
+        <div class="edu-item" *ngFor="let edu of jobSeekerService.educationList()">
+          <h4>{{ edu.degree }} in {{ edu.field_of_study }}</h4>
+          <span class="sub-text">{{ edu.institution }} &bull; {{ edu.start_date }} - {{ edu.end_date }}</span>
+          <span class="grade-pill" *ngIf="edu.grade">{{ edu.grade }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Experience -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3><i class="lucide lucide-layers"></i> Experience</h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Manage in Wizard</a>
+      </div>
+      <div class="section-body">
+        <div class="exp-item" *ngFor="let exp of jobSeekerService.experienceList()">
+          <h4>{{ exp.job_title }}</h4>
+          <span class="sub-text">{{ exp.company }} &bull; {{ exp.location }} ({{ exp.employment_type }})</span>
+          <span class="date-text">{{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }}</span>
+          <p class="desc-text">{{ exp.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Skills -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3><i class="lucide lucide-code"></i> Skills ({{ jobSeekerService.userSkills().length }})</h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Add Skills</a>
+      </div>
+      <div class="skills-wrap">
+        <div class="skill-tag-pill" *ngFor="let s of jobSeekerService.userSkills()">
+          <span class="sk-name">{{ s.skill_name }}</span>
+          <span class="sk-level">{{ s.proficiency_level }} ({{ s.years_of_experience }}y)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Resume -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3><i class="lucide lucide-file-text"></i> Primary Resume</h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Upload / Replace</a>
+      </div>
+      <div class="section-body">
+        <div class="resume-preview-box" *ngFor="let r of jobSeekerService.resumes()">
+          <i class="lucide lucide-file-pdf r-icon"></i>
+          <div>
+            <span class="r-name">{{ r.file_name }}</span>
+            <span class="r-meta">{{ r.file_size }} &bull; Primary Resume</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Preferences -->
+    <div class="profile-section-card full-width">
+      <div class="section-header">
+        <h3><i class="lucide lucide-sliders"></i> Match Preferences</h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Update Preferences</a>
+      </div>
+      <div class="pref-grid">
+        <div><strong>Target Role:</strong> {{ jobSeekerService.preferences().preferred_job_title }}</div>
+        <div><strong>Preferred Location:</strong> {{ jobSeekerService.preferences().preferred_location }}</div>
+        <div><strong>Remote Work Mode:</strong> {{ jobSeekerService.preferences().remote_preference | uppercase }}</div>
+        <div><strong>Salary Expectation:</strong> ₹{{ jobSeekerService.preferences().min_salary / 100000 }}–{{ jobSeekerService.preferences().max_salary / 100000 }} LPA</div>
+        <div><strong>Seniority:</strong> {{ jobSeekerService.preferences().experience_level | uppercase }}</div>
+        <div><strong>Open to Relocate:</strong> {{ jobSeekerService.preferences().willing_to_relocate ? 'Yes' : 'No' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Personal Modal -->
+<div class="modal-backdrop" *ngIf="editingSection() === 'personal'">
+  <div class="modal-box" [formGroup]="personalForm">
+    <div class="modal-header">
+      <h3>Edit Personal Information</h3>
+      <button class="close-btn" (click)="closeEditSection()"><i class="lucide lucide-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" formControlName="full_name" />
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" formControlName="phone" />
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" formControlName="location" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" formControlName="city" />
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" formControlName="state" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeEditSection()">Cancel</button>
+      <button class="primary-btn" (click)="savePersonal()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Professional Modal -->
+<div class="modal-backdrop" *ngIf="editingSection() === 'professional'">
+  <div class="modal-box" [formGroup]="professionalForm">
+    <div class="modal-header">
+      <h3>Edit Professional Summary</h3>
+      <button class="close-btn" (click)="closeEditSection()"><i class="lucide lucide-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Professional Headline</label>
+        <input type="text" formControlName="headline" />
+      </div>
+      <div class="form-group">
+        <label>Bio Summary</label>
+        <textarea rows="4" formControlName="bio"></textarea>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Current Job Title</label>
+          <input type="text" formControlName="current_job_title" />
+        </div>
+        <div class="form-group">
+          <label>Current Company</label>
+          <input type="text" formControlName="current_company" />
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>LinkedIn URL</label>
+          <input type="text" formControlName="linkedin_url" />
+        </div>
+        <div class="form-group">
+          <label>GitHub URL</label>
+          <input type="text" formControlName="github_url" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeEditSection()">Cancel</button>
+      <button class="primary-btn" (click)="saveProfessional()">Save Changes</button>
+    </div>
+  </div>
+</div>

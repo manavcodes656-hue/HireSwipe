@@ -1,0 +1,212 @@
+<div class="company-shell">
+  <!-- Top Navigation Header -->
+  <header class="top-header">
+    <div class="header-container">
+      <div class="brand-group">
+        <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Toggle navigation">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <a routerLink="/company/dashboard" class="brand-logo">
+          <img src="logo.png" alt="HireSwipe" class="brand-logo-img" />
+          <span class="logo-text">Hire<span class="highlight">Swipe</span></span>
+        </a>
+        <span class="recruiter-badge">Recruiter Portal</span>
+      </div>
+
+      <div class="company-switcher" routerLink="/company/profile">
+        <img [src]="company?.logo_url" [alt]="company?.name" class="company-mini-logo" />
+        <div class="company-info-text">
+          <div class="company-name-row">
+            <span class="comp-name">{{ company?.name }}</span>
+            <span class="verified-icon" title="Verified Employer">✓</span>
+          </div>
+          <span class="comp-completion">{{ company?.completion_percentage }}% Profile Complete</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Candidate Swipe Action Button -->
+        <a routerLink="/company/swipe" class="btn-swipe" routerLinkActive="active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Candidate Swipe</span>
+        </a>
+
+        <!-- Quick Action Create Job Button -->
+        <a routerLink="/company/jobs/create" class="btn-create-job">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Post Job</span>
+        </a>
+
+        <!-- Notifications Dropdown Trigger (Bell Button) -->
+        <div class="notif-wrapper">
+          <button class="icon-btn" (click)="toggleNotifMenu()" aria-label="Notifications">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="badge-dot" *ngIf="unreadNotifCount > 0">{{ unreadNotifCount }}</span>
+          </button>
+
+          <!-- Notifications Dropdown Panel -->
+          <div class="notif-dropdown" *ngIf="isNotifMenuOpen">
+            <div class="notif-header">
+              <h3>Notifications</h3>
+              <button class="text-link" (click)="markAllRead()">Mark all as read</button>
+            </div>
+            <div class="notif-list">
+              <div
+                *ngFor="let n of notifications"
+                class="notif-item"
+                [class.unread]="!n.is_read"
+                (click)="markNotifRead(n, $event)"
+              >
+                <div class="notif-icon-box" [ngClass]="n.type">
+                  <svg *ngIf="n.type === 'application'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  <svg *ngIf="n.type === 'match'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                  <svg *ngIf="n.type === 'message'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  <svg *ngIf="n.type === 'interview'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <svg *ngIf="n.type === 'job_activity' || n.type === 'system'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
+                <div class="notif-content">
+                  <div class="notif-title">{{ n.title }}</div>
+                  <div class="notif-msg">{{ n.message }}</div>
+                  <div class="notif-time">{{ n.created_at | date:'shortTime' }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="notif-footer">
+              <a routerLink="/company/notifications" (click)="isNotifMenuOpen = false">View All Notifications →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages Icon Button -->
+        <div class="notif-wrapper">
+          <a routerLink="/company/messages" class="icon-btn" aria-label="Messages">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span class="badge-dot teal" *ngIf="unreadMsgCount > 0">{{ unreadMsgCount }}</span>
+          </a>
+        </div>
+
+        <!-- Recruiter Profile Menu -->
+        <div class="profile-wrapper">
+          <button class="profile-btn" (click)="toggleProfileMenu()">
+            <img [src]="recruiterProfile?.avatar_url" [alt]="recruiterProfile?.full_name" class="avatar-img" />
+            <span class="user-name">{{ recruiterProfile?.full_name }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+
+          <div class="profile-dropdown" *ngIf="isProfileMenuOpen">
+            <div class="dropdown-header">
+              <p class="dh-name">{{ recruiterProfile?.full_name }}</p>
+              <p class="dh-email">{{ recruiterProfile?.email }}</p>
+              <span class="dh-role">Company Owner</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a routerLink="/company/profile" class="dropdown-item" (click)="isProfileMenuOpen = false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Company Profile</span>
+            </a>
+            <a routerLink="/company/onboarding" class="dropdown-item" (click)="isProfileMenuOpen = false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span>Onboarding Wizard</span>
+            </a>
+            <a routerLink="/company/settings" class="dropdown-item" (click)="isProfileMenuOpen = false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>Account & Settings</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item logout-btn" (click)="logout()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Shell Body -->
+  <div class="shell-body">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" [class.open]="isMobileMenuOpen">
+      <nav class="nav-menu">
+        <div class="nav-section-label">RECRUITMENT HUBS</div>
+
+        <a routerLink="/company/dashboard" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a routerLink="/company/swipe" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Candidate Swipe</span>
+          <span class="nav-badge teal">Swipe</span>
+        </a>
+
+        <a routerLink="/company/jobs" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span>Jobs Management</span>
+        </a>
+
+        <a routerLink="/company/candidates" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span>Candidate Discovery</span>
+        </a>
+
+        <a routerLink="/company/applications" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>Applications</span>
+          <span class="nav-badge" *ngIf="pendingAppsCount > 0">{{ pendingAppsCount }}</span>
+        </a>
+
+        <a routerLink="/company/matches" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span>Swipe Matches</span>
+        </a>
+
+        <a routerLink="/company/messages" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <span>Messages</span>
+          <span class="nav-badge teal" *ngIf="unreadMsgCount > 0">{{ unreadMsgCount }}</span>
+        </a>
+
+        <a routerLink="/company/interviews" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Interviews</span>
+        </a>
+
+        <div class="nav-section-label">ADMINISTRATION</div>
+
+        <a routerLink="/company/team" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="17" y1="11" x2="23" y2="11"></line></svg>
+          <span>Team Management</span>
+        </a>
+
+        <a routerLink="/company/profile" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>Company Profile</span>
+        </a>
+
+        <a routerLink="/company/settings" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <span>Company Settings</span>
+        </a>
+      </nav>
+
+      <!-- Onboarding completion status footer card -->
+      <div class="sidebar-completion-card" *ngIf="company?.completion_percentage < 100">
+        <div class="scc-header">
+          <span>Onboarding Progress</span>
+          <span class="scc-pct">{{ company?.completion_percentage }}%</span>
+        </div>
+        <div class="scc-progress-bar">
+          <div class="scc-fill" [style.width.%]="company?.completion_percentage"></div>
+        </div>
+        <a routerLink="/company/onboarding" class="scc-link">Complete Setup →</a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

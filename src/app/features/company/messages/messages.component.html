@@ -1,0 +1,92 @@
+<div class="messages-page">
+  <div class="messages-container">
+    <!-- Conversation List Sidebar -->
+    <div class="conv-sidebar">
+      <div class="cs-header">
+        <h2>Candidate Inbox</h2>
+        <div class="search-box">
+          <input type="text" placeholder="Search chats by candidate..." [(ngModel)]="searchQuery" />
+        </div>
+      </div>
+
+      <div class="conv-list">
+        <div
+          *ngFor="let c of filteredConversations"
+          class="conv-item"
+          [class.active]="activeConversation?.id === c.id"
+          (click)="selectConversation(c)"
+        >
+          <img [src]="c.candidate_avatar" [alt]="c.candidate_name" class="conv-avatar" />
+          <div class="conv-info">
+            <div class="ci-top">
+              <span class="cand-name">{{ c.candidate_name }}</span>
+              <span class="conv-time">{{ c.last_message_at | date:'shortTime' }}</span>
+            </div>
+            <span class="job-tag">{{ c.job_title }}</span>
+            <p class="last-msg">{{ c.last_message }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Chat View -->
+    <div class="chat-view" *ngIf="activeConversation; else noChatSelected">
+      <div class="chat-header">
+        <div class="ch-cand">
+          <img [src]="activeConversation.candidate_avatar" [alt]="activeConversation.candidate_name" class="ch-avatar" />
+          <div>
+            <h3>{{ activeConversation.candidate_name }}</h3>
+            <p class="ch-sub">{{ activeConversation.candidate_role }} • Role: <strong>{{ activeConversation.job_title }}</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Thread -->
+      <div class="messages-thread">
+        <div
+          *ngFor="let msg of activeMessages"
+          class="msg-bubble-wrapper"
+          [class.outgoing]="msg.sender_type === 'company'"
+          [class.incoming]="msg.sender_type === 'candidate'"
+        >
+          <div class="msg-bubble">
+            <div class="msg-sender">{{ msg.sender_name }}</div>
+            <div class="msg-content">{{ msg.content }}</div>
+
+            <!-- Attachments -->
+            <div class="msg-attachments" *ngIf="msg.attachments && msg.attachments.length > 0">
+              <div *ngFor="let att of msg.attachments" class="att-chip">
+                <span>📎 {{ att.name }}</span>
+              </div>
+            </div>
+
+            <div class="msg-meta">
+              <span class="msg-time">{{ msg.sent_at | date:'shortTime' }}</span>
+              <span class="read-status" *ngIf="msg.sender_type === 'company'">✓✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Composer -->
+      <div class="chat-composer">
+        <button type="button" class="btn-attach" (click)="sendAttachmentSimulation()" title="Attach Document">📎</button>
+        <input
+          type="text"
+          placeholder="Type your message to candidate..."
+          [(ngModel)]="messageText"
+          (keyup.enter)="sendMessage()"
+        />
+        <button type="button" class="btn-send" (click)="sendMessage()">Send Message</button>
+      </div>
+    </div>
+
+    <ng-template #noChatSelected>
+      <div class="no-chat-selected">
+        <div class="icon">💬</div>
+        <h3>Select a Candidate Conversation</h3>
+        <p>Choose a chat from the left inbox to view message history and send interview invites.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

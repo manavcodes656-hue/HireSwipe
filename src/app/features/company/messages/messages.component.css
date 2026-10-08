@@ -1,0 +1,176 @@
+.messages-page {
+  height: calc(100vh - 120px);
+}
+
+.messages-container {
+  display: flex;
+  height: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.conv-sidebar {
+  width: 320px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.cs-header {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cs-header h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.75rem; }
+
+.search-box input {
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.conv-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conv-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.conv-item:hover { background: var(--surface); }
+.conv-item.active { background: var(--accent-tint); border-left: 3px solid var(--accent); }
+
+.conv-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.conv-info { flex: 1; overflow: hidden; }
+
+.ci-top { display: flex; justify-content: space-between; align-items: center; }
+.cand-name { font-weight: 700; font-size: 0.875rem; color: var(--text); }
+.conv-time { font-size: 0.7rem; color: var(--muted); }
+
+.job-tag { font-size: 0.7rem; color: var(--accent); font-weight: 600; display: block; margin-top: 0.1rem; }
+.last-msg { font-size: 0.775rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 0.25rem; }
+
+.chat-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.chat-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ch-cand { display: flex; align-items: center; gap: 0.75rem; }
+.ch-avatar { width: 44px; height: 44px; border-radius: 9999px; object-fit: cover; }
+.ch-cand h3 { font-size: 1rem; font-weight: 700; }
+.ch-sub { font-size: 0.775rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
+.messages-thread {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--bg);
+}
+
+.msg-bubble-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.msg-bubble-wrapper.outgoing { align-self: flex-end; }
+.msg-bubble-wrapper.incoming { align-self: flex-start; }
+
+.msg-bubble {
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  box-shadow: var(--shadow-xs);
+}
+
+.outgoing .msg-bubble {
+  background: var(--accent);
+  color: #ffffff;
+  border-bottom-right-radius: 2px;
+}
+
+.incoming .msg-bubble {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 2px;
+}
+
+.msg-sender { font-size: 0.7rem; font-weight: 700; opacity: 0.85; margin-bottom: 0.25rem; }
+.msg-meta { display: flex; justify-content: flex-end; align-items: center; gap: 0.35rem; margin-top: 0.35rem; font-size: 0.675rem; opacity: 0.8; }
+
+.att-chip { background: rgba(255, 255, 255, 0.2); padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.75rem; margin-top: 0.5rem; }
+
+.chat-composer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-attach { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; width: 40px; height: 40px; cursor: pointer; font-size: 1.1rem; }
+
+.chat-composer input {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.btn-send {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.no-chat-selected {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.no-chat-selected .icon { font-size: 3rem; margin-bottom: 1rem; }

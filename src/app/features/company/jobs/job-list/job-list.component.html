@@ -1,0 +1,129 @@
+<div class="jobs-page">
+  <!-- Top Bar -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Company Job Openings</h1>
+      <p class="page-subtitle">Manage active postings, review draft roles, and monitor applicant engagement</p>
+    </div>
+    <a routerLink="/company/jobs/create" class="btn-primary">
+      <span>+ Post New Job</span>
+    </a>
+  </div>
+
+  <!-- Filter Controls -->
+  <div class="controls-card">
+    <div class="tabs-group">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'all'"
+        (click)="setTab('all')"
+      >
+        All Jobs <span class="count-pill">{{ getTabCount('all') }}</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'active'"
+        (click)="setTab('active')"
+      >
+        Active <span class="count-pill teal">{{ getTabCount('active') }}</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'draft'"
+        (click)="setTab('draft')"
+      >
+        Draft <span class="count-pill gray">{{ getTabCount('draft') }}</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'paused'"
+        (click)="setTab('paused')"
+      >
+        Paused <span class="count-pill amber">{{ getTabCount('paused') }}</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'closed'"
+        (click)="setTab('closed')"
+      >
+        Closed <span class="count-pill red">{{ getTabCount('closed') }}</span>
+      </button>
+    </div>
+
+    <div class="search-box">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input
+        type="text"
+        placeholder="Filter by job title or location..."
+        [(ngModel)]="searchQuery"
+      />
+    </div>
+  </div>
+
+  <!-- Jobs Grid -->
+  <div class="jobs-grid" *ngIf="filteredJobs.length > 0">
+    <div *ngFor="let job of filteredJobs" class="job-card">
+      <div class="jc-header">
+        <div>
+          <span class="status-badge" [ngClass]="job.status">{{ job.status | uppercase }}</span>
+          <h3 class="job-title">
+            <a [routerLink]="['/company/jobs', job.id]">{{ job.title }}</a>
+          </h3>
+          <p class="job-loc">📍 {{ job.location }} ({{ job.remote_type | titlecase }}) • {{ job.employment_type | titlecase }}</p>
+        </div>
+      </div>
+
+      <div class="jc-skills">
+        <span *ngFor="let s of job.skills" class="skill-pill">{{ s.skill_name }}</span>
+      </div>
+
+      <div class="jc-salary">
+        💰 {{ job.salary_currency }} {{ job.salary_min / 100000 | number:'1.1-1' }}–{{ job.salary_max / 100000 | number:'1.1-1' }} LPA • {{ job.experience_min }}–{{ job.experience_max }} Yrs Exp
+      </div>
+
+      <div class="jc-stats">
+        <div class="stat-box">
+          <span class="val">{{ job.views_count || 0 }}</span>
+          <span class="lbl">Views</span>
+        </div>
+        <div class="stat-box">
+          <span class="val">{{ job.applications_count || 0 }}</span>
+          <span class="lbl">Applicants</span>
+        </div>
+        <div class="stat-box">
+          <span class="val">{{ job.matches_count || 0 }}</span>
+          <span class="lbl">Matches</span>
+        </div>
+      </div>
+
+      <div class="jc-actions">
+        <a [routerLink]="['/company/jobs', job.id]" class="btn-action">View Details</a>
+        <a [routerLink]="['/company/jobs/edit', job.id]" class="btn-action">Edit</a>
+
+        <div class="dropdown-actions">
+          <button *ngIf="job.status === 'draft' || job.status === 'paused'" class="btn-action publish" (click)="changeStatus(job, 'active', $event)">
+            Publish
+          </button>
+          <button *ngIf="job.status === 'active'" class="btn-action pause" (click)="changeStatus(job, 'paused', $event)">
+            Pause
+          </button>
+          <button *ngIf="job.status !== 'closed'" class="btn-action close" (click)="changeStatus(job, 'closed', $event)">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredJobs.length === 0" class="empty-state">
+    <div class="empty-icon">💼</div>
+    <h3>No Jobs Found</h3>
+    <p>There are no jobs matching the selected status tab or search query.</p>
+    <a routerLink="/company/jobs/create" class="btn-primary">Post a New Job</a>
+  </div>
+</div>

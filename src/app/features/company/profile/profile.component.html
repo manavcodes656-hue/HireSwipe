@@ -1,0 +1,193 @@
+<div class="profile-page">
+  <div class="toast-banner" *ngIf="isSavedToast">
+    <span>✓ Company Profile updated successfully! Completion score updated.</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Company Profile & Employer Brand</h1>
+      <p class="page-subtitle">Manage public details, organization overview, branding visuals, and contact information</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="saveProfile()">
+      Save Profile Changes ✓
+    </button>
+  </div>
+
+  <!-- Hero Preview Banner -->
+  <div class="profile-hero-card">
+    <div class="ph-cover" [style.background-image]="company?.banner_url ? 'url(' + company.banner_url + ')' : 'linear-gradient(135deg, #0f766e 0%, #0d655e 100%)'"></div>
+    <div class="ph-details">
+      <img [src]="company?.logo_url" [alt]="company?.name" class="ph-logo" />
+      <div class="ph-text">
+        <div class="ph-title-row">
+          <h2>{{ company?.name }}</h2>
+          <span class="verified-tag">✓ Verified Employer</span>
+        </div>
+        <p class="ph-meta">{{ company?.industry }} • {{ company?.location }} • {{ company?.size }} Employees</p>
+      </div>
+
+      <div class="ph-score-box">
+        <span class="score-num">{{ company?.completion_percentage }}%</span>
+        <span class="score-lbl">Profile Completion</span>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="profile-form-grid">
+    <!-- Left Column -->
+    <div class="form-col">
+      <!-- Company Information -->
+      <div class="form-card">
+        <h3>1. Basic Organization Information</h3>
+
+        <div class="form-group">
+          <label>Company Name *</label>
+          <input type="text" formControlName="name" />
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Industry *</label>
+            <input type="text" formControlName="industry" />
+          </div>
+
+          <div class="form-group">
+            <label>Company Size *</label>
+            <input type="text" formControlName="size" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Founded Year *</label>
+            <input type="number" formControlName="founded_year" />
+          </div>
+
+          <div class="form-group">
+            <label>Website URL *</label>
+            <input type="url" formControlName="website" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Description & Mission -->
+      <div class="form-card">
+        <h3>2. Description, Culture & Mission</h3>
+
+        <div class="form-group">
+          <label>Company Overview *</label>
+          <textarea rows="4" formControlName="description"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Workplace Culture *</label>
+          <textarea rows="3" formControlName="culture"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Mission Statement *</label>
+          <textarea rows="2" formControlName="mission"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Core Values (Comma separated)</label>
+          <input type="text" formControlName="valuesInput" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="form-col">
+      <!-- Contact Info -->
+      <div class="form-card">
+        <h3>3. Contact Information & Location</h3>
+
+        <div class="form-group">
+          <label>Primary Recruiting Email *</label>
+          <input type="email" formControlName="email" />
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" formControlName="phone" />
+        </div>
+
+        <div class="form-group">
+          <label>Display Location *</label>
+          <input type="text" formControlName="location" />
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" formControlName="city" />
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" formControlName="state" />
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <input type="text" formControlName="country" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Branding Assets -->
+      <div class="form-card">
+        <h3>4. Branding & Visual Assets</h3>
+
+        <!-- Profile Photo Upload UI Pattern -->
+        <div class="profile-photo-upload-container">
+          <div class="photo-avatar-wrapper">
+            <img
+              *ngIf="profileForm.get('logo_url')?.value"
+              [src]="profileForm.get('logo_url')?.value"
+              alt="Company Logo Preview"
+              class="photo-avatar-img"
+            />
+            <div *ngIf="!profileForm.get('logo_url')?.value" class="photo-avatar-img avatar-fallback-box">
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+            </div>
+            <label class="camera-overlay-badge" title="Upload company logo">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              <input type="file" (change)="onLogoFileSelected($event)" accept="image/*" class="hidden-file-input" />
+            </label>
+          </div>
+
+          <div class="photo-controls-content">
+            <h3 class="photo-title">Company Logo Photo</h3>
+            <p class="photo-desc">Upload a logo image. Visually displayed across candidate cards, header, and recruiter messaging.</p>
+
+            <div class="photo-action-buttons">
+              <label class="btn-secondary sm upload-photo-btn">
+                Upload Photo
+                <input type="file" (change)="onLogoFileSelected($event)" accept="image/*" class="hidden-file-input" />
+              </label>
+
+              <button type="button" class="btn-tertiary sm" (click)="removeLogo()" *ngIf="profileForm.get('logo_url')?.value">
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group mt-4">
+          <label>Logo Image URL (Optional Direct Link)</label>
+          <input type="text" formControlName="logo_url" placeholder="https://..." />
+        </div>
+
+        <div class="form-group">
+          <label>Cover Banner Image URL</label>
+          <input type="text" formControlName="banner_url" placeholder="https://..." />
+        </div>
+
+        <button type="submit" class="btn-primary full-width">
+          Update Profile Details ✓
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

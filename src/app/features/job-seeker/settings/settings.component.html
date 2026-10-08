@@ -1,0 +1,135 @@
+<div class="settings-page-wrapper">
+  <div class="toast-popup" *ngIf="toastMsg()">
+    <i class="lucide lucide-check-circle"></i>
+    <span>{{ toastMsg() }}</span>
+  </div>
+
+  <div class="page-header-card">
+    <div>
+      <h1 class="page-title"><i class="lucide lucide-settings"></i> Candidate Settings</h1>
+      <p class="page-sub">Manage your account preferences, privacy toggles, and notification alerts.</p>
+    </div>
+  </div>
+
+  <div class="settings-sections">
+    <!-- 1. Account Settings -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h3><i class="lucide lucide-user-check"></i> Account Details</h3>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div>
+            <strong>Email Address</strong>
+            <p>{{ jobSeekerService.profile().email }}</p>
+          </div>
+          <button class="secondary-btn sm" (click)="saveSettings()">Update Email</button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Phone Number</strong>
+            <p>{{ jobSeekerService.profile().phone }}</p>
+          </div>
+          <button class="secondary-btn sm" (click)="saveSettings()">Update Phone</button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Password</strong>
+            <p>••••••••••••</p>
+          </div>
+          <button class="secondary-btn sm" (click)="saveSettings()">Change Password</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Privacy Settings -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h3><i class="lucide lucide-shield-check"></i> Privacy & Visibility</h3>
+      </div>
+      <div class="card-body">
+        <div class="toggle-row">
+          <div>
+            <strong>Public Profile Visibility</strong>
+            <p>Allow matched verified recruiters to view your full candidate profile and resume.</p>
+          </div>
+          <input type="checkbox" [ngModel]="profilePublic()" (ngModelChange)="profilePublic.set($event); saveSettings()" />
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <strong>Hide Profile from Current Employer</strong>
+            <p>Automatically block companies matching your current company name (TechFlow Systems) from seeing your candidate profile.</p>
+          </div>
+          <input type="checkbox" [ngModel]="hideCurrentEmployer()" (ngModelChange)="hideCurrentEmployer.set($event); saveSettings()" />
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <strong>Search Engine Indexing</strong>
+            <p>Allow web search engines (Google, Bing) to index your public candidate link.</p>
+          </div>
+          <input type="checkbox" [ngModel]="searchIndexable()" (ngModelChange)="searchIndexable.set($event); saveSettings()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Notification Settings -->
+    <div class="settings-card">
+      <div class="card-header">
+        <h3><i class="lucide lucide-bell"></i> Notification Preferences</h3>
+      </div>
+      <div class="card-body">
+        <div class="toggle-row">
+          <div>
+            <strong>Instant Match & Recruiter Message Email Alerts</strong>
+            <p>Receive email notifications as soon as a company matches with your profile or sends a message.</p>
+          </div>
+          <input type="checkbox" [ngModel]="emailAlerts()" (ngModelChange)="emailAlerts.set($event); saveSettings()" />
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <strong>Browser Push Notifications</strong>
+            <p>Receive real-time desktop push notifications for upcoming interviews.</p>
+          </div>
+          <input type="checkbox" [ngModel]="pushNotifs()" (ngModelChange)="pushNotifs.set($event); saveSettings()" />
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <strong>Weekly Recommended Jobs Digest</strong>
+            <p>Get a curated email summary every Monday with top jobs matching your preferences.</p>
+          </div>
+          <input type="checkbox" [ngModel]="weeklyDigest()" (ngModelChange)="weeklyDigest.set($event); saveSettings()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Danger Zone & Account Actions -->
+    <div class="settings-card danger-card">
+      <div class="card-header">
+        <h3><i class="lucide lucide-alert-triangle"></i> Account Actions & Logout</h3>
+      </div>
+      <div class="card-body">
+        <div class="setting-row">
+          <div>
+            <strong>Download Data Export</strong>
+            <p>Obtain a JSON copy of all your education, experience, matches, and application history.</p>
+          </div>
+          <button class="secondary-btn sm" (click)="exportData()">Export My Data</button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Sign Out of HireSwipe</strong>
+            <p>Log out safely from your current browser session.</p>
+          </div>
+          <button class="danger-btn sm" (click)="logout()">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

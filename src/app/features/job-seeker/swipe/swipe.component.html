@@ -1,0 +1,206 @@
+<div class="swipe-page-wrapper">
+  <!-- Discovery Controls & Filter Bar -->
+  <div class="discovery-header">
+    <div class="header-titles">
+      <h1 class="page-title"><i class="lucide lucide-sparkles"></i> Job Discovery & Match Deck</h1>
+      <p class="page-sub">Swipe right to Like & Apply instantly, or swipe left to Pass. 95%+ matches trigger direct recruiter connections!</p>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Work Mode:</label>
+        <select [ngModel]="filterRemote()" (ngModelChange)="onFilterRemoteChange($event)">
+          <option value="all">All Modes</option>
+          <option value="remote">Remote Only</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="on_site">On-Site</option>
+        </select>
+      </div>
+
+      <div class="deck-counter-badge" *ngIf="currentJob()">
+        <span>{{ availableDeck().length }} Roles Available in Deck</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECK CONTAINER -->
+  <div class="deck-stage" *ngIf="currentJob(); else emptyDeck">
+    <!-- Active Swipe Card -->
+    <div
+      class="swipe-card"
+      [class.swipe-like]="swipeDirection() === 'like'"
+      [class.swipe-pass]="swipeDirection() === 'pass'"
+    >
+      <!-- Match score badge -->
+      <div class="card-badge-row">
+        <span class="match-badge"><i class="lucide lucide-zap"></i> {{ currentJob()?.match_score }} Match Score</span>
+        <button class="save-bookmark-btn" (click)="saveJob(currentJob()!, $event)" title="Save Job">
+          <i class="lucide lucide-bookmark"></i>
+        </button>
+      </div>
+
+      <!-- Company & Role Intro -->
+      <div class="company-intro">
+        <img [src]="currentJob()?.company_logo" [alt]="currentJob()?.company_name" class="company-logo-img" />
+        <div class="company-title-box">
+          <span class="company-type">{{ currentJob()?.company_type }}</span>
+          <h2 class="company-name">{{ currentJob()?.company_name }}</h2>
+          <h3 class="role-title">{{ currentJob()?.title }}</h3>
+        </div>
+      </div>
+
+      <!-- Key Metadata Badges -->
+      <div class="meta-tags-row">
+        <span class="tag-pill"><i class="lucide lucide-map-pin"></i> {{ currentJob()?.location }}</span>
+        <span class="tag-pill accent"><i class="lucide lucide-dollar-sign"></i> {{ currentJob()?.salary_display }}</span>
+        <span class="tag-pill"><i class="lucide lucide-briefcase"></i> {{ currentJob()?.employment_type }}</span>
+        <span class="tag-pill"><i class="lucide lucide-star"></i> {{ currentJob()?.experience_level }}</span>
+      </div>
+
+      <!-- Description Snippet -->
+      <div class="card-description-box">
+        <h4>Role Overview</h4>
+        <p>{{ currentJob()?.description }}</p>
+      </div>
+
+      <!-- Skills Required -->
+      <div class="card-skills-section">
+        <span class="skills-label">Required Tech Stack:</span>
+        <div class="skills-flex-wrap">
+          <span class="skill-tag" *ngFor="let skill of currentJob()?.skills">{{ skill }}</span>
+        </div>
+      </div>
+
+      <!-- Requirements preview -->
+      <div class="requirements-preview">
+        <span class="req-title"><i class="lucide lucide-check-circle-2"></i> Key Qualifications:</span>
+        <ul>
+          <li *ngFor="let req of currentJob()?.requirements?.slice(0, 2)">{{ req }}</li>
+        </ul>
+      </div>
+
+      <!-- View Details Trigger Button -->
+      <button class="view-details-btn" (click)="openJobDetails(currentJob()!)">
+        <i class="lucide lucide-info"></i> View Full Job Specification & Benefits
+      </button>
+
+      <!-- SWIPE CONTROLS OVERLAY -->
+      <div class="action-buttons-row">
+        <button class="swipe-btn pass-btn" (click)="handleSwipe('pass')" title="Pass (Swipe Left)">
+          <i class="lucide lucide-x"></i>
+          <span>PASS</span>
+        </button>
+
+        <button class="swipe-btn info-btn" (click)="openJobDetails(currentJob()!)" title="View Details">
+          <i class="lucide lucide-eye"></i>
+        </button>
+
+        <button class="swipe-btn like-btn" (click)="handleSwipe('like')" title="Like (Swipe Right)">
+          <i class="lucide lucide-heart"></i>
+          <span>LIKE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMPTY DECK STATE -->
+  <ng-template #emptyDeck>
+    <div class="empty-deck-card">
+      <i class="lucide lucide-check-circle empty-deck-icon"></i>
+      <h2>You're all caught up! 🎉</h2>
+      <p>You have reviewed all available high-match jobs for your current filters.</p>
+      <div class="empty-deck-actions">
+        <button class="primary-btn" (click)="resetDeck()">
+          <i class="lucide lucide-refresh-cw"></i> Reload Jobs Deck
+        </button>
+        <a routerLink="/job-seeker/preferences" class="secondary-btn">
+          <i class="lucide lucide-sliders"></i> Update Match Preferences
+        </a>
+      </div>
+    </div>
+  </ng-template>
+</div>
+
+<!-- JOB DETAILS FULL MODAL -->
+<div class="modal-backdrop" *ngIf="selectedJobForModal()">
+  <div class="job-modal-box">
+    <div class="job-modal-header">
+      <div class="modal-comp-info">
+        <img [src]="selectedJobForModal()?.company_logo" [alt]="selectedJobForModal()?.company_name" class="modal-logo" />
+        <div>
+          <h3>{{ selectedJobForModal()?.title }}</h3>
+          <span class="modal-comp-name">{{ selectedJobForModal()?.company_name }} &bull; {{ selectedJobForModal()?.company_type }}</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeJobDetails()"><i class="lucide lucide-x"></i></button>
+    </div>
+
+    <div class="job-modal-body">
+      <div class="modal-grid-tags">
+        <div><strong>Salary:</strong> {{ selectedJobForModal()?.salary_display }}</div>
+        <div><strong>Location:</strong> {{ selectedJobForModal()?.location }}</div>
+        <div><strong>Type:</strong> {{ selectedJobForModal()?.employment_type }}</div>
+        <div><strong>Seniority:</strong> {{ selectedJobForModal()?.experience_level }}</div>
+      </div>
+
+      <div class="modal-section">
+        <h4>About the Role</h4>
+        <p>{{ selectedJobForModal()?.description }}</p>
+      </div>
+
+      <div class="modal-section">
+        <h4>Key Responsibilities & Requirements</h4>
+        <ul class="modal-req-list">
+          <li *ngFor="let req of selectedJobForModal()?.requirements">{{ req }}</li>
+        </ul>
+      </div>
+
+      <div class="modal-section">
+        <h4>Required Tech Stack</h4>
+        <div class="skills-flex-wrap">
+          <span class="skill-tag" *ngFor="let skill of selectedJobForModal()?.skills">{{ skill }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="job-modal-footer">
+      <button class="secondary-btn" (click)="closeJobDetails()">Close</button>
+      <button class="primary-btn" (click)="handleSwipe('like'); closeJobDetails()">
+        <i class="lucide lucide-heart"></i> Like & Apply Now
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MATCH CELEBRATION MODAL -->
+<div class="modal-backdrop match-celebration-backdrop" *ngIf="showMatchModal()">
+  <div class="match-celebration-box">
+    <div class="sparkles-icon-wrap">
+      <i class="lucide lucide-sparkles"></i>
+    </div>
+
+    <h2 class="match-title">It's a Match! 🎉</h2>
+    <p class="match-subtitle">You and {{ recentMatchObj()?.company_name }} liked each other!</p>
+
+    <div class="match-avatars-row">
+      <img [src]="jobSeekerService.profile().avatar_url" alt="Candidate avatar" class="match-avatar candidate" />
+      <div class="match-vs-heart"><i class="lucide lucide-heart"></i></div>
+      <img [src]="recentMatchObj()?.company_logo" [alt]="recentMatchObj()?.company_name" class="match-avatar company" />
+    </div>
+
+    <div class="match-details-card">
+      <h3>{{ recentMatchObj()?.job_title }}</h3>
+      <span class="match-score-pill">{{ recentMatchObj()?.match_score }} Candidate Fit Score</span>
+    </div>
+
+    <div class="match-actions">
+      <button class="primary-btn complete-btn full-width" (click)="openMatchMessage()">
+        <i class="lucide lucide-message-square"></i> Send Message to Recruiter
+      </button>
+      <button class="secondary-btn full-width mt-2" (click)="closeMatchModal()">
+        Keep Swiping
+      </button>
+    </div>
+  </div>
+</div>
