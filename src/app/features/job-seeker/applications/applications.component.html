@@ -1,0 +1,101 @@
+<div class="apps-page-wrapper">
+  <!-- Header Card -->
+  <div class="page-header-card">
+    <div>
+      <h1 class="page-title"><i class="lucide lucide-briefcase"></i> Application Tracking</h1>
+      <p class="page-sub">Track real-time status updates and recruitment history for all your submitted roles.</p>
+    </div>
+
+    <!-- Status Filters Pills -->
+    <div class="filter-pills-row">
+      <button
+        *ngFor="let s of statusList"
+        class="status-pill"
+        [class.active]="selectedStatus() === s.value"
+        (click)="selectedStatus.set(s.value)"
+      >
+        {{ s.label }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Applications List -->
+  <div class="apps-list" *ngIf="filteredApplications().length > 0; else emptyApps">
+    <div class="app-card" *ngFor="let app of filteredApplications()">
+      <div class="app-main-info">
+        <img [src]="app.company_logo" [alt]="app.company_name" class="comp-logo" />
+        <div class="app-details">
+          <h3 class="job-title">{{ app.job_title }}</h3>
+          <span class="comp-name">{{ app.company_name }} &bull; {{ app.job_location }}</span>
+          <span class="app-date"><i class="lucide lucide-calendar"></i> Applied on {{ app.applied_at | date:'mediumDate' }}</span>
+        </div>
+      </div>
+
+      <div class="app-right-info">
+        <span class="salary-tag">{{ app.salary_range }}</span>
+
+        <div class="status-badge" [class]="app.status">
+          <span class="status-dot"></span>
+          <span class="status-text">{{ app.status | titlecase }}</span>
+        </div>
+
+        <button class="secondary-btn sm" (click)="openDetailsModal(app)">
+          <i class="lucide lucide-history"></i> History & Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <ng-template #emptyApps>
+    <div class="empty-card">
+      <i class="lucide lucide-folder-open empty-icon"></i>
+      <h2>No applications found</h2>
+      <p>No job applications match the selected status filter.</p>
+      <a routerLink="/job-seeker/swipe" class="primary-btn mt-4">
+        <i class="lucide lucide-sparkles"></i> Swipe Roles to Apply
+      </a>
+    </div>
+  </ng-template>
+</div>
+
+<!-- History Timeline Modal -->
+<div class="modal-backdrop" *ngIf="selectedAppForModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <img [src]="selectedAppForModal()?.company_logo" [alt]="selectedAppForModal()?.company_name" class="modal-logo" />
+        <div>
+          <h3>{{ selectedAppForModal()?.job_title }}</h3>
+          <span>{{ selectedAppForModal()?.company_name }}</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeModal()"><i class="lucide lucide-x"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <h4>Recruitment Status History</h4>
+      <p class="modal-sub">Audit log of your application status changes:</p>
+
+      <div class="timeline-list">
+        <div class="timeline-item" *ngFor="let hist of selectedAppForModal()?.status_history">
+          <div class="timeline-dot" [class]="hist.status"></div>
+          <div class="timeline-content">
+            <div class="timeline-top">
+              <span class="status-title">{{ hist.status | titlecase }}</span>
+              <span class="timeline-time">{{ hist.changed_at | date:'short' }}</span>
+            </div>
+            <p class="timeline-comment">{{ hist.comment }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="danger-btn sm" *ngIf="selectedAppForModal()?.status !== 'withdrawn' && selectedAppForModal()?.status !== 'rejected'" (click)="withdrawApplication(selectedAppForModal()!.id)">
+        Withdraw Application
+      </button>
+      <button class="secondary-btn" (click)="closeModal()">Close</button>
+    </div>
+  </div>
+</div>

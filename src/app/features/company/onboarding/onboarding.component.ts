@@ -186,6 +186,8 @@ export class OnboardingComponent implements OnInit {
       phone: this.step4Form.value.phone,
     });
 
+    this.dataService.setOnboardingCompleted(true);
+
     this.router.navigate(['/company/dashboard']);
   }
 }

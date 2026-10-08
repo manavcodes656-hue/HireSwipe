@@ -4,8 +4,42 @@
   align-items: center;
   padding: 120px 0 72px;
   position: relative;
+  overflow: hidden;
   background: var(--bg);
 }
+
+/* ─── World-map background layer ─── */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/world-map-network.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  /* Soft white veil so the map feels like a watermark rather than a photo */
+  filter: saturate(0.7) brightness(1.05);
+  opacity: 1;
+  /* Smooth scroll-driven fade — opacity is driven by JS/TS via inline style */
+  will-change: opacity;
+  transition: opacity 0.08s linear;
+  pointer-events: none;
+}
+
+/* White gradient feather at the bottom of the hero so map dissolves into the next section */
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0.35) 60%,
+    rgba(255, 255, 255, 0.72) 82%,
+    rgba(255, 255, 255, 1)    100%
+  );
+}
+
 
 .hero-grid {
   max-width: 1180px;
@@ -16,7 +50,10 @@
   gap: 56px;
   align-items: center;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
+
 
 .hero-left {
   display: flex;
@@ -464,5 +501,23 @@
 
   .card-title {
     font-size: 15px;
+  }
+}
+
+/* Mobile: make map even more subtle so text stays crystal clear */
+@media (max-width: 768px) {
+  .hero-bg {
+    filter: saturate(0.5) brightness(1.08);
+    background-position: 60% center;
+  }
+
+  .hero-bg::after {
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.5)  0%,
+      rgba(255, 255, 255, 0.5)  55%,
+      rgba(255, 255, 255, 0.82) 80%,
+      rgba(255, 255, 255, 1)    100%
+    );
   }
 }

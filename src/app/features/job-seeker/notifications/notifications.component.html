@@ -1,0 +1,62 @@
+<div class="notif-page-wrapper">
+  <!-- Page Header -->
+  <div class="page-header-card">
+    <div class="header-left">
+      <h1 class="page-title"><i class="lucide lucide-bell"></i> Notifications Center</h1>
+      <p class="page-sub">Real-time alerts for matches, applications, messages, and interview invites.</p>
+    </div>
+
+    <button class="secondary-btn sm" (click)="markAllAsRead()" *ngIf="jobSeekerService.unreadNotificationCount() > 0">
+      <i class="lucide lucide-check-check"></i> Mark All as Read
+    </button>
+  </div>
+
+  <!-- Filter Pills -->
+  <div class="filter-pills-row">
+    <button
+      *ngFor="let f of filterList"
+      class="filter-pill"
+      [class.active]="selectedFilter() === f.value"
+      (click)="selectedFilter.set(f.value)"
+    >
+      {{ f.label }}
+    </button>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notif-list" *ngIf="filteredNotifications().length > 0; else emptyNotifs">
+    <div
+      class="notif-card"
+      *ngFor="let n of filteredNotifications()"
+      [class.unread]="!n.read"
+      (click)="markAsRead(n)"
+    >
+      <div class="notif-type-icon" [class]="n.type">
+        <i class="lucide lucide-sparkles" *ngIf="n.type === 'new_match'"></i>
+        <i class="lucide lucide-message-square" *ngIf="n.type === 'new_message'"></i>
+        <i class="lucide lucide-calendar-check" *ngIf="n.type === 'interview'"></i>
+        <i class="lucide lucide-briefcase" *ngIf="n.type === 'application_update'"></i>
+        <i class="lucide lucide-bell" *ngIf="n.type === 'job_recommendation' || n.type === 'system'"></i>
+      </div>
+
+      <div class="notif-content">
+        <div class="notif-top">
+          <h3 class="notif-title">{{ n.title }}</h3>
+          <span class="notif-time">{{ n.created_at }}</span>
+        </div>
+        <p class="notif-msg">{{ n.message }}</p>
+      </div>
+
+      <span class="unread-dot" *ngIf="!n.read"></span>
+      <i class="lucide lucide-chevron-right arrow-icon"></i>
+    </div>
+  </div>
+
+  <ng-template #emptyNotifs>
+    <div class="empty-card">
+      <i class="lucide lucide-bell-off empty-icon"></i>
+      <h2>No notifications found</h2>
+      <p>You have no notifications in this category.</p>
+    </div>
+  </ng-template>
+</div>

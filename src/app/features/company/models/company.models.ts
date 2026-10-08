@@ -67,6 +67,7 @@ export interface Company {
   logo_url: string;
   banner_url?: string;
   completion_percentage: number;
+  onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CompanyDataService } from '../../features/company/services/company-data.service';
 
 export type AuthRole = 'jobseeker' | 'company';
 export type AuthMode = 'login' | 'signup';
@@ -204,12 +205,24 @@ export class AuthComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private router: Router
-  ) {}
+    private router: Router,
+    private companyDataService: CompanyDataService
+  ) { }
 
   ngOnInit(): void {
     this.initForms();
     this.startAutoCycle();
+
+    this.route.url.subscribe((segments) => {
+      if (segments.length > 0) {
+        const path = segments[0].path;
+        if (path === 'signup') {
+          this.mode = 'signup';
+        } else if (path === 'login') {
+          this.mode = 'login';
+        }
+      }
+    });
 
     this.route.queryParams.subscribe((params) => {
       if (params['role'] === 'company' || params['role'] === 'employer') {
@@ -325,25 +338,59 @@ export class AuthComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Navigate based on role + mode
-    if (this.role === 'company') {
-      if (this.mode === 'signup') {
-        this.router.navigate(['/company/onboarding']);
-      } else {
-        this.router.navigate(['/company/dashboard']);
-      }
-    } else {
-      // jobseeker flow (placeholder)
-      this.router.navigate(['/']);
+    const formVal = this.currentForm.value;
+    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
+    const actionName = this.mode === 'login' ? 'Signed in' : 'Account created';
+
+    this.successMessage = `${actionName} successfully as ${roleName} (${formVal.email}). Redirecting...`;
+
+    if (this.role === 'jobseeker') {
+      setTimeout(() => {
+        if (this.mode === 'signup') {
+          this.router.navigate(['/job-seeker/onboarding']);
+        } else {
+          this.router.navigate(['/job-seeker/dashboard']);
+        }
+      }, 500);
+    } else if (this.role === 'company') {
+      setTimeout(() => {
+        if (this.mode === 'signup') {
+          this.companyDataService.setOnboardingCompleted(false);
+          this.router.navigate(['/company/onboarding']);
+        } else {
+          if (this.companyDataService.isOnboardingCompleted()) {
+            this.router.navigate(['/company/dashboard']);
+          } else {
+            this.router.navigate(['/company/onboarding']);
+          }
+        }
+      }, 500);
     }
   }
 
   onGoogleAuth(): void {
-    if (this.role === 'company') {
-      this.router.navigate(['/company/dashboard']);
-    } else {
-      this.router.navigate(['/']);
-    }
+    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
+    this.successMessage = `Google authentication initiated for ${roleName}. Redirecting...`;
+    setTimeout(() => {
+      if (this.role === 'jobseeker') {
+        if (this.mode === 'signup') {
+          this.router.navigate(['/job-seeker/onboarding']);
+        } else {
+          this.router.navigate(['/job-seeker/dashboard']);
+        }
+      } else {
+        if (this.mode === 'signup') {
+          this.companyDataService.setOnboardingCompleted(false);
+          this.router.navigate(['/company/onboarding']);
+        } else {
+          if (this.companyDataService.isOnboardingCompleted()) {
+            this.router.navigate(['/company/dashboard']);
+          } else {
+            this.router.navigate(['/company/onboarding']);
+          }
+        }
+      }
+    }, 500);
   }
 
   isFieldInvalid(fieldName: string): boolean {

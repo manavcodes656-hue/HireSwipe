@@ -1,0 +1,228 @@
+<div class="dashboard-wrapper">
+  <!-- Welcome Hero Header -->
+  <section class="welcome-hero-card">
+    <div class="hero-left">
+      <span class="hero-greeting-badge">Candidate Dashboard</span>
+      <h1 class="hero-title">Welcome back, {{ jobSeekerService.profile().full_name }}! 👋</h1>
+      <p class="hero-headline">{{ jobSeekerService.jobSeekerProfile().headline }}</p>
+
+      <div class="hero-quick-tags">
+        <span class="hero-tag"><i class="lucide lucide-map-pin"></i> {{ jobSeekerService.jobSeekerProfile().location }}</span>
+        <span class="hero-tag"><i class="lucide lucide-briefcase"></i> {{ jobSeekerService.jobSeekerProfile().availability }} Notice</span>
+        <span class="hero-tag"><i class="lucide lucide-star"></i> {{ jobSeekerService.jobSeekerProfile().years_of_experience }} YOE</span>
+      </div>
+    </div>
+
+    <!-- What Should I Do Next Card -->
+    <div class="next-action-card">
+      <div class="action-card-top">
+        <span class="action-badge"><i class="lucide lucide-zap"></i> WHAT TO DO NEXT</span>
+        <span class="comp-badge">{{ jobSeekerService.jobSeekerProfile().profile_completion_pct }}% Profile Score</span>
+      </div>
+      <h3 class="action-title">{{ nextActionSuggestion.title }}</h3>
+      <p class="action-desc">{{ nextActionSuggestion.desc }}</p>
+      <a [routerLink]="nextActionSuggestion.route" class="action-btn">
+        {{ nextActionSuggestion.buttonText }} &rarr;
+      </a>
+    </div>
+  </section>
+
+  <!-- Metric Counters Row -->
+  <section class="metrics-grid">
+    <div class="metric-card" routerLink="/job-seeker/applications">
+      <div class="metric-icon teal">
+        <i class="lucide lucide-briefcase"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-value">{{ jobSeekerService.applications().length }}</span>
+        <span class="metric-label">Active Applications</span>
+      </div>
+      <i class="lucide lucide-arrow-up-right card-arrow"></i>
+    </div>
+
+    <div class="metric-card" routerLink="/job-seeker/matches">
+      <div class="metric-icon rose">
+        <i class="lucide lucide-heart"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-value">{{ jobSeekerService.matches().length }}</span>
+        <span class="metric-label">Mutual Matches</span>
+      </div>
+      <i class="lucide lucide-arrow-up-right card-arrow"></i>
+    </div>
+
+    <div class="metric-card" routerLink="/job-seeker/interviews">
+      <div class="metric-icon purple">
+        <i class="lucide lucide-calendar-check"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-value">{{ upcomingInterviewsList.length }}</span>
+        <span class="metric-label">Upcoming Interviews</span>
+      </div>
+      <i class="lucide lucide-arrow-up-right card-arrow"></i>
+    </div>
+
+    <div class="metric-card" routerLink="/job-seeker/saved-jobs">
+      <div class="metric-icon amber">
+        <i class="lucide lucide-bookmark"></i>
+      </div>
+      <div class="metric-data">
+        <span class="metric-value">{{ jobSeekerService.savedJobs().length }}</span>
+        <span class="metric-label">Saved Jobs</span>
+      </div>
+      <i class="lucide lucide-arrow-up-right card-arrow"></i>
+    </div>
+  </section>
+
+  <!-- Main Grid: Recommended Jobs & Recent Activity -->
+  <div class="dashboard-main-grid">
+    <div class="left-column">
+
+      <!-- Upcoming Interviews Card Banner -->
+      <section class="section-panel" *ngIf="upcomingInterviewsList.length > 0">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="lucide lucide-video"></i> Upcoming Interview</h2>
+          <a routerLink="/job-seeker/interviews" class="view-all-link">View All</a>
+        </div>
+        <div class="interview-banner-card" *ngFor="let int of upcomingInterviewsList">
+          <img [src]="int.company_logo" [alt]="int.company_name" class="int-logo" />
+          <div class="int-details">
+            <h4>{{ int.job_title }}</h4>
+            <span class="int-comp">{{ int.company_name }} &bull; {{ int.location }}</span>
+            <div class="int-time">
+              <i class="lucide lucide-clock"></i> {{ int.date }} @ {{ int.time }}
+            </div>
+          </div>
+          <a [href]="int.meeting_link" target="_blank" class="join-btn">
+            <i class="lucide lucide-video"></i> Join Call
+          </a>
+        </div>
+      </section>
+
+      <!-- Recommended Jobs Section -->
+      <section class="section-panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title"><i class="lucide lucide-sparkles"></i> Recommended Jobs For You</h2>
+            <p class="panel-sub">Matched against your profile skills, YOE, and location preferences.</p>
+          </div>
+          <a routerLink="/job-seeker/swipe" class="view-all-link">Launch Deck &rarr;</a>
+        </div>
+
+        <div class="jobs-cards-grid">
+          <div class="dash-job-card" *ngFor="let j of jobSeekerService.availableDeckJobs().slice(0, 3)">
+            <div class="job-card-header">
+              <img [src]="j.company_logo" [alt]="j.company_name" class="comp-logo" />
+              <div>
+                <span class="comp-name">{{ j.company_name }}</span>
+                <span class="match-chip"><i class="lucide lucide-zap"></i> {{ j.match_score }} Match</span>
+              </div>
+            </div>
+
+            <h3 class="job-title">{{ j.title }}</h3>
+
+            <div class="job-meta-row">
+              <span><i class="lucide lucide-map-pin"></i> {{ j.location }}</span>
+              <span><i class="lucide lucide-dollar-sign"></i> {{ j.salary_display }}</span>
+            </div>
+
+            <div class="job-skills-chips">
+              <span class="skill-chip" *ngFor="let s of j.skills.slice(0, 3)">{{ s }}</span>
+            </div>
+
+            <div class="job-card-actions">
+              <button class="secondary-btn sm" (click)="saveJob(j)" title="Bookmark Job">
+                <i class="lucide lucide-bookmark"></i> Save
+              </button>
+              <button class="primary-btn sm" (click)="quickLikeJob(j)">
+                <i class="lucide lucide-heart"></i> Instant Swipe Like
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Applications Summary -->
+      <section class="section-panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="lucide lucide-list-checks"></i> Applications Status Tracker</h2>
+          <a routerLink="/job-seeker/applications" class="view-all-link">Manage Applications</a>
+        </div>
+
+        <div class="app-tracker-list">
+          <div class="app-tracker-row" *ngFor="let app of jobSeekerService.applications()">
+            <img [src]="app.company_logo" [alt]="app.company_name" class="app-logo" />
+            <div class="app-info">
+              <h4 class="app-title">{{ app.job_title }}</h4>
+              <span class="app-comp">{{ app.company_name }} &bull; Applied {{ app.applied_at | date:'mediumDate' }}</span>
+            </div>
+
+            <div class="app-status-badge" [class]="app.status">
+              <span class="status-dot"></span>
+              <span class="status-text">{{ app.status | titlecase }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right Column: Recent Matches & Notifications -->
+    <div class="right-column">
+      <!-- Recent Matches -->
+      <section class="section-panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="lucide lucide-heart"></i> Recent Matches</h2>
+          <a routerLink="/job-seeker/matches" class="view-all-link">All Matches</a>
+        </div>
+
+        <div class="matches-compact-list" *ngIf="jobSeekerService.matches().length > 0; else noMatches">
+          <div class="match-compact-item" *ngFor="let m of jobSeekerService.matches()">
+            <img [src]="m.company_logo" [alt]="m.company_name" class="m-logo" />
+            <div class="m-info">
+              <h4>{{ m.company_name }}</h4>
+              <p>{{ m.job_title }}</p>
+              <span class="m-score">{{ m.match_score }} Match</span>
+            </div>
+            <button class="icon-action-btn" (click)="openMatchChat(m.id)" title="Chat with recruiter">
+              <i class="lucide lucide-message-square"></i>
+            </button>
+          </div>
+        </div>
+        <ng-template #noMatches>
+          <div class="empty-compact">No matches yet. Start swiping jobs to match!</div>
+        </ng-template>
+      </section>
+
+      <!-- Activity & Notifications -->
+      <section class="section-panel">
+        <div class="panel-header">
+          <h2 class="panel-title"><i class="lucide lucide-bell"></i> Notifications</h2>
+          <a routerLink="/job-seeker/notifications" class="view-all-link">View All</a>
+        </div>
+
+        <div class="notif-compact-list">
+          <div
+            class="notif-compact-item"
+            *ngFor="let n of jobSeekerService.notifications().slice(0, 4)"
+            [class.unread]="!n.read"
+            [routerLink]="n.link_route"
+          >
+            <div class="notif-icon-box">
+              <i class="lucide lucide-sparkles" *ngIf="n.type === 'new_match'"></i>
+              <i class="lucide lucide-message-square" *ngIf="n.type === 'new_message'"></i>
+              <i class="lucide lucide-calendar-check" *ngIf="n.type === 'interview'"></i>
+              <i class="lucide lucide-briefcase" *ngIf="n.type === 'application_update'"></i>
+              <i class="lucide lucide-bell" *ngIf="n.type === 'job_recommendation' || n.type === 'system'"></i>
+            </div>
+            <div class="notif-text">
+              <span class="notif-title">{{ n.title }}</span>
+              <p class="notif-msg">{{ n.message }}</p>
+              <span class="notif-time">{{ n.created_at }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

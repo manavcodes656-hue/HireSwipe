@@ -722,6 +722,23 @@ export class CompanyDataService {
     return this.candidateProfiles;
   }
 
+  isOnboardingCompleted(): boolean {
+    const fromStorage = localStorage.getItem('hireswipe_company_onboarding_completed');
+    if (fromStorage !== null) {
+      return fromStorage === 'true';
+    }
+    return this.companySubject.value.onboarding_completed ?? true;
+  }
+
+  setOnboardingCompleted(completed: boolean): void {
+    localStorage.setItem('hireswipe_company_onboarding_completed', String(completed));
+    const updated = {
+      ...this.companySubject.value,
+      onboarding_completed: completed,
+    };
+    this.companySubject.next(updated);
+  }
+
   // --- Dynamic Completion Calculator (Requirement 5) ---
   calculateCompanyCompletion(company: Partial<Company>): number {
     const fields = [

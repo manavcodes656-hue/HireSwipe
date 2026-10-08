@@ -1,0 +1,87 @@
+<div class="matches-page-wrapper">
+  <!-- Header -->
+  <div class="page-header-card">
+    <div>
+      <h1 class="page-title"><i class="lucide lucide-heart"></i> Mutual Matches ({{ jobSeekerService.matches().length }})</h1>
+      <p class="page-sub">Roles where both you and the company liked each other's profile.</p>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="tabs-row">
+      <button class="tab-btn" [class.active]="activeTab() === 'all'" (click)="activeTab.set('all')">
+        All Matches
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'active'" (click)="activeTab.set('active')">
+        Active
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'archived'" (click)="activeTab.set('archived')">
+        Archived
+      </button>
+    </div>
+  </div>
+
+  <!-- Matches Grid -->
+  <div class="matches-grid" *ngIf="filteredMatches().length > 0; else emptyMatches">
+    <div class="match-card" *ngFor="let m of filteredMatches()">
+      <div class="match-card-top">
+        <img [src]="m.company_logo" [alt]="m.company_name" class="comp-logo" />
+        <span class="match-score-badge"><i class="lucide lucide-zap"></i> {{ m.match_score }} Match</span>
+      </div>
+
+      <div class="match-info">
+        <h3 class="role-title">{{ m.job_title }}</h3>
+        <span class="comp-name">{{ m.company_name }}</span>
+        <span class="location"><i class="lucide lucide-map-pin"></i> {{ m.job_location }}</span>
+        <span class="match-date"><i class="lucide lucide-calendar"></i> Matched on {{ m.match_date | date:'mediumDate' }}</span>
+      </div>
+
+      <div class="match-card-actions">
+        <button class="secondary-btn sm" (click)="viewJobDetails(m)">
+          <i class="lucide lucide-info"></i> View Job
+        </button>
+        <button class="primary-btn sm" (click)="openConversation(m)">
+          <i class="lucide lucide-message-square"></i> Open Chat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <ng-template #emptyMatches>
+    <div class="empty-matches-card">
+      <i class="lucide lucide-heart-off empty-icon"></i>
+      <h2>No matches found in this view</h2>
+      <p>Keep swiping in the discovery deck to create instant mutual matches with top hiring companies!</p>
+      <a routerLink="/job-seeker/swipe" class="primary-btn mt-4">
+        <i class="lucide lucide-sparkles"></i> Launch Discovery Deck
+      </a>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Match Details Modal -->
+<div class="modal-backdrop" *ngIf="selectedMatch()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Match Details: {{ selectedMatch()?.company_name }}</h3>
+      <button class="close-btn" (click)="closeModal()"><i class="lucide lucide-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="match-modal-intro">
+        <img [src]="selectedMatch()?.company_logo" [alt]="selectedMatch()?.company_name" class="modal-logo" />
+        <div>
+          <h4>{{ selectedMatch()?.job_title }}</h4>
+          <span>{{ selectedMatch()?.company_name }} &bull; {{ selectedMatch()?.job_location }}</span>
+          <span class="match-score-pill">{{ selectedMatch()?.match_score }} Match Fit Score</span>
+        </div>
+      </div>
+      <p class="modal-meta">Matched on {{ selectedMatch()?.match_date | date:'fullDate' }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeModal()">Close</button>
+      <button class="primary-btn" (click)="openConversation(selectedMatch()!); closeModal()">
+        <i class="lucide lucide-message-square"></i> Start Conversation
+      </button>
+    </div>
+  </div>
+</div>

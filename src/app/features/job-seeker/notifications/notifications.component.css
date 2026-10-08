@@ -1,0 +1,169 @@
+.notif-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-header-card {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-xs);
+}
+
+.page-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-sub {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #475569);
+  margin-top: 0.2rem;
+}
+
+.filter-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filter-pill {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 20px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-pill.active {
+  background: var(--accent-tint, #f0fdfa);
+  border-color: var(--accent, #0f766e);
+  color: var(--accent, #0f766e);
+  font-weight: 600;
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notif-card {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notif-card:hover {
+  border-color: var(--accent, #0f766e);
+  box-shadow: var(--shadow-sm);
+}
+
+.notif-card.unread {
+  background: var(--accent-tint, #f0fdfa);
+  border-color: rgba(15, 118, 110, 0.25);
+}
+
+.notif-type-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.notif-type-icon.new_match { background: #f0fdfa; color: #0f766e; }
+.notif-type-icon.new_message { background: #eff6ff; color: #2563eb; }
+.notif-type-icon.interview { background: #f5f3ff; color: #7c3aed; }
+.notif-type-icon.application_update { background: #fefce8; color: #ca8a04; }
+.notif-type-icon.job_recommendation,
+.notif-type-icon.system { background: #f1f5f9; color: #475569; }
+
+.notif-content {
+  flex: 1;
+}
+
+.notif-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notif-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+}
+
+.notif-time {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.notif-msg {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #475569);
+  margin-top: 0.2rem;
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.arrow-icon {
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+.secondary-btn {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.empty-card {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 3.5rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}

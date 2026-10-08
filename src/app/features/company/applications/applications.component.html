@@ -2,7 +2,8 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Candidate Applications</h1>
-      <p class="page-subtitle">Review incoming applications, evaluate cover letters, and manage recruitment pipeline status</p>
+      <p class="page-subtitle">Review incoming applications, evaluate cover letters, and manage recruitment pipeline
+        status</p>
     </div>
   </div>
 
@@ -18,7 +19,8 @@
       <button class="s-tab" [class.active]="activeStatusFilter === 'reviewing'" (click)="setStatusFilter('reviewing')">
         Reviewing <span class="pill blue">{{ getStatusCount('reviewing') }}</span>
       </button>
-      <button class="s-tab" [class.active]="activeStatusFilter === 'shortlisted'" (click)="setStatusFilter('shortlisted')">
+      <button class="s-tab" [class.active]="activeStatusFilter === 'shortlisted'"
+        (click)="setStatusFilter('shortlisted')">
         Shortlisted <span class="pill green">{{ getStatusCount('shortlisted') }}</span>
       </button>
       <button class="s-tab" [class.active]="activeStatusFilter === 'interview'" (click)="setStatusFilter('interview')">
@@ -34,7 +36,11 @@
 
     <div class="controls-row">
       <div class="search-box">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
         <input type="text" placeholder="Search by applicant or role..." [(ngModel)]="searchQuery" />
       </div>
 
@@ -110,11 +116,13 @@
       <div class="drawer-body">
         <!-- Candidate Overview Box -->
         <div class="cand-hero-box">
-          <img [src]="selectedApplication.profile?.avatar_url" [alt]="selectedApplication.profile?.full_name" class="dh-avatar" />
+          <img [src]="selectedApplication.profile?.avatar_url" [alt]="selectedApplication.profile?.full_name"
+            class="dh-avatar" />
           <div class="dh-info">
             <h3>{{ selectedApplication.profile?.full_name }}</h3>
             <p>{{ selectedApplication.profile?.headline }}</p>
-            <p class="dh-loc">📍 {{ selectedApplication.profile?.location }} • {{ selectedApplication.profile?.experience_years }} Years Exp</p>
+            <p class="dh-loc">📍 {{ selectedApplication.profile?.location }} • {{
+              selectedApplication.profile?.experience_years }} Years Exp</p>
           </div>
           <div class="dh-score">
             <span class="score-num">{{ selectedApplication.match_score }}%</span>
@@ -125,7 +133,8 @@
         <!-- Current Status Banner -->
         <div class="status-box">
           <span>Current Pipeline Status:</span>
-          <span class="status-badge" [ngClass]="selectedApplication.status">{{ selectedApplication.status | uppercase }}</span>
+          <span class="status-badge" [ngClass]="selectedApplication.status">{{ selectedApplication.status | uppercase
+            }}</span>
         </div>
 
         <!-- Cover Letter -->
@@ -155,15 +164,21 @@
 
           <div class="notes-input">
             <label>Internal Notes (Optional)</label>
-            <input type="text" [(ngModel)]="statusNotes" placeholder="e.g. Strong candidate, passed technical code review..." />
+            <input type="text" [(ngModel)]="statusNotes"
+              placeholder="e.g. Strong candidate, passed technical code review..." />
           </div>
 
           <div class="action-buttons-grid">
-            <button type="button" class="act-btn review" (click)="updateStatus('reviewing')">🔍 Move to Reviewing</button>
-            <button type="button" class="act-btn shortlist" (click)="updateStatus('shortlisted')">⭐ Shortlist Candidate</button>
-            <button type="button" class="act-btn interview" (click)="scheduleInterviewForApp()">📅 Schedule Interview</button>
-            <button type="button" class="act-btn accept" (click)="updateStatus('accepted')">🎉 Accept & Extend Offer</button>
-            <button type="button" class="act-btn reject" (click)="updateStatus('rejected')">✕ Reject Application</button>
+            <button type="button" class="act-btn review" (click)="updateStatus('reviewing')">🔍 Move to
+              Reviewing</button>
+            <button type="button" class="act-btn shortlist" (click)="updateStatus('shortlisted')">⭐ Shortlist
+              Candidate</button>
+            <button type="button" class="act-btn interview" (click)="scheduleInterviewForApp()">📅 Schedule
+              Interview</button>
+            <button type="button" class="act-btn accept" (click)="updateStatus('accepted')">🎉 Accept & Extend
+              Offer</button>
+            <button type="button" class="act-btn reject" (click)="updateStatus('rejected')">✕ Reject
+              Application</button>
           </div>
         </div>
 

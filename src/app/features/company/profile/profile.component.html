@@ -137,14 +137,51 @@
       <div class="form-card">
         <h3>4. Branding & Visual Assets</h3>
 
-        <div class="form-group">
-          <label>Logo Image URL</label>
-          <input type="text" formControlName="logo_url" />
+        <!-- Profile Photo Upload UI Pattern -->
+        <div class="profile-photo-upload-container">
+          <div class="photo-avatar-wrapper">
+            <img
+              *ngIf="profileForm.get('logo_url')?.value"
+              [src]="profileForm.get('logo_url')?.value"
+              alt="Company Logo Preview"
+              class="photo-avatar-img"
+            />
+            <div *ngIf="!profileForm.get('logo_url')?.value" class="photo-avatar-img avatar-fallback-box">
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              </svg>
+            </div>
+            <label class="camera-overlay-badge" title="Upload company logo">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              <input type="file" (change)="onLogoFileSelected($event)" accept="image/*" class="hidden-file-input" />
+            </label>
+          </div>
+
+          <div class="photo-controls-content">
+            <h3 class="photo-title">Company Logo Photo</h3>
+            <p class="photo-desc">Upload a logo image. Visually displayed across candidate cards, header, and recruiter messaging.</p>
+
+            <div class="photo-action-buttons">
+              <label class="btn-secondary sm upload-photo-btn">
+                Upload Photo
+                <input type="file" (change)="onLogoFileSelected($event)" accept="image/*" class="hidden-file-input" />
+              </label>
+
+              <button type="button" class="btn-tertiary sm" (click)="removeLogo()" *ngIf="profileForm.get('logo_url')?.value">
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group mt-4">
+          <label>Logo Image URL (Optional Direct Link)</label>
+          <input type="text" formControlName="logo_url" placeholder="https://..." />
         </div>
 
         <div class="form-group">
           <label>Cover Banner Image URL</label>
-          <input type="text" formControlName="banner_url" />
+          <input type="text" formControlName="banner_url" placeholder="https://..." />
         </div>
 
         <button type="submit" class="btn-primary full-width">

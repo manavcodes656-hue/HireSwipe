@@ -1,0 +1,59 @@
+<div class="saved-jobs-page-wrapper">
+  <!-- Page Header -->
+  <div class="page-header-card">
+    <div class="header-left">
+      <h1 class="page-title"><i class="lucide lucide-bookmark"></i> Saved Jobs ({{ jobSeekerService.savedJobs().length }})</h1>
+      <p class="page-sub">Bookmarked positions you are tracking or planning to apply to.</p>
+    </div>
+
+    <div class="search-box">
+      <i class="lucide lucide-search search-icon"></i>
+      <input
+        type="text"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Filter saved roles..."
+      />
+    </div>
+  </div>
+
+  <!-- Saved Jobs Grid -->
+  <div class="jobs-grid" *ngIf="filteredSavedJobs().length > 0; else emptySaved">
+    <div class="saved-card" *ngFor="let sj of filteredSavedJobs()">
+      <div class="card-header">
+        <img [src]="sj.company_logo" [alt]="sj.company_name" class="comp-logo" />
+        <button class="remove-btn" (click)="removeSavedJob(sj.id)" title="Remove bookmark">
+          <i class="lucide lucide-trash-2"></i>
+        </button>
+      </div>
+
+      <div class="card-body">
+        <h3 class="job-title">{{ sj.job_title }}</h3>
+        <span class="comp-name">{{ sj.company_name }}</span>
+        <div class="meta-row">
+          <span><i class="lucide lucide-map-pin"></i> {{ sj.location }}</span>
+          <span><i class="lucide lucide-dollar-sign"></i> {{ sj.salary_range }}</span>
+        </div>
+        <span class="type-pill">{{ sj.employment_type }}</span>
+      </div>
+
+      <div class="card-footer">
+        <span class="saved-time">Saved {{ sj.saved_at | date:'mediumDate' }}</span>
+        <button class="primary-btn sm" (click)="applyJob(sj)">
+          <i class="lucide lucide-send"></i> Apply Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #emptySaved>
+    <div class="empty-card">
+      <i class="lucide lucide-bookmark-x empty-icon"></i>
+      <h2>No saved jobs</h2>
+      <p>Click the bookmark icon on any job card in discovery to save it for later.</p>
+      <a routerLink="/job-seeker/swipe" class="primary-btn mt-4">
+        <i class="lucide lucide-sparkles"></i> Discover Jobs
+      </a>
+    </div>
+  </ng-template>
+</div>

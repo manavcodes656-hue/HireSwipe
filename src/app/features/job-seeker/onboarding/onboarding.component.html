@@ -1,0 +1,904 @@
+<div class="onboarding-container">
+  <!-- Top Stepper Header -->
+  <div class="stepper-header-card">
+    <div class="stepper-top-row">
+      <div>
+        <span class="step-badge">STEP {{ currentStep() }} OF {{ totalSteps }}</span>
+        <h1 class="step-title">{{ stepTitles[currentStep() - 1] }}</h1>
+        <p class="step-subtitle">{{ stepSubtitles[currentStep() - 1] }}</p>
+      </div>
+
+      <!-- Auto Save Toast -->
+      <div class="auto-save-toast" *ngIf="saveSuccessMessage()">
+        <i class="lucide lucide-check-circle"></i>
+        <span>{{ saveSuccessMessage() }}</span>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" [style.width.%]="(currentStep() / totalSteps) * 100"></div>
+    </div>
+
+    <!-- Step Indicator Pills -->
+    <div class="stepper-pills">
+      <button
+        *ngFor="let title of stepTitles; let i = index"
+        class="step-pill"
+        [class.completed]="i + 1 < currentStep()"
+        [class.active]="i + 1 === currentStep()"
+        (click)="goToStep(i + 1)"
+        [attr.aria-label]="title"
+      >
+        <span class="pill-number" *ngIf="i + 1 >= currentStep()">{{ i + 1 }}</span>
+        <i class="lucide lucide-check pill-check" *ngIf="i + 1 < currentStep()"></i>
+        <span class="pill-name">{{ title }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP CONTENT CARD -->
+  <div class="step-card">
+
+    <!-- STEP 1: Personal Information & Profile Photo -->
+    <div *ngIf="currentStep() === 1" [formGroup]="personalForm" class="step-form-body">
+      <!-- Refined Profile Photo Upload Section -->
+      <div class="profile-photo-upload-container">
+        <div class="photo-avatar-wrapper">
+          <img
+            *ngIf="personalForm.get('avatar_url')?.value"
+            [src]="personalForm.get('avatar_url')?.value"
+            alt="Candidate profile preview"
+            class="photo-avatar-img"
+          />
+          <div *ngIf="!personalForm.get('avatar_url')?.value" class="photo-avatar-img avatar-fallback-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <label class="camera-overlay-badge" title="Upload new photo">
+            <i class="lucide lucide-camera"></i>
+            <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
+          </label>
+        </div>
+
+        <div class="photo-controls-content">
+          <h3 class="photo-title">Profile Photo</h3>
+          <p class="photo-desc">Upload a clear professional headshot. Visually aligned across your application, sidebar, and recruiter chats.</p>
+
+          <div class="photo-action-buttons">
+            <label class="secondary-btn sm upload-photo-btn">
+              <i class="lucide lucide-upload"></i> Upload Photo
+              <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
+            </label>
+
+            <button type="button" class="tertiary-btn sm" (click)="removeAvatar()" *ngIf="personalForm.get('avatar_url')?.value">
+              <i class="lucide lucide-trash-2"></i> Reset
+            </button>
+          </div>
+
+          <div class="avatar-presets-row">
+            <span class="presets-label">Or select a default avatar:</span>
+            <div class="presets-chips">
+              <button
+                type="button"
+                class="preset-chip"
+                (click)="selectPresetAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80')"
+              >
+                Avatar 1
+              </button>
+              <button
+                type="button"
+                class="preset-chip"
+                (click)="selectPresetAvatar('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80')"
+              >
+                Avatar 2
+              </button>
+              <button
+                type="button"
+                class="preset-chip"
+                (click)="selectPresetAvatar('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80')"
+              >
+                Avatar 3
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="full_name">Full Name <span class="req">*</span></label>
+          <input
+            id="full_name"
+            type="text"
+            formControlName="full_name"
+            placeholder="e.g. Krish Sharma"
+            [class.is-invalid]="personalForm.get('full_name')?.invalid && (personalForm.get('full_name')?.touched || submittedStep())"
+          />
+          <span class="error-msg" *ngIf="personalForm.get('full_name')?.invalid && (personalForm.get('full_name')?.touched || submittedStep())">
+            Please enter your full name.
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number <span class="req">*</span></label>
+          <input
+            id="phone"
+            type="text"
+            formControlName="phone"
+            placeholder="+91 98765 43210"
+            [class.is-invalid]="personalForm.get('phone')?.invalid && (personalForm.get('phone')?.touched || submittedStep())"
+          />
+          <span class="error-msg" *ngIf="personalForm.get('phone')?.invalid && (personalForm.get('phone')?.touched || submittedStep())">
+            Valid phone number is required.
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Current Location <span class="req">*</span></label>
+          <input
+            id="location"
+            type="text"
+            formControlName="location"
+            placeholder="e.g. Bengaluru, Karnataka, India"
+            [class.is-invalid]="personalForm.get('location')?.invalid && (personalForm.get('location')?.touched || submittedStep())"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="city">City <span class="req">*</span></label>
+          <input id="city" type="text" formControlName="city" placeholder="e.g. Bengaluru" />
+        </div>
+
+        <div class="form-group">
+          <label for="state">State / Province <span class="req">*</span></label>
+          <input id="state" type="text" formControlName="state" placeholder="e.g. Karnataka" />
+        </div>
+
+        <div class="form-group">
+          <label for="country">Country <span class="req">*</span></label>
+          <input id="country" type="text" formControlName="country" placeholder="e.g. India" />
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Professional Information -->
+    <div *ngIf="currentStep() === 2" [formGroup]="professionalForm" class="step-form-body">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="headline">Professional Headline <span class="req">*</span></label>
+          <input
+            id="headline"
+            type="text"
+            formControlName="headline"
+            placeholder="e.g. Senior Full Stack Engineer | Angular, TypeScript, Node.js"
+            [class.is-invalid]="professionalForm.get('headline')?.invalid && (professionalForm.get('headline')?.touched || submittedStep())"
+          />
+          <span class="error-msg" *ngIf="professionalForm.get('headline')?.invalid && (professionalForm.get('headline')?.touched || submittedStep())">
+            Headline is required (min 5 characters).
+          </span>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="bio">Professional Bio / Summary <span class="req">*</span></label>
+          <textarea
+            id="bio"
+            rows="4"
+            formControlName="bio"
+            placeholder="Write a brief overview of your technical background, achievements, and career goals..."
+            [class.is-invalid]="professionalForm.get('bio')?.invalid && (professionalForm.get('bio')?.touched || submittedStep())"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="current_job_title">Current / Recent Job Title <span class="req">*</span></label>
+          <input id="current_job_title" type="text" formControlName="current_job_title" placeholder="e.g. Senior Frontend Engineer" />
+        </div>
+
+        <div class="form-group">
+          <label for="current_company">Current / Recent Company <span class="req">*</span></label>
+          <input id="current_company" type="text" formControlName="current_company" placeholder="e.g. TechFlow Systems" />
+        </div>
+
+        <div class="form-group">
+          <label for="years_of_experience">Years of Experience <span class="req">*</span></label>
+          <input id="years_of_experience" type="number" formControlName="years_of_experience" min="0" max="40" />
+        </div>
+
+        <div class="form-group">
+          <label for="availability">Notice Period / Availability <span class="req">*</span></label>
+          <select id="availability" formControlName="availability">
+            <option value="Immediate">Immediate (Serving notice)</option>
+            <option value="15 Days">15 Days</option>
+            <option value="30 Days">30 Days</option>
+            <option value="60 Days">60 Days</option>
+            <option value="90 Days">90 Days</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="linkedin_url">LinkedIn Profile URL</label>
+          <input id="linkedin_url" type="text" formControlName="linkedin_url" placeholder="https://linkedin.com/in/username" />
+        </div>
+
+        <div class="form-group">
+          <label for="github_url">GitHub Profile URL</label>
+          <input id="github_url" type="text" formControlName="github_url" placeholder="https://github.com/username" />
+        </div>
+
+        <div class="form-group full-width">
+          <label for="portfolio_url">Portfolio / Personal Website</label>
+          <input id="portfolio_url" type="text" formControlName="portfolio_url" placeholder="https://yourportfolio.dev" />
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Education History -->
+    <div *ngIf="currentStep() === 3" class="step-form-body">
+      <div class="section-top-actions">
+        <div>
+          <h3>Academic Records</h3>
+          <p class="section-desc">Add your degree(s), college, or university details.</p>
+        </div>
+        <button class="primary-btn sm" type="button" (click)="openAddEduModal()">
+          <i class="lucide lucide-plus"></i> Add Education
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-box" *ngIf="jobSeekerService.educationList().length === 0">
+        <i class="lucide lucide-graduation-cap empty-icon"></i>
+        <p>No education records added yet. Click above to add your qualification.</p>
+      </div>
+
+      <!-- Education Cards List -->
+      <div class="records-grid">
+        <div class="record-card" *ngFor="let edu of jobSeekerService.educationList()">
+          <div class="record-header">
+            <div>
+              <h4 class="record-title">{{ edu.degree }} in {{ edu.field_of_study }}</h4>
+              <span class="record-subtitle">{{ edu.institution }}</span>
+            </div>
+            <div class="record-actions">
+              <button class="icon-action-btn" (click)="openEditEduModal(edu)" title="Edit">
+                <i class="lucide lucide-pencil"></i>
+              </button>
+              <button class="icon-action-btn danger" (click)="deleteEdu(edu.id)" title="Delete">
+                <i class="lucide lucide-trash-2"></i>
+              </button>
+            </div>
+          </div>
+          <div class="record-meta">
+            <span><i class="lucide lucide-calendar"></i> {{ edu.start_date }} to {{ edu.end_date }}</span>
+            <span *ngIf="edu.grade" class="grade-tag"><i class="lucide lucide-award"></i> {{ edu.grade }}</span>
+          </div>
+          <p class="record-desc" *ngIf="edu.description">{{ edu.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Work Experience -->
+    <div *ngIf="currentStep() === 4" class="step-form-body">
+      <div class="section-top-actions">
+        <div>
+          <h3>Employment History</h3>
+          <p class="section-desc">List your previous or current full-time, contract, or internship positions.</p>
+        </div>
+        <button class="primary-btn sm" type="button" (click)="openAddExpModal()">
+          <i class="lucide lucide-plus"></i> Add Experience
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-box" *ngIf="jobSeekerService.experienceList().length === 0">
+        <i class="lucide lucide-briefcase empty-icon"></i>
+        <p>No work experience entries added yet. Click above to add your employment history.</p>
+      </div>
+
+      <!-- Experience Cards List -->
+      <div class="records-grid">
+        <div class="record-card" *ngFor="let exp of jobSeekerService.experienceList()">
+          <div class="record-header">
+            <div>
+              <h4 class="record-title">{{ exp.job_title }}</h4>
+              <span class="record-subtitle">{{ exp.company }} &bull; {{ exp.location }}</span>
+            </div>
+            <div class="record-actions">
+              <button class="icon-action-btn" (click)="openEditExpModal(exp)" title="Edit">
+                <i class="lucide lucide-pencil"></i>
+              </button>
+              <button class="icon-action-btn danger" (click)="deleteExp(exp.id)" title="Delete">
+                <i class="lucide lucide-trash-2"></i>
+              </button>
+            </div>
+          </div>
+          <div class="record-meta">
+            <span><i class="lucide lucide-calendar"></i> {{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }}</span>
+            <span class="type-badge">{{ exp.employment_type }}</span>
+          </div>
+          <p class="record-desc">{{ exp.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Skills & Expertise (Popular Skills Static + Dynamic Search Dropdown) -->
+    <div *ngIf="currentStep() === 5" class="step-form-body">
+      
+      <!-- Static Popular Skills Section (ALWAYS REMAINS VISIBLE) -->
+      <div class="popular-skills-section">
+        <div class="popular-header">
+          <span class="popular-title"><i class="lucide lucide-star"></i> Popular Skills</span>
+          <span class="popular-sub">Click any skill below to add it instantly to your candidate profile:</span>
+        </div>
+        <div class="popular-chips-wrap">
+          <button
+            type="button"
+            class="popular-chip"
+            *ngFor="let pSkill of popularSkills"
+            [class.selected]="isSkillAlreadySelected(pSkill)"
+            (click)="addSkillFromCatalog(pSkill)"
+            [disabled]="isSkillAlreadySelected(pSkill)"
+          >
+            <span *ngIf="!isSkillAlreadySelected(pSkill)">+</span>
+            <i class="lucide lucide-check" *ngIf="isSkillAlreadySelected(pSkill)"></i>
+            {{ pSkill }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Interactive Skill Search Field & Dynamic Results Dropdown -->
+      <div class="skill-search-wrapper">
+        <div class="search-input-box">
+          <i class="lucide lucide-search search-icon"></i>
+          <input
+            type="text"
+            [ngModel]="skillSearchQuery()"
+            (ngModelChange)="skillSearchQuery.set($event)"
+            placeholder="Search for skills (e.g. React, Next.js, Docker, Kubernetes, Figma...)"
+          />
+          <button
+            class="secondary-btn sm custom-add-btn"
+            type="button"
+            (click)="addCustomSkill()"
+            *ngIf="skillSearchQuery()"
+          >
+            + Add "{{ skillSearchQuery() }}"
+          </button>
+        </div>
+
+        <!-- Proficiency & YOE Controls -->
+        <div class="skill-level-pickers">
+          <div class="form-group">
+            <label>Default Proficiency</label>
+            <select [ngModel]="selectedProficiency()" (ngModelChange)="selectedProficiency.set($event)">
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+              <option value="expert">Expert</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Years of Experience</label>
+            <input type="number" min="1" max="30" [ngModel]="selectedSkillYoe()" (ngModelChange)="selectedSkillYoe.set($event)" />
+          </div>
+        </div>
+
+        <!-- Floating Dynamic Search Results Dropdown -->
+        <div class="search-results-dropdown" *ngIf="skillSearchQuery()">
+          <div class="dropdown-header">Matching Local Skills:</div>
+          <div class="dropdown-list" *ngIf="searchSkillResults().length > 0; else noMatchResults">
+            <div
+              class="dropdown-item"
+              *ngFor="let item of searchSkillResults()"
+              (click)="addSkillFromCatalog(item.name)"
+            >
+              <div class="item-name">{{ item.name }}</div>
+              <span class="item-cat">{{ item.category }}</span>
+            </div>
+          </div>
+          <ng-template #noMatchResults>
+            <div class="no-match-box">
+              <span>No exact match found in local catalog.</span>
+              <button type="button" class="text-link-btn" (click)="addCustomSkill()">
+                Click to add "{{ skillSearchQuery() }}" as custom skill
+              </button>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Selected Candidate Skills Grid -->
+      <div class="selected-skills-container">
+        <h3 class="section-title">Your Selected Skills ({{ jobSeekerService.userSkills().length }})</h3>
+        
+        <div class="empty-box" *ngIf="jobSeekerService.userSkills().length === 0">
+          <p>No skills added yet. Select from Popular Skills above or search for skills.</p>
+        </div>
+
+        <div class="user-skills-grid" *ngIf="jobSeekerService.userSkills().length > 0">
+          <div class="user-skill-tag" *ngFor="let s of jobSeekerService.userSkills()">
+            <div class="tag-left">
+              <span class="skill-name">{{ s.skill_name }}</span>
+              <span class="skill-badge" [class]="s.proficiency_level">{{ s.proficiency_level }} &bull; {{ s.years_of_experience }}y</span>
+            </div>
+            <button type="button" class="remove-skill-btn" (click)="removeSkill(s.id)" title="Remove skill">
+              <i class="lucide lucide-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6: Resume Upload UI -->
+    <div *ngIf="currentStep() === 6" class="step-form-body">
+      <!-- Upload Zone (Shown when uploading or adding resume) -->
+      <div
+        class="resume-dropzone-card"
+        [class.dragover]="resumeDragOver()"
+        (dragover)="$event.preventDefault(); resumeDragOver.set(true)"
+        (dragleave)="resumeDragOver.set(false)"
+        (drop)="onFileDropped($event)"
+      >
+        <div class="dropzone-icon-circle">
+          <i class="lucide lucide-file-up"></i>
+        </div>
+
+        <div class="dropzone-text-box">
+          <h3>Upload your Resume / CV</h3>
+          <p>Drag and drop your file here, or click browse to choose a document from your device.</p>
+          <span class="file-specs-text">Accepted formats: PDF, DOCX, DOC (Max file size: 10MB)</span>
+        </div>
+
+        <label class="primary-btn sm browse-btn">
+          <i class="lucide lucide-folder-open"></i> Browse File
+          <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.doc" class="hidden-file-input" />
+        </label>
+      </div>
+
+      <!-- Uploaded Resumes List Cards -->
+      <div class="uploaded-resumes-container" *ngIf="jobSeekerService.resumes().length > 0">
+        <h3 class="section-title">Uploaded Document ({{ jobSeekerService.resumes().length }})</h3>
+
+        <div class="resume-file-card" *ngFor="let r of jobSeekerService.resumes()">
+          <div class="file-card-left">
+            <div class="pdf-icon-box">
+              <i class="lucide lucide-file-text"></i>
+            </div>
+            <div class="file-info-details">
+              <div class="file-title-row">
+                <span class="file-name">{{ r.file_name }}</span>
+                <span class="primary-pill" *ngIf="r.is_primary"><i class="lucide lucide-star"></i> Primary Resume</span>
+              </div>
+              <span class="file-meta">{{ r.file_size }} &bull; Uploaded {{ r.uploaded_at | date:'mediumDate' }}</span>
+            </div>
+          </div>
+
+          <div class="file-card-actions">
+            <button class="secondary-btn sm" *ngIf="!r.is_primary" (click)="setPrimaryResume(r.id)">
+              Set Primary
+            </button>
+            <button class="icon-action-btn danger" (click)="deleteResume(r.id)" title="Delete resume">
+              <i class="lucide lucide-trash-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 7: Job Preferences UI (Choice Cards & Refined Inputs) -->
+    <div *ngIf="currentStep() === 7" [formGroup]="preferencesForm" class="step-form-body">
+      <div class="pref-sections-container">
+        
+        <!-- Desired Job Title -->
+        <div class="form-group full-width">
+          <label for="preferred_job_title">Desired Job Title(s) <span class="req">*</span></label>
+          <input id="preferred_job_title" type="text" formControlName="preferred_job_title" placeholder="e.g. Senior Full Stack Engineer, Lead Frontend Architect" />
+        </div>
+
+        <!-- Work Mode / Remote Preference Choice Cards -->
+        <div class="pref-card-group">
+          <label>Remote / Work Mode Preference <span class="req">*</span></label>
+          <div class="choice-cards-grid">
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('remote_preference')?.value === 'hybrid'"
+              (click)="selectRemotePref('hybrid')"
+            >
+              <i class="lucide lucide-building-2 choice-icon"></i>
+              <span class="choice-title">Hybrid</span>
+              <span class="choice-sub">Office + Remote flexibility</span>
+            </div>
+
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('remote_preference')?.value === 'remote'"
+              (click)="selectRemotePref('remote')"
+            >
+              <i class="lucide lucide-laptop choice-icon"></i>
+              <span class="choice-title">100% Remote</span>
+              <span class="choice-sub">Work from anywhere</span>
+            </div>
+
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('remote_preference')?.value === 'on_site'"
+              (click)="selectRemotePref('on_site')"
+            >
+              <i class="lucide lucide-map-pin choice-icon"></i>
+              <span class="choice-title">On-Site</span>
+              <span class="choice-sub">In-office full time</span>
+            </div>
+
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('remote_preference')?.value === 'any'"
+              (click)="selectRemotePref('any')"
+            >
+              <i class="lucide lucide-sparkles choice-icon"></i>
+              <span class="choice-title">Open to Any</span>
+              <span class="choice-sub">Flexible work modes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employment Type Choice Cards -->
+        <div class="pref-card-group">
+          <label>Employment Type <span class="req">*</span></label>
+          <div class="choice-cards-grid">
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('employment_type')?.value === 'full_time'"
+              (click)="selectEmploymentType('full_time')"
+            >
+              <span class="choice-title">Full-time</span>
+              <span class="choice-sub">Permanent role</span>
+            </div>
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('employment_type')?.value === 'contract'"
+              (click)="selectEmploymentType('contract')"
+            >
+              <span class="choice-title">Contract</span>
+              <span class="choice-sub">Project-based</span>
+            </div>
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('employment_type')?.value === 'part_time'"
+              (click)="selectEmploymentType('part_time')"
+            >
+              <span class="choice-title">Part-time</span>
+              <span class="choice-sub">Flexible hours</span>
+            </div>
+            <div
+              class="choice-card"
+              [class.selected]="preferencesForm.get('employment_type')?.value === 'internship'"
+              (click)="selectEmploymentType('internship')"
+            >
+              <span class="choice-title">Internship</span>
+              <span class="choice-sub">Early career</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seniority & Salary expectations -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="experience_level">Target Seniority Level <span class="req">*</span></label>
+            <select id="experience_level" formControlName="experience_level">
+              <option value="entry">Entry Level (0-2 yrs)</option>
+              <option value="mid">Mid Level (2-4 yrs)</option>
+              <option value="senior">Senior Level (5-8 yrs)</option>
+              <option value="lead">Lead / Principal (8+ yrs)</option>
+              <option value="executive">Executive</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="preferred_location">Preferred Job Location <span class="req">*</span></label>
+            <input id="preferred_location" type="text" formControlName="preferred_location" placeholder="e.g. Bengaluru, Remote" />
+          </div>
+
+          <div class="form-group">
+            <label for="min_salary">Minimum Salary Expectation (INR) <span class="req">*</span></label>
+            <input id="min_salary" type="number" formControlName="min_salary" step="100000" />
+          </div>
+
+          <div class="form-group">
+            <label for="max_salary">Maximum Salary Target (INR) <span class="req">*</span></label>
+            <input id="max_salary" type="number" formControlName="max_salary" step="100000" />
+          </div>
+        </div>
+
+        <!-- Relocation toggle & Industries -->
+        <div class="form-group">
+          <div class="checkbox-toggle-wrap">
+            <input id="willing_to_relocate" type="checkbox" formControlName="willing_to_relocate" />
+            <label for="willing_to_relocate">Yes, I am open to relocating for the right opportunity</label>
+          </div>
+        </div>
+
+        <!-- Preferred Industries Chips -->
+        <div class="form-group full-width">
+          <label>Preferred Industries</label>
+          <div class="industry-tag-input-row">
+            <input
+              type="text"
+              [ngModel]="industryInput()"
+              (ngModelChange)="industryInput.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="e.g. FinTech, SaaS, HealthTech, AI/ML..."
+            />
+            <button class="secondary-btn sm" type="button" (click)="addIndustry()">+ Add</button>
+          </div>
+          <div class="industry-chips mt-2">
+            <span class="ind-chip" *ngFor="let ind of jobSeekerService.preferences().preferred_industries">
+              {{ ind }}
+              <i class="lucide lucide-x" (click)="removeIndustry(ind)"></i>
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- STEP 8: Review Profile (Properly Arranged Cards) -->
+    <div *ngIf="currentStep() === 8" class="step-form-body">
+      <!-- Profile Header Banner -->
+      <div class="review-banner-card">
+        <div class="review-user-info">
+          <img *ngIf="jobSeekerService.profile().avatar_url" [src]="jobSeekerService.profile().avatar_url" alt="Candidate profile photo" class="review-avatar-img" />
+          <div *ngIf="!jobSeekerService.profile().avatar_url" class="review-avatar-img avatar-fallback-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <h2 class="review-name">{{ jobSeekerService.profile().full_name }}</h2>
+            <p class="review-headline">{{ jobSeekerService.jobSeekerProfile().headline }}</p>
+            <span class="review-location"><i class="lucide lucide-map-pin"></i> {{ jobSeekerService.jobSeekerProfile().location }}</span>
+          </div>
+        </div>
+
+        <div class="completion-status-box">
+          <span class="score-number">100%</span>
+          <span class="score-label">Profile Completed</span>
+        </div>
+      </div>
+
+      <div class="review-notice-bar">
+        <i class="lucide lucide-check-circle"></i>
+        <span>Everything is ready! Please review your candidate summary before launching discovery.</span>
+      </div>
+
+      <!-- Reorganized Summary Cards Grid -->
+      <div class="review-sections-grid">
+        
+        <!-- Personal Info -->
+        <div class="review-card">
+          <div class="card-head">
+            <h4><i class="lucide lucide-user"></i> Personal Information</h4>
+            <button class="text-link-btn" (click)="goToStep(1)">Edit</button>
+          </div>
+          <div class="card-body-list">
+            <div><strong>Email:</strong> {{ jobSeekerService.profile().email }}</div>
+            <div><strong>Phone:</strong> {{ jobSeekerService.profile().phone }}</div>
+            <div><strong>City / State:</strong> {{ jobSeekerService.jobSeekerProfile().city }}, {{ jobSeekerService.jobSeekerProfile().state }}</div>
+            <div><strong>Country:</strong> {{ jobSeekerService.jobSeekerProfile().country }}</div>
+          </div>
+        </div>
+
+        <!-- Professional Summary -->
+        <div class="review-card">
+          <div class="card-head">
+            <h4><i class="lucide lucide-briefcase"></i> Professional Information</h4>
+            <button class="text-link-btn" (click)="goToStep(2)">Edit</button>
+          </div>
+          <div class="card-body-list">
+            <div><strong>Current Role:</strong> {{ jobSeekerService.jobSeekerProfile().current_job_title }}</div>
+            <div><strong>Company:</strong> {{ jobSeekerService.jobSeekerProfile().current_company }}</div>
+            <div><strong>Experience:</strong> {{ jobSeekerService.jobSeekerProfile().years_of_experience }} Years</div>
+            <div><strong>Notice Period:</strong> {{ jobSeekerService.jobSeekerProfile().availability }}</div>
+          </div>
+        </div>
+
+        <!-- Education History -->
+        <div class="review-card">
+          <div class="card-head">
+            <h4><i class="lucide lucide-graduation-cap"></i> Education ({{ jobSeekerService.educationList().length }})</h4>
+            <button class="text-link-btn" (click)="goToStep(3)">Edit</button>
+          </div>
+          <div class="card-body-list">
+            <div *ngFor="let edu of jobSeekerService.educationList()">
+              <strong>{{ edu.degree }} in {{ edu.field_of_study }}</strong> &bull; {{ edu.institution }} ({{ edu.start_date }} - {{ edu.end_date }})
+            </div>
+          </div>
+        </div>
+
+        <!-- Work Experience -->
+        <div class="review-card">
+          <div class="card-head">
+            <h4><i class="lucide lucide-layers"></i> Work Experience ({{ jobSeekerService.experienceList().length }})</h4>
+            <button class="text-link-btn" (click)="goToStep(4)">Edit</button>
+          </div>
+          <div class="card-body-list">
+            <div *ngFor="let exp of jobSeekerService.experienceList()">
+              <strong>{{ exp.job_title }}</strong> at {{ exp.company }} ({{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }})
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="review-card">
+          <div class="card-head">
+            <h4><i class="lucide lucide-code"></i> Skills ({{ jobSeekerService.userSkills().length }})</h4>
+            <button class="text-link-btn" (click)="goToStep(5)">Edit</button>
+          </div>
+          <div class="skills-inline-chips">
+            <span class="sk-pill" *ngFor="let sk of jobSeekerService.userSkills()">{{ sk.skill_name }}</span>
+          </div>
+        </div>
+
+        <!-- Uploaded Resume -->
+        <div class="review-card">
+          <div class="card-head">
+            <h4><i class="lucide lucide-file-text"></i> Uploaded Resume</h4>
+            <button class="text-link-btn" (click)="goToStep(6)">Edit</button>
+          </div>
+          <div class="card-body-list" *ngFor="let r of jobSeekerService.resumes()">
+            <div><strong>File:</strong> {{ r.file_name }} ({{ r.file_size }})</div>
+            <div><span class="primary-pill"><i class="lucide lucide-star"></i> Primary Candidate CV</span></div>
+          </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="review-card full-width">
+          <div class="card-head">
+            <h4><i class="lucide lucide-sliders"></i> Job Preferences</h4>
+            <button class="text-link-btn" (click)="goToStep(7)">Edit</button>
+          </div>
+          <div class="card-body-list flex-row-wrap">
+            <div><strong>Target Role:</strong> {{ jobSeekerService.preferences().preferred_job_title }}</div>
+            <div><strong>Work Mode:</strong> {{ jobSeekerService.preferences().remote_preference | uppercase }}</div>
+            <div><strong>Salary Target:</strong> ₹{{ jobSeekerService.preferences().min_salary / 100000 }}–{{ jobSeekerService.preferences().max_salary / 100000 }} LPA</div>
+            <div><strong>Relocation:</strong> {{ jobSeekerService.preferences().willing_to_relocate ? 'Yes' : 'No' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP FOOTER CONTROLS -->
+    <div class="step-footer-controls">
+      <button class="secondary-btn" type="button" (click)="prevStep()" [disabled]="currentStep() === 1">
+        &larr; Back
+      </button>
+
+      <div class="footer-right-group">
+        <button
+          *ngIf="currentStep() < totalSteps"
+          class="primary-btn"
+          type="button"
+          (click)="nextStep()"
+        >
+          Continue &rarr;
+        </button>
+
+        <button
+          *ngIf="currentStep() === totalSteps"
+          class="primary-btn complete-btn"
+          type="button"
+          (click)="completeOnboarding()"
+        >
+          <i class="lucide lucide-check-circle"></i> Complete Profile & Launch Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Education Modal -->
+<div class="modal-backdrop" *ngIf="showEduModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>{{ editingEduId() ? 'Edit Education' : 'Add Education Record' }}</h3>
+      <button class="close-btn" (click)="showEduModal.set(false)"><i class="lucide lucide-x"></i></button>
+    </div>
+    <div class="modal-body" [formGroup]="educationForm">
+      <div class="form-group">
+        <label>Institution / University <span class="req">*</span></label>
+        <input type="text" formControlName="institution" placeholder="e.g. IIT Madras" />
+      </div>
+      <div class="form-group">
+        <label>Degree <span class="req">*</span></label>
+        <input type="text" formControlName="degree" placeholder="e.g. B.Tech" />
+      </div>
+      <div class="form-group">
+        <label>Field of Study <span class="req">*</span></label>
+        <input type="text" formControlName="field_of_study" placeholder="e.g. Computer Science" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Start Date <span class="req">*</span></label>
+          <input type="date" formControlName="start_date" />
+        </div>
+        <div class="form-group">
+          <label>End Date <span class="req">*</span></label>
+          <input type="date" formControlName="end_date" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Grade / CGPA</label>
+        <input type="text" formControlName="grade" placeholder="e.g. 8.9 CGPA" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea rows="3" formControlName="description" placeholder="Highlights, specializations..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="showEduModal.set(false)">Cancel</button>
+      <button class="primary-btn" (click)="saveEdu()">Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Experience Modal -->
+<div class="modal-backdrop" *ngIf="showExpModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>{{ editingExpId() ? 'Edit Work Experience' : 'Add Work Experience' }}</h3>
+      <button class="close-btn" (click)="showExpModal.set(false)"><i class="lucide lucide-x"></i></button>
+    </div>
+    <div class="modal-body" [formGroup]="experienceForm">
+      <div class="form-group">
+        <label>Company Name <span class="req">*</span></label>
+        <input type="text" formControlName="company" placeholder="e.g. TechFlow Systems" />
+      </div>
+      <div class="form-group">
+        <label>Job Title <span class="req">*</span></label>
+        <input type="text" formControlName="job_title" placeholder="e.g. Senior Frontend Engineer" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Employment Type <span class="req">*</span></label>
+          <select formControlName="employment_type">
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+            <option value="Internship">Internship</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Location <span class="req">*</span></label>
+          <input type="text" formControlName="location" placeholder="e.g. Bengaluru" />
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Start Date <span class="req">*</span></label>
+          <input type="date" formControlName="start_date" />
+        </div>
+        <div class="form-group" *ngIf="!experienceForm.get('currently_working')?.value">
+          <label>End Date</label>
+          <input type="date" formControlName="end_date" />
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="checkbox-toggle-wrap">
+          <input id="currently_working" type="checkbox" formControlName="currently_working" />
+          <label for="currently_working">I am currently working in this role</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description & Key Achievements <span class="req">*</span></label>
+        <textarea rows="4" formControlName="description" placeholder="Describe your responsibilities, tech stack used, and key impact..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="showExpModal.set(false)">Cancel</button>
+      <button class="primary-btn" (click)="saveExp()">Save Experience</button>
+    </div>
+  </div>
+</div>

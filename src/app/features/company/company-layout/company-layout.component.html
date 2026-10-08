@@ -7,7 +7,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
         <a routerLink="/company/dashboard" class="brand-logo">
-          <span class="logo-mark">⚡</span>
+          <img src="logo.png" alt="HireSwipe" class="brand-logo-img" />
           <span class="logo-text">Hire<span class="highlight">Swipe</span></span>
         </a>
         <span class="recruiter-badge">Recruiter Portal</span>
@@ -25,13 +25,19 @@
       </div>
 
       <div class="header-right">
+        <!-- Candidate Swipe Action Button -->
+        <a routerLink="/company/swipe" class="btn-swipe" routerLinkActive="active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Candidate Swipe</span>
+        </a>
+
         <!-- Quick Action Create Job Button -->
         <a routerLink="/company/jobs/create" class="btn-create-job">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>Post Job</span>
         </a>
 
-        <!-- Notifications Dropdown Trigger -->
+        <!-- Notifications Dropdown Trigger (Bell Button) -->
         <div class="notif-wrapper">
           <button class="icon-btn" (click)="toggleNotifMenu()" aria-label="Notifications">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -69,6 +75,14 @@
               <a routerLink="/company/notifications" (click)="isNotifMenuOpen = false">View All Notifications →</a>
             </div>
           </div>
+        </div>
+
+        <!-- Messages Icon Button -->
+        <div class="notif-wrapper">
+          <a routerLink="/company/messages" class="icon-btn" aria-label="Messages">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span class="badge-dot teal" *ngIf="unreadMsgCount > 0">{{ unreadMsgCount }}</span>
+          </a>
         </div>
 
         <!-- Recruiter Profile Menu -->
@@ -119,6 +133,12 @@
         <a routerLink="/company/dashboard" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
           <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           <span>Dashboard</span>
+        </a>
+
+        <a routerLink="/company/swipe" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>Candidate Swipe</span>
+          <span class="nav-badge teal">Swipe</span>
         </a>
 
         <a routerLink="/company/jobs" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">

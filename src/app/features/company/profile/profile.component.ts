@@ -58,6 +58,29 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
 
+  onLogoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const logoDataUrl = e.target.result as string;
+        this.profileForm.patchValue({ logo_url: logoDataUrl });
+        if (this.company) {
+          this.company = { ...this.company, logo_url: logoDataUrl };
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeLogo(): void {
+    this.profileForm.patchValue({ logo_url: '' });
+    if (this.company) {
+      this.company = { ...this.company, logo_url: '' };
+    }
+  }
+
   saveProfile(): void {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();

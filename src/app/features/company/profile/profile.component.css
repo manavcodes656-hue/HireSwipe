@@ -110,3 +110,97 @@
 @media (max-width: 1024px) {
   .profile-form-grid { grid-template-columns: 1fr; }
 }
+
+/* Photo Upload UI Pattern */
+.profile-photo-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface-raised, #fafaf9);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+}
+
+.photo-avatar-wrapper {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+
+.photo-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent, #0f766e);
+  box-shadow: var(--shadow-xs);
+}
+
+.avatar-fallback-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg, #f1f5f9);
+  color: var(--text-secondary, #64748b);
+  border: 2px dashed var(--border, #cbd5e1);
+}
+
+.camera-overlay-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent, #0f766e);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.camera-overlay-badge:hover {
+  transform: scale(1.1);
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.photo-controls-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.photo-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+}
+
+.photo-desc {
+  font-size: 0.825rem;
+  color: var(--text-secondary, #475569);
+  line-height: 1.4;
+}
+
+.photo-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.btn-secondary.sm, .btn-tertiary.sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+}

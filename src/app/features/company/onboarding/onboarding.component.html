@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="ob-header">
       <div class="ob-brand">
-        <span class="mark">⚡</span>
+        <img src="logo.png" alt="HireSwipe" class="brand-logo-img" style="height: 32px; width: auto;" />
         <h2>Company Account Setup</h2>
       </div>
       <p class="ob-subtitle">Complete your employer profile to post jobs and swipe top talent on HireSwipe</p>
@@ -149,14 +149,37 @@
 
       <div class="branding-container">
         <div class="upload-section">
-          <label class="section-label">Company Logo</label>
-          <div class="logo-upload-box">
-            <img [src]="step3LogoUrl" alt="Company Logo" class="preview-logo" />
-            <div class="upload-btn-wrapper">
-              <button type="button" class="btn-secondary">Upload Logo Image</button>
-              <input type="file" (change)="onLogoUpload($event)" accept="image/*" />
+          <label class="section-label">Company Logo Photo</label>
+          <div class="profile-photo-upload-container">
+            <div class="photo-avatar-wrapper">
+              <img
+                *ngIf="step3LogoUrl"
+                [src]="step3LogoUrl"
+                alt="Company Logo Preview"
+                class="photo-avatar-img"
+              />
+              <div *ngIf="!step3LogoUrl" class="photo-avatar-img avatar-fallback-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+              </div>
+              <label class="camera-overlay-badge" title="Upload company logo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <input type="file" (change)="onLogoUpload($event)" accept="image/*" class="hidden-file-input" />
+              </label>
             </div>
-            <span class="help-text">JPG, PNG or SVG. Max 2MB.</span>
+
+            <div class="photo-controls-content">
+              <h3 class="photo-title">Logo / Branding Photo</h3>
+              <p class="photo-desc">Upload a high-resolution logo. Visually aligned across candidate discovery cards and recruiter chats.</p>
+
+              <div class="photo-action-buttons">
+                <label class="btn-secondary sm upload-photo-btn">
+                  Upload Photo
+                  <input type="file" (change)="onLogoUpload($event)" accept="image/*" class="hidden-file-input" />
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -300,11 +323,11 @@
           <div class="ns-grid">
             <a routerLink="/company/jobs/create" class="ns-card">
               <span class="ns-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="7" width="20" height="14" rx="2"/>
                   <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                  <line x1="12" y1="12" x2="12" y2="17"/>
-                  <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+                  <line x1="12" y1="12" x2="12" y2="16"/>
+                  <line x1="10" y1="14" x2="14" y2="14"/>
                 </svg>
               </span>
               <h5>Create First Job</h5>
@@ -312,7 +335,7 @@
             </a>
             <a routerLink="/company/team" class="ns-card">
               <span class="ns-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                   <circle cx="9" cy="7" r="4"/>
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -324,11 +347,11 @@
             </a>
             <a routerLink="/company/dashboard" class="ns-card">
               <span class="ns-icon" aria-hidden="true">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="7" height="7"/>
                   <rect x="14" y="3" width="7" height="7"/>
-                  <rect x="3" y="14" width="7" height="7"/>
                   <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
                 </svg>
               </span>
               <h5>Go to Dashboard</h5>
