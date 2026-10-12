@@ -161,7 +161,7 @@
         <div><strong>Target Role:</strong> {{ jobSeekerService.preferences().preferred_job_title }}</div>
         <div><strong>Preferred Location:</strong> {{ jobSeekerService.preferences().preferred_location }}</div>
         <div><strong>Remote Work Mode:</strong> {{ jobSeekerService.preferences().remote_preference | uppercase }}</div>
-        <div><strong>Salary Expectation:</strong> ₹{{ jobSeekerService.preferences().min_salary / 100000 }}–{{ jobSeekerService.preferences().max_salary / 100000 }} LPA</div>
+        <div><strong>Salary Expectation:</strong> ₹{{ ((jobSeekerService.preferences().min_salary || 0) / 100000) }}–{{ ((jobSeekerService.preferences().max_salary || 0) / 100000) }} LPA</div>
         <div><strong>Seniority:</strong> {{ jobSeekerService.preferences().experience_level | uppercase }}</div>
         <div><strong>Open to Relocate:</strong> {{ jobSeekerService.preferences().willing_to_relocate ? 'Yes' : 'No' }}</div>
       </div>

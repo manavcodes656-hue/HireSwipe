@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
 import { JobSeekerService } from '../services/job-seeker.service';
 
+import { AuthService } from '../../../core/services/auth.service';
+
 @Component({
   selector: 'app-job-seeker-layout',
   standalone: true,
@@ -12,12 +14,20 @@ import { JobSeekerService } from '../services/job-seeker.service';
 })
 export class JobSeekerLayoutComponent {
   jobSeekerService = inject(JobSeekerService);
+  authService = inject(AuthService);
   router = inject(Router);
 
   sidebarCollapsed = signal(false);
   mobileMenuOpen = signal(false);
   isProfileMenuOpen = signal(false);
   isNotifMenuOpen = signal(false);
+
+  constructor() {
+    const userId = this.authService.getCurrentUserId();
+    if (userId) {
+      this.jobSeekerService.initialize(userId);
+    }
+  }
 
   toggleSidebar() {
     this.sidebarCollapsed.update((v) => !v);
@@ -41,8 +51,9 @@ export class JobSeekerLayoutComponent {
     if (this.isNotifMenuOpen()) this.isProfileMenuOpen.set(false);
   }
 
-  logout() {
+  async logout() {
     this.isProfileMenuOpen.set(false);
+    await this.authService.signOut();
     this.router.navigate(['/login']);
   }
 }

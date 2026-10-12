@@ -56,8 +56,8 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
       const matchJob = !this.selectedJobIdFilter || app.job_id === this.selectedJobIdFilter;
       const matchSearch =
         !this.searchQuery ||
-        app.profile?.full_name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        app.job?.title.toLowerCase().includes(this.searchQuery.toLowerCase());
+        (app.profile?.full_name || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        (app.job?.title || '').toLowerCase().includes(this.searchQuery.toLowerCase());
 
       return matchStatus && matchJob && matchSearch;
     });

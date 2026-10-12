@@ -35,7 +35,7 @@ export class SwipeComponent {
     let list = this.jobSeekerService.availableDeckJobs();
     const rem = this.filterRemote();
     if (rem !== 'all') {
-      list = list.filter((j) => j.remote_option.toLowerCase().includes(rem));
+      list = list.filter((j) => (j.remote_option || j.remote_type || '').toLowerCase().includes(rem));
     }
     return list;
   });

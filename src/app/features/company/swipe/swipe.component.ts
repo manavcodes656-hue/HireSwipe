@@ -102,6 +102,8 @@ export class CompanySwipeComponent implements OnInit, OnDestroy {
           id: `mat-${Date.now()}`,
           job_id: jobId,
           job: this.selectedJob,
+          company_id: this.dataService.currentCompany?.id || '',
+          job_seeker_id: candidate.id,
           profile_id: candidate.id,
           profile: candidate,
           match_score: matchScore,

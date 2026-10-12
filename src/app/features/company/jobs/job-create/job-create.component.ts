@@ -99,7 +99,11 @@ export class JobCreateComponent implements OnInit {
   }
 
   private loadJobForEdit(id: string): void {
-    const job = this.dataService.currentCompany ? this.dataService['jobsSubject'].value.find((j) => j.id === id) : null;
+    let job: Job | undefined;
+    this.dataService.jobs$.subscribe((jobs) => {
+      job = jobs.find((j) => j.id === id);
+    }).unsubscribe();
+
     if (job) {
       this.jobForm.patchValue({
         title: job.title,
@@ -121,13 +125,13 @@ export class JobCreateComponent implements OnInit {
       });
 
       if (job.skills) {
-        this.selectedSkills = job.skills.map((s) => s.skill_name);
+        this.selectedSkills = job.skills.map((s) => s.skill_name || '').filter((name): name is string => !!name);
       }
       if (job.requirements) {
-        this.requirementsList = job.requirements.map((r) => r.requirement_text);
+        this.requirementsList = job.requirements.map((r) => r.requirement_text || r.requirement || '').filter(Boolean);
       }
       if (job.benefits) {
-        this.benefitsList = job.benefits.map((b) => b.benefit_text);
+        this.benefitsList = job.benefits.map((b) => b.benefit_text || b.benefit || '').filter(Boolean);
       }
     }
   }

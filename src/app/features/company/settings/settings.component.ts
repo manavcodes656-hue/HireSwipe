@@ -61,14 +61,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subs.add(
       this.dataService.company$.subscribe((c) => {
-        this.company = c;
-        this.initForms();
+        if (c) {
+          this.company = c;
+          this.initForms();
+        }
       })
     );
 
     this.subs.add(
       this.dataService.recruiterProfile$.subscribe((p) => {
-        this.recruiterProfile = p;
+        if (p) {
+          this.recruiterProfile = p;
+        }
       })
     );
   }

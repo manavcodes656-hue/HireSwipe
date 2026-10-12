@@ -42,8 +42,8 @@ export class JobListComponent implements OnInit, OnDestroy {
       const matchesTab = this.activeTab === 'all' || job.status === this.activeTab;
       const matchesSearch =
         !this.searchQuery ||
-        job.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        job.location.toLowerCase().includes(this.searchQuery.toLowerCase());
+        (job.title || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        (job.location || '').toLowerCase().includes(this.searchQuery.toLowerCase());
       return matchesTab && matchesSearch;
     });
   }

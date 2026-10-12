@@ -21,7 +21,7 @@ export class InterviewsService {
   async getJobSeekerInterviews(jobSeekerId: string): Promise<(InterviewRow & { application: any })[]> {
     const { data, error } = await this.supabase.client
       .from('interviews')
-      .select('*, applications(job_id, company_id, jobs(title), companies(name, logo_url))')
+      .select('*, applications!inner(job_id, company_id, job_seeker_id, jobs(title), companies(name, logo_url))')
       .eq('applications.job_seeker_id', jobSeekerId)
       .order('scheduled_at', { ascending: true });
     if (error) console.error('[InterviewsService] getJobSeekerInterviews:', error.message);
@@ -31,7 +31,7 @@ export class InterviewsService {
   async getCompanyInterviews(companyId: string): Promise<(InterviewRow & { application: any })[]> {
     const { data, error } = await this.supabase.client
       .from('interviews')
-      .select('*, applications(job_id, job_seeker_id, jobs(title), job_seeker_profiles(profile_id, profiles(full_name, avatar_url)))')
+      .select('*, applications!inner(job_id, job_seeker_id, jobs(title), job_seeker_profiles(profile_id, profiles(full_name, avatar_url)))')
       .eq('applications.company_id', companyId)
       .order('scheduled_at', { ascending: true });
     if (error) console.error('[InterviewsService] getCompanyInterviews:', error.message);

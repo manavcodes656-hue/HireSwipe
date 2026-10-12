@@ -762,7 +762,7 @@
           <div class="card-body-list flex-row-wrap">
             <div><strong>Target Role:</strong> {{ jobSeekerService.preferences().preferred_job_title }}</div>
             <div><strong>Work Mode:</strong> {{ jobSeekerService.preferences().remote_preference | uppercase }}</div>
-            <div><strong>Salary Target:</strong> ₹{{ jobSeekerService.preferences().min_salary / 100000 }}–{{ jobSeekerService.preferences().max_salary / 100000 }} LPA</div>
+            <div><strong>Salary Target:</strong> ₹{{ ((jobSeekerService.preferences().min_salary || 0) / 100000) }}–{{ ((jobSeekerService.preferences().max_salary || 0) / 100000) }} LPA</div>
             <div><strong>Relocation:</strong> {{ jobSeekerService.preferences().willing_to_relocate ? 'Yes' : 'No' }}</div>
           </div>
         </div>

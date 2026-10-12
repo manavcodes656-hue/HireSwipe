@@ -45,7 +45,7 @@ export class CandidatesComponent implements OnInit {
 
       const matchSkill =
         !this.selectedSkillFilter ||
-        (c.skills && c.skills.some((s) => s.toLowerCase().includes(this.selectedSkillFilter.toLowerCase())));
+        (c.skills && c.skills.some((s: string) => s.toLowerCase().includes(this.selectedSkillFilter.toLowerCase())));
 
       return matchSearch && matchSkill;
     });

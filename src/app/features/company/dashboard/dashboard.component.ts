@@ -13,7 +13,7 @@ import { Job, Application, Match, Interview, Company } from '../models/company.m
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  company!: Company;
+  company: Company | null = null;
   jobs: Job[] = [];
   applications: Application[] = [];
   matches: Match[] = [];
