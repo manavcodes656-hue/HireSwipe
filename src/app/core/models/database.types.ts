@@ -105,6 +105,7 @@ export type Database = {
           id: string
           job_id: string
           job_seeker_id: string
+          match_score: number | null
           resume_id: string | null
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
@@ -116,6 +117,7 @@ export type Database = {
           id?: string
           job_id: string
           job_seeker_id: string
+          match_score?: number | null
           resume_id?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -127,6 +129,7 @@ export type Database = {
           id?: string
           job_id?: string
           job_seeker_id?: string
+          match_score?: number | null
           resume_id?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
@@ -205,6 +208,7 @@ export type Database = {
         Row: {
           city: string | null
           company_size: string | null
+          completion_percentage: number
           country: string | null
           created_at: string
           description: string | null
@@ -215,6 +219,7 @@ export type Database = {
           location: string | null
           logo_url: string | null
           name: string
+          onboarding_completed: boolean
           phone: string | null
           state: string | null
           updated_at: string
@@ -223,6 +228,7 @@ export type Database = {
         Insert: {
           city?: string | null
           company_size?: string | null
+          completion_percentage?: number
           country?: string | null
           created_at?: string
           description?: string | null
@@ -233,6 +239,7 @@ export type Database = {
           location?: string | null
           logo_url?: string | null
           name: string
+          onboarding_completed?: boolean
           phone?: string | null
           state?: string | null
           updated_at?: string
@@ -241,6 +248,7 @@ export type Database = {
         Update: {
           city?: string | null
           company_size?: string | null
+          completion_percentage?: number
           country?: string | null
           created_at?: string
           description?: string | null
@@ -251,6 +259,7 @@ export type Database = {
           location?: string | null
           logo_url?: string | null
           name?: string
+          onboarding_completed?: boolean
           phone?: string | null
           state?: string | null
           updated_at?: string
@@ -364,6 +373,68 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: true
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_outbox: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          idempotency_key: string | null
+          max_retries: number
+          payload: Json
+          provider_message_id: string | null
+          recipient_email: string
+          recipient_id: string | null
+          retry_count: number
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          idempotency_key?: string | null
+          max_retries?: number
+          payload?: Json
+          provider_message_id?: string | null
+          recipient_email: string
+          recipient_id?: string | null
+          retry_count?: number
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          idempotency_key?: string | null
+          max_retries?: number
+          payload?: Json
+          provider_message_id?: string | null
+          recipient_email?: string
+          recipient_id?: string | null
+          retry_count?: number
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_outbox_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -674,8 +745,10 @@ export type Database = {
           id: string
           linkedin_url: string | null
           location: string | null
+          onboarding_completed: boolean
           phone: string | null
           portfolio_url: string | null
+          profile_completion_pct: number
           profile_id: string
           resume_url: string | null
           salary_currency: string
@@ -699,8 +772,10 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           location?: string | null
+          onboarding_completed?: boolean
           phone?: string | null
           portfolio_url?: string | null
+          profile_completion_pct?: number
           profile_id: string
           resume_url?: string | null
           salary_currency?: string
@@ -724,8 +799,10 @@ export type Database = {
           id?: string
           linkedin_url?: string | null
           location?: string | null
+          onboarding_completed?: boolean
           phone?: string | null
           portfolio_url?: string | null
+          profile_completion_pct?: number
           profile_id?: string
           resume_url?: string | null
           salary_currency?: string
@@ -951,6 +1028,7 @@ export type Database = {
           id: string
           job_id: string
           job_seeker_id: string
+          match_score: number | null
           matched_at: string
           status: Database["public"]["Enums"]["match_status"]
           updated_at: string
@@ -962,6 +1040,7 @@ export type Database = {
           id?: string
           job_id: string
           job_seeker_id: string
+          match_score?: number | null
           matched_at?: string
           status?: Database["public"]["Enums"]["match_status"]
           updated_at?: string
@@ -973,6 +1052,7 @@ export type Database = {
           id?: string
           job_id?: string
           job_seeker_id?: string
+          match_score?: number | null
           matched_at?: string
           status?: Database["public"]["Enums"]["match_status"]
           updated_at?: string
@@ -994,6 +1074,66 @@ export type Database = {
           },
           {
             foreignKeyName: "matches_job_seeker_id_fkey"
+            columns: ["job_seeker_id"]
+            isOneToOne: false
+            referencedRelation: "job_seeker_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matching_results: {
+        Row: {
+          created_at: string
+          criteria_analysis: Json | null
+          error_message: string | null
+          gaps: string[] | null
+          id: string
+          job_id: string
+          job_seeker_id: string
+          match_score: number
+          model_version: string | null
+          status: string
+          strengths: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criteria_analysis?: Json | null
+          error_message?: string | null
+          gaps?: string[] | null
+          id?: string
+          job_id: string
+          job_seeker_id: string
+          match_score: number
+          model_version?: string | null
+          status?: string
+          strengths?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criteria_analysis?: Json | null
+          error_message?: string | null
+          gaps?: string[] | null
+          id?: string
+          job_id?: string
+          job_seeker_id?: string
+          match_score?: number
+          model_version?: string | null
+          status?: string
+          strengths?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matching_results_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matching_results_job_seeker_id_fkey"
             columns: ["job_seeker_id"]
             isOneToOne: false
             referencedRelation: "job_seeker_profiles"
@@ -1096,6 +1236,7 @@ export type Database = {
           created_at: string
           email: string
           first_name: string | null
+          full_name: string | null
           id: string
           last_name: string | null
           phone: string | null
@@ -1107,6 +1248,7 @@ export type Database = {
           created_at?: string
           email: string
           first_name?: string | null
+          full_name?: string | null
           id: string
           last_name?: string | null
           phone?: string | null
@@ -1118,6 +1260,7 @@ export type Database = {
           created_at?: string
           email?: string
           first_name?: string | null
+          full_name?: string | null
           id?: string
           last_name?: string | null
           phone?: string | null
@@ -1300,6 +1443,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_application_eligibility: {
+        Args: { p_job_seeker_id: string; p_job_id: string }
+        Returns: Json
+      }
       get_job_seeker_id_for_user: {
         Args: { p_user_id?: string }
         Returns: string
