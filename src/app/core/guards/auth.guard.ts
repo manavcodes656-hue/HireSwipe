@@ -33,6 +33,10 @@ export const jobSeekerGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  if (authService.loading()) {
+    return true;
+  }
+
   if (!authService.isAuthenticated()) {
     router.navigate(['/login']);
     return false;
@@ -53,6 +57,10 @@ export const jobSeekerGuard: CanActivateFn = () => {
 export const companyGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
+
+  if (authService.loading()) {
+    return true;
+  }
 
   if (!authService.isAuthenticated()) {
     router.navigate(['/login']);

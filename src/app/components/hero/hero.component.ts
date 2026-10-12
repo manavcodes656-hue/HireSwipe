@@ -22,6 +22,8 @@ export class HeroComponent implements AfterViewInit, OnDestroy {
     if (!this.heroEl || !this.heroBgEl) return;
 
     // Use IntersectionObserver to only run the scroll listener when the hero is visible
+    // Guard against environments (e.g. jsdom in unit tests) that lack this API.
+    if (typeof IntersectionObserver === 'undefined') return;
     this.observer = new IntersectionObserver(
       (entries) => {
         const isIntersecting = entries[0].isIntersecting;
