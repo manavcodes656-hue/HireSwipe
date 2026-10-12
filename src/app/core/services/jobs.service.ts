@@ -99,6 +99,21 @@ export class JobsService {
     await this.supabase.client.from('jobs').update({ status: 'closed' }).eq('id', jobId);
   }
 
+  /**
+   * Generic job status update used by the job-list UI.
+   */
+  async updateJobStatus(
+    jobId: string,
+    status: JobRow['status']
+  ): Promise<{ error: string | null }> {
+    const { error } = await this.supabase.client
+      .from('jobs')
+      .update({ status })
+      .eq('id', jobId);
+    if (error) return { error: error.message };
+    return { error: null };
+  }
+
   // ── Job Skills ────────────────────────────────────────────────────────────
 
   async getJobSkills(jobId: string): Promise<(JobSkillRow & { skill_name: string })[]> {
@@ -144,4 +159,35 @@ export class JobsService {
       );
     }
   }
+
+  // ── Saved Jobs ────────────────────────────────────────────────────────────
+
+  async getSavedJobs(jobSeekerId: string): Promise<any[]> {
+    const { data, error } = await this.supabase.client
+      .from('saved_jobs')
+      .select('*, jobs(*, companies(name, logo_url))')
+      .eq('job_seeker_id', jobSeekerId)
+      .order('created_at', { ascending: false });
+    if (error) console.error('[JobsService] getSavedJobs:', error.message);
+    return data ?? [];
+  }
+
+  async saveJob(jobSeekerId: string, jobId: string): Promise<{ error: string | null }> {
+    const { error } = await this.supabase.client
+      .from('saved_jobs')
+      .insert({ job_seeker_id: jobSeekerId, job_id: jobId });
+    if (error) return { error: error.message };
+    return { error: null };
+  }
+
+  async unsaveJob(jobSeekerId: string, jobId: string): Promise<{ error: string | null }> {
+    const { error } = await this.supabase.client
+      .from('saved_jobs')
+      .delete()
+      .eq('job_seeker_id', jobSeekerId)
+      .eq('job_id', jobId);
+    if (error) return { error: error.message };
+    return { error: null };
+  }
 }
+

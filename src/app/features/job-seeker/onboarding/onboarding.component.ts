@@ -69,9 +69,13 @@ export class OnboardingComponent implements OnInit {
   searchSkillResults = computed(() => {
     const q = this.skillSearchQuery().toLowerCase().trim();
     if (!q) return [];
-    const userSkillNames = new Set(this.jobSeekerService.userSkills().map((s) => s.skill_name.toLowerCase()));
+    const userSkillNames = new Set(
+      this.jobSeekerService.userSkills().map((s) => (s.skill_name || '').toLowerCase())
+    );
     return this.jobSeekerService.catalogSkills().filter(
-      (s) => !userSkillNames.has(s.name.toLowerCase()) && (s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q))
+      (s) =>
+        !userSkillNames.has(s.name.toLowerCase()) &&
+        (s.name.toLowerCase().includes(q) || (s.category || '').toLowerCase().includes(q))
     );
   });
 
@@ -369,12 +373,14 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
-  removeSkill(id: string) {
-    this.jobSeekerService.removeUserSkill(id);
+  removeSkill(id?: string) {
+    if (id) {
+      this.jobSeekerService.removeUserSkill(id);
+    }
   }
 
   isSkillAlreadySelected(skillName: string): boolean {
-    return this.jobSeekerService.userSkills().some((s) => s.skill_name.toLowerCase() === skillName.toLowerCase());
+    return this.jobSeekerService.userSkills().some((s) => (s.skill_name || '').toLowerCase() === skillName.toLowerCase());
   }
 
   // Step 6: Resume Upload Simulation
@@ -422,7 +428,7 @@ export class OnboardingComponent implements OnInit {
   addIndustry() {
     const tag = this.industryInput().trim();
     if (!tag) return;
-    const current = this.jobSeekerService.preferences().preferred_industries;
+    const current = this.jobSeekerService.preferences().preferred_industries ?? [];
     if (!current.includes(tag)) {
       this.jobSeekerService.updatePreferences({ preferred_industries: [...current, tag] });
     }
@@ -430,7 +436,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   removeIndustry(tag: string) {
-    const current = this.jobSeekerService.preferences().preferred_industries;
+    const current = this.jobSeekerService.preferences().preferred_industries ?? [];
     this.jobSeekerService.updatePreferences({
       preferred_industries: current.filter((i) => i !== tag),
     });

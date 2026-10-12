@@ -48,7 +48,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return this.conversations.filter((c) => {
       return (
         !this.searchQuery ||
-        c.candidate_name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        (c.candidate_name || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         (c.job_title && c.job_title.toLowerCase().includes(this.searchQuery.toLowerCase()))
       );
     });

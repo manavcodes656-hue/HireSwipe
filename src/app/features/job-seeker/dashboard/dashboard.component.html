@@ -127,7 +127,7 @@
             </div>
 
             <div class="job-skills-chips">
-              <span class="skill-chip" *ngFor="let s of j.skills.slice(0, 3)">{{ s }}</span>
+              <span class="skill-chip" *ngFor="let s of (j.skills || []).slice(0, 3)">{{ s }}</span>
             </div>
 
             <div class="job-card-actions">
