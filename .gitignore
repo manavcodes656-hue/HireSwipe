@@ -43,5 +43,13 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
+# Environment secrets - NEVER commit real .env files with secrets
+.env
+.env.local
+.env.*.local
+
+# Supabase service-role key must NEVER be in the repo.
+# Only .env.example (with placeholder values) is safe to commit.
+
 app/node_modules/
 app/dist/

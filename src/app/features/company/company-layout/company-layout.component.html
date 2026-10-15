@@ -192,7 +192,7 @@
       </nav>
 
       <!-- Onboarding completion status footer card -->
-      <div class="sidebar-completion-card" *ngIf="company?.completion_percentage < 100">
+      <div class="sidebar-completion-card" *ngIf="company && company.completion_percentage < 100">
         <div class="scc-header">
           <span>Onboarding Progress</span>
           <span class="scc-pct">{{ company?.completion_percentage }}%</span>

@@ -47,7 +47,7 @@
           *ngFor="let msg of activeMessages"
           class="msg-bubble-wrapper"
           [class.outgoing]="msg.sender_type === 'company'"
-          [class.incoming]="msg.sender_type === 'candidate'"
+          [class.incoming]="msg.sender_type !== 'company'"
         >
           <div class="msg-bubble">
             <div class="msg-sender">{{ msg.sender_name }}</div>

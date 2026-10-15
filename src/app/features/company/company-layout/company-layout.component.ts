@@ -4,6 +4,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
 import { Company, Profile, Notification } from '../models/company.models';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-company-layout',
@@ -15,8 +16,8 @@ import { Company, Profile, Notification } from '../models/company.models';
 export class CompanyLayoutComponent implements OnInit, OnDestroy {
   @ViewChild('notifWrapper') notifWrapper?: ElementRef;
 
-  company!: Company;
-  recruiterProfile!: Profile;
+  company: Company | null = null;
+  recruiterProfile: Profile | null = null;
   notifications: Notification[] = [];
   unreadNotifCount = 0;
   pendingAppsCount = 0;
@@ -30,10 +31,16 @@ export class CompanyLayoutComponent implements OnInit, OnDestroy {
 
   constructor(
     private dataService: CompanyDataService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    const userId = this.authService.getCurrentUserId();
+    if (userId) {
+      this.dataService.initialize(userId);
+    }
+
     this.subs.add(
       this.dataService.company$.subscribe((c) => {
         this.company = c;
@@ -108,8 +115,9 @@ export class CompanyLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
     this.isProfileMenuOpen = false;
+    await this.authService.signOut();
     this.router.navigate(['/login']);
   }
 }

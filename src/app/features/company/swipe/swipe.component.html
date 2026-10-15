@@ -211,8 +211,8 @@
 
     <div class="match-avatars-row">
       <img
-        [src]="dataService.currentCompany.logo_url"
-        [alt]="dataService.currentCompany.name"
+        [src]="dataService.currentCompany?.logo_url"
+        [alt]="dataService.currentCompany?.name"
         class="match-avatar company"
       />
       <div class="match-vs-heart">

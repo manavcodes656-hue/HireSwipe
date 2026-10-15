@@ -26,8 +26,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subs.add(
       this.dataService.company$.subscribe((c) => {
-        this.company = c;
-        this.initForm(c);
+        if (c) {
+          this.company = c;
+          this.initForm(c);
+        }
       })
     );
   }

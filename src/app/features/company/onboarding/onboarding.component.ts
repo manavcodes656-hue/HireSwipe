@@ -52,9 +52,47 @@ export class OnboardingComponent implements OnInit {
     private router: Router
   ) {}
 
+  private companyId: string | null = null;
+  private profileId: string | null = null;
+
   ngOnInit(): void {
-    this.company = this.dataService.currentCompany;
-    this.recruiterProfile = this.dataService.currentRecruiterProfile;
+    const current = this.dataService.currentCompany;
+    const recruiter = this.dataService.currentRecruiterProfile;
+
+    // Use current company if present, or fallback defaults
+    this.company = current ?? {
+      id: '',
+      name: '',
+      industry: 'Software & Cloud Solutions',
+      size: '11-50',
+      company_size: '11-50',
+      founded_year: 2022,
+      website: 'https://',
+      email: '',
+      phone: '',
+      location: '',
+      city: '',
+      state: '',
+      country: 'India',
+      description: '',
+      culture: '',
+      mission: '',
+      values: [],
+      logo_url: '',
+      completion_percentage: 0,
+      onboarding_completed: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    this.recruiterProfile = recruiter ?? {
+      id: '',
+      email: '',
+      full_name: '',
+      role: 'company',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
     this.initForms();
     this.recalculateCompletion();
@@ -63,36 +101,36 @@ export class OnboardingComponent implements OnInit {
   private initForms(): void {
     // Step 1: Info
     this.step1Form = this.fb.group({
-      name: [this.company.name, Validators.required],
-      industry: [this.company.industry, Validators.required],
-      size: [this.company.size, Validators.required],
-      founded_year: [this.company.founded_year, [Validators.required, Validators.min(1800), Validators.max(2026)]],
-      website: [this.company.website, [Validators.required, Validators.pattern('https?://.+')]],
-      email: [this.company.email, [Validators.required, Validators.email]],
-      phone: [this.company.phone, Validators.required],
-      location: [this.company.location, Validators.required],
-      city: [this.company.city, Validators.required],
-      state: [this.company.state, Validators.required],
-      country: [this.company.country, Validators.required],
+      name: [this.company.name || '', Validators.required],
+      industry: [this.company.industry || this.industries[0], Validators.required],
+      size: [this.company.size || this.company.company_size || '11-50', Validators.required],
+      founded_year: [this.company.founded_year || 2022, [Validators.required, Validators.min(1800), Validators.max(2026)]],
+      website: [this.company.website || 'https://', [Validators.required, Validators.pattern('https?://.+')]],
+      email: [this.company.email || '', [Validators.required, Validators.email]],
+      phone: [this.company.phone || '', Validators.required],
+      location: [this.company.location || '', Validators.required],
+      city: [this.company.city || '', Validators.required],
+      state: [this.company.state || '', Validators.required],
+      country: [this.company.country || 'India', Validators.required],
     });
 
     // Step 2: Description
     this.step2Form = this.fb.group({
-      description: [this.company.description, [Validators.required, Validators.minLength(20)]],
-      culture: [this.company.culture, Validators.required],
-      mission: [this.company.mission, Validators.required],
-      valuesInput: [this.company.values.join(', '), Validators.required],
+      description: [this.company.description || '', [Validators.required, Validators.minLength(20)]],
+      culture: [this.company.culture || '', Validators.required],
+      mission: [this.company.mission || '', Validators.required],
+      valuesInput: [(this.company.values || []).join(', '), Validators.required],
     });
 
     // Step 3: Branding
-    this.step3LogoUrl = this.company.logo_url;
+    this.step3LogoUrl = this.company.logo_url || '';
     this.step3BannerUrl = this.company.banner_url || '';
 
     // Step 4: Recruiter
     this.step4Form = this.fb.group({
-      full_name: [this.recruiterProfile.full_name, Validators.required],
+      full_name: [this.recruiterProfile.full_name || '', Validators.required],
       role: ['owner', Validators.required],
-      email: [this.recruiterProfile.email, [Validators.required, Validators.email]],
+      email: [this.recruiterProfile.email || '', [Validators.required, Validators.email]],
       phone: [this.recruiterProfile.phone || '', Validators.required],
     });
   }
@@ -165,22 +203,24 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
-  finishOnboarding(): void {
+  async finishOnboarding(): Promise<void> {
     const valuesArray = this.step2Form.value.valuesInput
       ? this.step2Form.value.valuesInput.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0)
-      : this.company.values;
+      : (this.company.values || []);
 
-    this.dataService.updateCompanyProfile({
+    await this.dataService.updateCompanyProfile({
       ...this.step1Form.value,
+      company_size: this.step1Form.value.size,
       description: this.step2Form.value.description,
       culture: this.step2Form.value.culture,
       mission: this.step2Form.value.mission,
       values: valuesArray,
       logo_url: this.step3LogoUrl,
       banner_url: this.step3BannerUrl,
+      onboarding_completed: true,
     });
 
-    this.dataService.updateRecruiterProfile({
+    await this.dataService.updateRecruiterProfile({
       full_name: this.step4Form.value.full_name,
       email: this.step4Form.value.email,
       phone: this.step4Form.value.phone,
@@ -191,3 +231,4 @@ export class OnboardingComponent implements OnInit {
     this.router.navigate(['/company/dashboard']);
   }
 }
+

@@ -30,7 +30,7 @@
           <span class="role-name">{{ c.job_title }}</span>
           <p class="last-snippet">{{ c.last_message_snippet }}</p>
         </div>
-        <span class="unread-badge" *ngIf="c.unread_count > 0">{{ c.unread_count }}</span>
+        <span class="unread-badge" *ngIf="(c.unread_count || 0) > 0">{{ c.unread_count }}</span>
       </div>
     </div>
 
