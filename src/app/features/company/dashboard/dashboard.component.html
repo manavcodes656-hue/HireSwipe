@@ -1,0 +1,226 @@
+<div class="dashboard-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Company Recruitment Overview</h1>
+      <p class="page-subtitle">Real-time candidate matches, active postings, and interview pipelines for {{ company?.name }}</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/company/jobs/create" class="btn-primary">
+        <span>+ Post New Job</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Attention Banner ("What needs my attention?") -->
+  <div class="attention-section" *ngIf="attentionItems.length > 0">
+    <div class="attention-header">
+      <div class="att-title">
+        <span class="pulse-dot"></span>
+        <h2>What Needs Your Attention Today</h2>
+      </div>
+      <span class="att-count">{{ attentionItems.length }} Action Items</span>
+    </div>
+
+    <div class="attention-grid">
+      <div *ngFor="let item of attentionItems" class="att-card" [ngClass]="item.type">
+        <span class="att-icon" aria-hidden="true">
+          <svg *ngIf="item.icon === 'applications' || item.type === 'urgent'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+          <svg *ngIf="item.icon === 'interviews' || item.type === 'action'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <svg *ngIf="item.icon === 'profile' || item.type === 'info'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/>
+            <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+            <line x1="9" y1="8" x2="10" y2="8"/>
+            <line x1="9" y1="12" x2="10" y2="12"/>
+            <line x1="9" y1="16" x2="10" y2="16"/>
+            <line x1="14" y1="8" x2="15" y2="8"/>
+            <line x1="14" y1="12" x2="15" y2="12"/>
+            <line x1="14" y1="16" x2="15" y2="16"/>
+          </svg>
+        </span>
+        <div class="att-content">
+          <h4>{{ item.title }}</h4>
+          <p>{{ item.desc }}</p>
+        </div>
+        <a [routerLink]="item.link" class="att-btn">Review Now →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon-box teal" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Active Jobs</span>
+        <span class="kpi-val">{{ activeJobsCount }}</span>
+        <span class="kpi-sub font-teal">Live on candidate swipe feed</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box blue" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Total Applications</span>
+        <span class="kpi-val">{{ totalAppsCount }}</span>
+        <span class="kpi-sub font-blue">+8 new applications this week</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box amber" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="8.5" cy="7" r="4"/>
+          <polyline points="17 11 19 13 23 9"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Shortlisted Candidates</span>
+        <span class="kpi-val">{{ shortlistedCount }}</span>
+        <span class="kpi-sub font-amber">High match confidence score</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box emerald" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m11 17 2 2a1 1 0 0 0 1.4 0l4.3-4.3a1 1 0 0 0 0-1.4l-2-2"/>
+          <path d="m14 14 2.5 2.5"/>
+          <path d="m17 11 2.5 2.5"/>
+          <path d="m3 11 4-4a2 2 0 0 1 2.8 0l1.2 1.2"/>
+          <path d="m21 13-4 4a2 2 0 0 1-2.8 0l-1.2-1.2"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Mutual Matches</span>
+        <span class="kpi-val">{{ matchesCount }}</span>
+        <span class="kpi-sub font-emerald">Direct messaging enabled</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon-box purple" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Upcoming Interviews</span>
+        <span class="kpi-val">{{ upcomingInterviewsCount }}</span>
+        <span class="kpi-sub font-purple">Next session tomorrow</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-main-grid">
+    <!-- Recent Applications Table -->
+    <div class="dash-card col-span-2">
+      <div class="card-header">
+        <h3>Recent Applications</h3>
+        <a routerLink="/company/applications" class="view-all-link">View All Applications →</a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Applied Role</th>
+              <th>Match Score</th>
+              <th>Applied Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let app of applications">
+              <td>
+                <div class="cand-cell">
+                  <img [src]="app.profile?.avatar_url" [alt]="app.profile?.full_name" class="cand-avatar" />
+                  <div>
+                    <div class="cand-name">{{ app.profile?.full_name }}</div>
+                    <div class="cand-loc">{{ app.profile?.location }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="role-title">{{ app.job?.title }}</span>
+              </td>
+              <td>
+                <span class="match-score-pill">{{ app.match_score }}% Match</span>
+              </td>
+              <td>{{ app.applied_at | date:'mediumDate' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="app.status">{{ app.status | titlecase }}</span>
+              </td>
+              <td>
+                <a routerLink="/company/applications" class="table-btn">Review</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Active Job Performance Overview -->
+    <div class="dash-card">
+      <div class="card-header">
+        <h3>Job Performance</h3>
+        <a routerLink="/company/jobs" class="view-all-link">Manage Jobs →</a>
+      </div>
+
+      <div class="jobs-perf-list">
+        <div *ngFor="let job of jobs" class="job-perf-item">
+          <div class="jpi-header">
+            <span class="jpi-title">{{ job.title }}</span>
+            <span class="jpi-status" [ngClass]="job.status">{{ job.status | uppercase }}</span>
+          </div>
+          <p class="jpi-meta">{{ job.employment_type | titlecase }} • {{ job.location }}</p>
+          <div class="jpi-stats-row">
+            <div class="jpi-stat">
+              <span class="num">{{ job.views_count }}</span>
+              <span class="lbl">Views</span>
+            </div>
+            <div class="jpi-stat">
+              <span class="num">{{ job.applications_count }}</span>
+              <span class="lbl">Applicants</span>
+            </div>
+            <div class="jpi-stat">
+              <span class="num">{{ job.matches_count }}</span>
+              <span class="lbl">Matches</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
