@@ -658,11 +658,165 @@
   color: #94a3b8;
 }
 
+/* Attention Banner */
+.attention-section {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-left: 4px solid var(--accent, #0f766e);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+
+.attention-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.att-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--accent, #0f766e);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.2);
+  animation: subtlePulse 2s infinite;
+}
+
+.att-title h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+  margin: 0;
+}
+
+.att-count {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: var(--accent, #0f766e);
+  background: var(--accent-tint, rgba(15, 118, 110, 0.08));
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(15, 118, 110, 0.15);
+}
+
+.attention-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.att-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg, #ffffff);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.att-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.att-card.urgent { border-color: #fecaca; background: #fff5f5; }
+.att-card.action { border-color: #e0f2fe; background: #f0f9ff; }
+.att-card.info { border-color: var(--border, #e2e8f0); background: #ffffff; }
+
+.att-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.att-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.att-card.urgent .att-icon {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.att-card.action .att-icon {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.15);
+}
+
+.att-card.info .att-icon {
+  background: var(--accent-soft, #f0fdfa);
+  color: var(--accent, #0f766e);
+  border: 1px solid rgba(15, 118, 110, 0.15);
+}
+
+.att-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.att-content h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+  margin: 0 0 0.2rem;
+}
+
+.att-content p {
+  font-size: 0.8rem;
+  color: var(--secondary, #64748b);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.att-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent, #0f766e);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background: var(--accent-tint, rgba(15, 118, 110, 0.08));
+}
+
+.att-btn:hover {
+  background: var(--accent, #0f766e);
+  color: #ffffff;
+}
+
 @media (max-width: 1024px) {
   .welcome-hero-card,
   .dashboard-main-grid,
   .jobs-cards-grid,
-  .metrics-grid {
+  .metrics-grid,
+  .attention-grid {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .att-card {
+    flex-wrap: wrap;
+  }
+}
+

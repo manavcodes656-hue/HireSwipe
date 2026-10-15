@@ -72,4 +72,40 @@ export class DashboardComponent {
       route: '/job-seeker/swipe',
     };
   }
+
+  get attentionItems(): { title: string; desc: string; link: string; icon: string; type: 'urgent' | 'action' | 'info' }[] {
+    const items: { title: string; desc: string; link: string; icon: string; type: 'urgent' | 'action' | 'info' }[] = [];
+    const apps = this.jobSeekerService.applications();
+    const activeApps = apps.filter((a) => a.status !== 'rejected');
+    const upcoming = this.upcomingInterviewsList;
+
+    // 1. New Application
+    items.push({
+      title: activeApps.length > 0 ? `${activeApps.length} New Application Update${activeApps.length > 1 ? 's' : ''}` : 'New Application Activity',
+      desc: activeApps.length > 0 ? `Your submission for ${activeApps[0].job_title} at ${activeApps[0].company_name} is active.` : 'Track submitted job applications and responses from engineering teams.',
+      link: '/job-seeker/applications',
+      icon: 'applications',
+      type: 'urgent',
+    });
+
+    // 2. Upcoming Interview
+    items.push({
+      title: upcoming.length > 0 ? `Upcoming Interview: ${upcoming[0].company_name}` : 'Upcoming Interview Schedule',
+      desc: upcoming.length > 0 ? `Scheduled for ${upcoming[0].date} at ${upcoming[0].time} (${upcoming[0].job_title}).` : 'No upcoming interviews scheduled today. Stay tuned for invites.',
+      link: '/job-seeker/interviews',
+      icon: 'interviews',
+      type: 'action',
+    });
+
+    // 3. Company Profile
+    items.push({
+      title: 'Company Profile & Matches',
+      desc: 'Explore verified company profiles actively recruiting engineers matching your stack.',
+      link: '/job-seeker/swipe',
+      icon: 'profile',
+      type: 'info',
+    });
+
+    return items;
+  }
 }
