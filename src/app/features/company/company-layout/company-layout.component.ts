@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -14,6 +14,8 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './company-layout.component.css',
 })
 export class CompanyLayoutComponent implements OnInit, OnDestroy {
+  @ViewChild('notifWrapper') notifWrapper?: ElementRef;
+
   company: Company | null = null;
   recruiterProfile: Profile | null = null;
   notifications: Notification[] = [];
@@ -73,6 +75,17 @@ export class CompanyLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.isNotifMenuOpen) {
+      return;
+    }
+    const targetNode = event.target as Node;
+    if (this.notifWrapper && !this.notifWrapper.nativeElement.contains(targetNode)) {
+      this.isNotifMenuOpen = false;
+    }
   }
 
   toggleProfileMenu(): void {
