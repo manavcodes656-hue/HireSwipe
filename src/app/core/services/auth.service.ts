@@ -140,6 +140,20 @@ export class AuthService {
   }
 
   /**
+   * Get the current user's Supabase Auth access token.
+   * Checks the reactive session signal first, and falls back to
+   * Supabase Auth getSession() if not yet populated.
+   */
+  async getAccessToken(): Promise<string | null> {
+    const currentSession = this.session();
+    if (currentSession?.access_token) {
+      return currentSession.access_token;
+    }
+    const { data } = await this.supabase.client.auth.getSession();
+    return data.session?.access_token ?? null;
+  }
+
+  /**
    * Navigate to the correct dashboard/onboarding based on role.
    * Call after successful login or signup.
    */
