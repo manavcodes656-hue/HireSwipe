@@ -540,10 +540,48 @@ export class CompanyDataService {
 
   // ── Mutations ────────────────────────────────────────────────────────────
 
-  async updateCompanyProfile(data: Partial<Company>): Promise<{ error: string | null }> {
-    if (!this._companyId) return { error: 'No company loaded' };
-    const { error } = await this.companyService.updateCompany(this._companyId, data as any);
-    if (!error) {
+  /**
+   * Reload the current company data from backend.
+   */
+  async reloadCompany(): Promise<void> {
+    const profileId = this._profileId || this.authService.getCurrentUserId();
+    if (profileId) {
+      await this.loadCompanyForProfile(profileId);
+    }
+  }
+
+  /**
+   * Create a company and initialize state via the Express backend.
+   */
+  async createCompany(data: Partial<Company>): Promise<{ companyId: string | null; error: string | null; code?: string }> {
+    const profileId = this._profileId || this.authService.getCurrentUserId();
+    if (!profileId) {
+      return { companyId: null, error: 'User is not authenticated', code: 'UNAUTHORIZED' };
+    }
+    this._profileId = profileId;
+
+    const result = await this.companyService.createCompany(profileId, data as any);
+    if (result.companyId) {
+      this._companyId = result.companyId;
+      await this.loadCompanyForProfile(profileId);
+    } else if (result.code === 'COMPANY_EXISTS') {
+      // In case of conflict, safely load the existing company so UI can proceed
+      await this.loadCompanyForProfile(profileId);
+    }
+    return result;
+  }
+
+  async updateCompanyProfile(data: Partial<Company>): Promise<{ error: string | null; code?: string }> {
+    if (!this._companyId) {
+      const profileId = this._profileId || this.authService.getCurrentUserId();
+      if (profileId) {
+        await this.loadCompanyForProfile(profileId);
+      }
+    }
+    if (!this._companyId) return { error: 'No company loaded', code: 'NO_COMPANY' };
+
+    const result = await this.companyService.updateCompany(this._companyId, data as any);
+    if (!result.error) {
       const current = this.companySubject.value;
       if (current) {
         const updated = { ...current, ...data, updated_at: new Date().toISOString() };
@@ -551,7 +589,7 @@ export class CompanyDataService {
         this.companySubject.next(updated);
       }
     }
-    return { error };
+    return result;
   }
 
   async updateRecruiterProfile(data: Partial<Profile>): Promise<{ error: string | null }> {
@@ -603,7 +641,7 @@ export class CompanyDataService {
     newStatus: ApplicationStatus,
     notes?: string
   ): Promise<{ error: string | null }> {
-    const result = await this.applicationsService.updateApplicationStatus(appId, newStatus as any);
+    const result = await this.applicationsService.updateApplicationStatus(appId, newStatus as any, notes);
     if (!result.error) {
       const apps = this.applicationsSubject.value.map((app) =>
         app.id === appId
