@@ -80,9 +80,11 @@ export class CandidatesComponent implements OnInit {
     this.showToast(`Candidate ${cand.full_name} rejected.`);
   }
 
-  contact(cand: Profile, event?: Event): void {
+  async contact(cand: Profile, event?: Event): Promise<void> {
     if (event) event.stopPropagation();
-    const conv = this.dataService.startConversationWithCandidate(cand.id, this.jobs[0]?.id);
+    // A conversation only exists once the candidate matched a published job.
+    // The lookup never creates one, it only finds the real conversation.
+    await this.dataService.startConversationWithCandidate(cand.id, this.jobs[0]?.id);
     this.router.navigate(['/company/messages']);
   }
 
