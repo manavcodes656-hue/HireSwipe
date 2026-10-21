@@ -10,7 +10,7 @@
 
       <!-- Auto Save Toast -->
       <div class="auto-save-toast" *ngIf="saveSuccessMessage()">
-        <i class="lucide lucide-check-circle"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         <span>{{ saveSuccessMessage() }}</span>
       </div>
     </div>
@@ -31,7 +31,7 @@
         [attr.aria-label]="title"
       >
         <span class="pill-number" *ngIf="i + 1 >= currentStep()">{{ i + 1 }}</span>
-        <i class="lucide lucide-check pill-check" *ngIf="i + 1 < currentStep()"></i>
+        <svg class="pill-check" *ngIf="i + 1 < currentStep()" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         <span class="pill-name">{{ title }}</span>
       </button>
     </div>
@@ -58,7 +58,7 @@
             </svg>
           </div>
           <label class="camera-overlay-badge" title="Upload new photo">
-            <i class="lucide lucide-camera"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
           </label>
         </div>
@@ -69,12 +69,14 @@
 
           <div class="photo-action-buttons">
             <label class="secondary-btn sm upload-photo-btn">
-              <i class="lucide lucide-upload"></i> Upload Photo
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <span>Upload Photo</span>
               <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
             </label>
 
             <button type="button" class="tertiary-btn sm" (click)="removeAvatar()" *ngIf="personalForm.get('avatar_url')?.value">
-              <i class="lucide lucide-trash-2"></i> Reset
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <span>Reset</span>
             </button>
           </div>
 
@@ -243,13 +245,14 @@
           <p class="section-desc">Add your degree(s), college, or university details.</p>
         </div>
         <button class="primary-btn sm" type="button" (click)="openAddEduModal()">
-          <i class="lucide lucide-plus"></i> Add Education
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Add Education</span>
         </button>
       </div>
 
       <!-- Empty State -->
       <div class="empty-box" *ngIf="jobSeekerService.educationList().length === 0">
-        <i class="lucide lucide-graduation-cap empty-icon"></i>
+        <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
         <p>No education records added yet. Click above to add your qualification.</p>
       </div>
 
@@ -263,16 +266,22 @@
             </div>
             <div class="record-actions">
               <button class="icon-action-btn" (click)="openEditEduModal(edu)" title="Edit">
-                <i class="lucide lucide-pencil"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
               </button>
               <button class="icon-action-btn danger" (click)="deleteEdu(edu.id)" title="Delete">
-                <i class="lucide lucide-trash-2"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             </div>
           </div>
           <div class="record-meta">
-            <span><i class="lucide lucide-calendar"></i> {{ edu.start_date }} to {{ edu.end_date }}</span>
-            <span *ngIf="edu.grade" class="grade-tag"><i class="lucide lucide-award"></i> {{ edu.grade }}</span>
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              {{ edu.start_date }} to {{ edu.end_date }}
+            </span>
+            <span *ngIf="edu.grade" class="grade-tag">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+              {{ edu.grade }}
+            </span>
           </div>
           <p class="record-desc" *ngIf="edu.description">{{ edu.description }}</p>
         </div>
@@ -287,13 +296,14 @@
           <p class="section-desc">List your previous or current full-time, contract, or internship positions.</p>
         </div>
         <button class="primary-btn sm" type="button" (click)="openAddExpModal()">
-          <i class="lucide lucide-plus"></i> Add Experience
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Add Experience</span>
         </button>
       </div>
 
       <!-- Empty State -->
       <div class="empty-box" *ngIf="jobSeekerService.experienceList().length === 0">
-        <i class="lucide lucide-briefcase empty-icon"></i>
+        <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
         <p>No work experience entries added yet. Click above to add your employment history.</p>
       </div>
 
@@ -307,15 +317,18 @@
             </div>
             <div class="record-actions">
               <button class="icon-action-btn" (click)="openEditExpModal(exp)" title="Edit">
-                <i class="lucide lucide-pencil"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
               </button>
               <button class="icon-action-btn danger" (click)="deleteExp(exp.id)" title="Delete">
-                <i class="lucide lucide-trash-2"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             </div>
           </div>
           <div class="record-meta">
-            <span><i class="lucide lucide-calendar"></i> {{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }}</span>
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              {{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }}
+            </span>
             <span class="type-badge">{{ exp.employment_type }}</span>
           </div>
           <p class="record-desc">{{ exp.description }}</p>
@@ -329,7 +342,10 @@
       <!-- Static Popular Skills Section (ALWAYS REMAINS VISIBLE) -->
       <div class="popular-skills-section">
         <div class="popular-header">
-          <span class="popular-title"><i class="lucide lucide-star"></i> Popular Skills</span>
+          <span class="popular-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            Popular Skills
+          </span>
           <span class="popular-sub">Click any skill below to add it instantly to your candidate profile:</span>
         </div>
         <div class="popular-chips-wrap">
@@ -342,7 +358,7 @@
             [disabled]="isSkillAlreadySelected(pSkill)"
           >
             <span *ngIf="!isSkillAlreadySelected(pSkill)">+</span>
-            <i class="lucide lucide-check" *ngIf="isSkillAlreadySelected(pSkill)"></i>
+            <svg *ngIf="isSkillAlreadySelected(pSkill)" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             {{ pSkill }}
           </button>
         </div>
@@ -351,7 +367,7 @@
       <!-- Interactive Skill Search Field & Dynamic Results Dropdown -->
       <div class="skill-search-wrapper">
         <div class="search-input-box">
-          <i class="lucide lucide-search search-icon"></i>
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input
             type="text"
             [ngModel]="skillSearchQuery()"
@@ -424,7 +440,7 @@
               <span class="skill-badge" [class]="s.proficiency_level">{{ s.proficiency_level }} &bull; {{ s.years_of_experience }}y</span>
             </div>
             <button type="button" class="remove-skill-btn" (click)="removeSkill(s.id)" title="Remove skill">
-              <i class="lucide lucide-x"></i>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
         </div>
@@ -442,7 +458,7 @@
         (drop)="onFileDropped($event)"
       >
         <div class="dropzone-icon-circle">
-          <i class="lucide lucide-file-up"></i>
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
         </div>
 
         <div class="dropzone-text-box">
@@ -452,7 +468,8 @@
         </div>
 
         <label class="primary-btn sm browse-btn">
-          <i class="lucide lucide-folder-open"></i> Browse File
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <span>Browse File</span>
           <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.doc" class="hidden-file-input" />
         </label>
       </div>
@@ -464,12 +481,15 @@
         <div class="resume-file-card" *ngFor="let r of jobSeekerService.resumes()">
           <div class="file-card-left">
             <div class="pdf-icon-box">
-              <i class="lucide lucide-file-text"></i>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
             </div>
             <div class="file-info-details">
               <div class="file-title-row">
                 <span class="file-name">{{ r.file_name }}</span>
-                <span class="primary-pill" *ngIf="r.is_primary"><i class="lucide lucide-star"></i> Primary Resume</span>
+                <span class="primary-pill" *ngIf="r.is_primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  Primary Resume
+                </span>
               </div>
               <span class="file-meta">{{ r.file_size }} &bull; Uploaded {{ r.uploaded_at | date:'mediumDate' }}</span>
             </div>
@@ -480,7 +500,7 @@
               Set Primary
             </button>
             <button class="icon-action-btn danger" (click)="deleteResume(r.id)" title="Delete resume">
-              <i class="lucide lucide-trash-2"></i>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
           </div>
         </div>
@@ -506,7 +526,7 @@
               [class.selected]="preferencesForm.get('remote_preference')?.value === 'hybrid'"
               (click)="selectRemotePref('hybrid')"
             >
-              <i class="lucide lucide-building-2 choice-icon"></i>
+              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="9" y1="18" x2="9" y2="18.01"></line><line x1="15" y1="18" x2="15" y2="18.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line></svg>
               <span class="choice-title">Hybrid</span>
               <span class="choice-sub">Office + Remote flexibility</span>
             </div>
@@ -516,7 +536,7 @@
               [class.selected]="preferencesForm.get('remote_preference')?.value === 'remote'"
               (click)="selectRemotePref('remote')"
             >
-              <i class="lucide lucide-laptop choice-icon"></i>
+              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="20" x2="22" y2="20"></line></svg>
               <span class="choice-title">100% Remote</span>
               <span class="choice-sub">Work from anywhere</span>
             </div>
@@ -526,7 +546,7 @@
               [class.selected]="preferencesForm.get('remote_preference')?.value === 'on_site'"
               (click)="selectRemotePref('on_site')"
             >
-              <i class="lucide lucide-map-pin choice-icon"></i>
+              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
               <span class="choice-title">On-Site</span>
               <span class="choice-sub">In-office full time</span>
             </div>
@@ -536,7 +556,7 @@
               [class.selected]="preferencesForm.get('remote_preference')?.value === 'any'"
               (click)="selectRemotePref('any')"
             >
-              <i class="lucide lucide-sparkles choice-icon"></i>
+              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
               <span class="choice-title">Open to Any</span>
               <span class="choice-sub">Flexible work modes</span>
             </div>
@@ -635,7 +655,7 @@
           <div class="industry-chips mt-2">
             <span class="ind-chip" *ngFor="let ind of jobSeekerService.preferences().preferred_industries">
               {{ ind }}
-              <i class="lucide lucide-x" (click)="removeIndustry(ind)"></i>
+              <svg (click)="removeIndustry(ind)" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </span>
           </div>
         </div>
@@ -658,7 +678,10 @@
           <div>
             <h2 class="review-name">{{ jobSeekerService.profile().full_name }}</h2>
             <p class="review-headline">{{ jobSeekerService.jobSeekerProfile().headline }}</p>
-            <span class="review-location"><i class="lucide lucide-map-pin"></i> {{ jobSeekerService.jobSeekerProfile().location }}</span>
+            <span class="review-location">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              {{ jobSeekerService.jobSeekerProfile().location }}
+            </span>
           </div>
         </div>
 
@@ -669,7 +692,7 @@
       </div>
 
       <div class="review-notice-bar">
-        <i class="lucide lucide-check-circle"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         <span>Everything is ready! Please review your candidate summary before launching discovery.</span>
       </div>
 
@@ -679,7 +702,10 @@
         <!-- Personal Info -->
         <div class="review-card">
           <div class="card-head">
-            <h4><i class="lucide lucide-user"></i> Personal Information</h4>
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Personal Information
+            </h4>
             <button class="text-link-btn" (click)="goToStep(1)">Edit</button>
           </div>
           <div class="card-body-list">
@@ -693,7 +719,10 @@
         <!-- Professional Summary -->
         <div class="review-card">
           <div class="card-head">
-            <h4><i class="lucide lucide-briefcase"></i> Professional Information</h4>
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              Professional Information
+            </h4>
             <button class="text-link-btn" (click)="goToStep(2)">Edit</button>
           </div>
           <div class="card-body-list">
@@ -707,7 +736,10 @@
         <!-- Education History -->
         <div class="review-card">
           <div class="card-head">
-            <h4><i class="lucide lucide-graduation-cap"></i> Education ({{ jobSeekerService.educationList().length }})</h4>
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              Education ({{ jobSeekerService.educationList().length }})
+            </h4>
             <button class="text-link-btn" (click)="goToStep(3)">Edit</button>
           </div>
           <div class="card-body-list">
@@ -720,7 +752,10 @@
         <!-- Work Experience -->
         <div class="review-card">
           <div class="card-head">
-            <h4><i class="lucide lucide-layers"></i> Work Experience ({{ jobSeekerService.experienceList().length }})</h4>
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              Work Experience ({{ jobSeekerService.experienceList().length }})
+            </h4>
             <button class="text-link-btn" (click)="goToStep(4)">Edit</button>
           </div>
           <div class="card-body-list">
@@ -733,7 +768,10 @@
         <!-- Skills -->
         <div class="review-card">
           <div class="card-head">
-            <h4><i class="lucide lucide-code"></i> Skills ({{ jobSeekerService.userSkills().length }})</h4>
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              Skills ({{ jobSeekerService.userSkills().length }})
+            </h4>
             <button class="text-link-btn" (click)="goToStep(5)">Edit</button>
           </div>
           <div class="skills-inline-chips">
@@ -744,19 +782,30 @@
         <!-- Uploaded Resume -->
         <div class="review-card">
           <div class="card-head">
-            <h4><i class="lucide lucide-file-text"></i> Uploaded Resume</h4>
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              Uploaded Resume
+            </h4>
             <button class="text-link-btn" (click)="goToStep(6)">Edit</button>
           </div>
           <div class="card-body-list" *ngFor="let r of jobSeekerService.resumes()">
             <div><strong>File:</strong> {{ r.file_name }} ({{ r.file_size }})</div>
-            <div><span class="primary-pill"><i class="lucide lucide-star"></i> Primary Candidate CV</span></div>
+            <div>
+              <span class="primary-pill">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                Primary Candidate CV
+              </span>
+            </div>
           </div>
         </div>
 
         <!-- Preferences -->
         <div class="review-card full-width">
           <div class="card-head">
-            <h4><i class="lucide lucide-sliders"></i> Job Preferences</h4>
+            <h4>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Job Preferences
+            </h4>
             <button class="text-link-btn" (click)="goToStep(7)">Edit</button>
           </div>
           <div class="card-body-list flex-row-wrap">
@@ -791,7 +840,8 @@
           type="button"
           (click)="completeOnboarding()"
         >
-          <i class="lucide lucide-check-circle"></i> Complete Profile & Launch Dashboard
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>Complete Profile & Launch Dashboard</span>
         </button>
       </div>
     </div>
@@ -803,7 +853,9 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3>{{ editingEduId() ? 'Edit Education' : 'Add Education Record' }}</h3>
-      <button class="close-btn" (click)="showEduModal.set(false)"><i class="lucide lucide-x"></i></button>
+      <button class="close-btn" (click)="showEduModal.set(false)" aria-label="Close modal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
     <div class="modal-body" [formGroup]="educationForm">
       <div class="form-group">
@@ -849,7 +901,9 @@
   <div class="modal-box">
     <div class="modal-header">
       <h3>{{ editingExpId() ? 'Edit Work Experience' : 'Add Work Experience' }}</h3>
-      <button class="close-btn" (click)="showExpModal.set(false)"><i class="lucide lucide-x"></i></button>
+      <button class="close-btn" (click)="showExpModal.set(false)" aria-label="Close modal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
     <div class="modal-body" [formGroup]="experienceForm">
       <div class="form-group">

@@ -10,14 +10,18 @@
           <img src="logo.png" alt="HireSwipe" class="brand-logo-img" />
           <span class="logo-text">Hire<span class="highlight">Swipe</span></span>
         </a>
-        <span class="recruiter-badge">Candidate Workspace</span>
+        <span class="recruiter-badge">Job Seeker</span>
       </div>
 
-      <a routerLink="/job-seeker/profile" class="company-switcher">
+      <div class="company-switcher" routerLink="/job-seeker/profile">
         <div class="avatar-box">
-          <img *ngIf="jobSeekerService.profile().avatar_url" [src]="jobSeekerService.profile().avatar_url" [alt]="jobSeekerService.profile().full_name" class="company-mini-logo" />
-          <div *ngIf="!jobSeekerService.profile().avatar_url" class="company-mini-logo avatar-fallback-box">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <img *ngIf="jobSeekerService.profile().avatar_url && !avatarError()"
+               [src]="jobSeekerService.profile().avatar_url"
+               [alt]="jobSeekerService.profile().full_name"
+               (error)="onAvatarError()"
+               class="company-mini-logo" />
+          <div *ngIf="!jobSeekerService.profile().avatar_url || avatarError()" class="company-mini-logo avatar-fallback-box">
+            <span>{{ userInitials }}</span>
           </div>
         </div>
         <div class="company-info-text">
@@ -27,24 +31,62 @@
           </div>
           <span class="comp-completion">{{ jobSeekerService.jobSeekerProfile().profile_completion_pct }}% Profile Complete</span>
         </div>
-      </a>
+      </div>
 
       <div class="header-right">
-        <!-- Discover Jobs Quick Action Button -->
-        <a routerLink="/job-seeker/swipe" class="btn-create-job">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        <!-- Discover Jobs / Swipe Action Button -->
+        <a routerLink="/job-seeker/swipe" class="btn-swipe" routerLinkActive="active" title="Explore and swipe job openings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
           <span>Discover Jobs</span>
         </a>
 
-        <!-- Notifications Icon -->
-        <div class="notif-wrapper">
-          <a routerLink="/job-seeker/notifications" class="icon-btn" aria-label="Notifications">
+        <!-- Quick Action Track Applications Button -->
+        <a routerLink="/job-seeker/applications" class="btn-create-job" routerLinkActive="active" title="View your applications">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Applications</span>
+        </a>
+
+        <!-- Notifications Dropdown Trigger (Bell Button) -->
+        <div class="notif-wrapper" #notifWrapper>
+          <button class="icon-btn" (click)="toggleNotifMenu()" aria-label="Notifications">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
             <span class="badge-dot" *ngIf="jobSeekerService.unreadNotificationCount() > 0">{{ jobSeekerService.unreadNotificationCount() }}</span>
-          </a>
+          </button>
+
+          <!-- Notifications Dropdown Panel -->
+          <div class="notif-dropdown" *ngIf="isNotifMenuOpen()">
+            <div class="notif-header">
+              <h3>Notifications</h3>
+              <button class="text-link" (click)="markAllRead()">Mark all as read</button>
+            </div>
+            <div class="notif-list">
+              <div
+                *ngFor="let n of jobSeekerService.notifications()"
+                class="notif-item"
+                [class.unread]="!n.read && !n.is_read"
+                (click)="markNotifRead(n, $event)"
+              >
+                <div class="notif-icon-box" [ngClass]="n.type">
+                  <svg *ngIf="n.type === 'application' || n.type === 'application_update'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  <svg *ngIf="n.type === 'match' || n.type === 'new_match'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                  <svg *ngIf="n.type === 'message' || n.type === 'new_message'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  <svg *ngIf="n.type === 'interview'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <svg *ngIf="n.type === 'job_recommendation' || n.type === 'system'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
+                <div class="notif-content">
+                  <div class="notif-title">{{ n.title }}</div>
+                  <div class="notif-msg">{{ n.message }}</div>
+                  <div class="notif-time">{{ n.created_at }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="notif-footer">
+              <a routerLink="/job-seeker/notifications" (click)="isNotifMenuOpen.set(false)">View All Notifications →</a>
+            </div>
+          </div>
         </div>
 
-        <!-- Messages Icon -->
+        <!-- Messages Icon Button -->
         <div class="notif-wrapper">
           <a routerLink="/job-seeker/messages" class="icon-btn" aria-label="Messages">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -53,11 +95,15 @@
         </div>
 
         <!-- Job Seeker Profile Menu -->
-        <div class="profile-wrapper">
+        <div class="profile-wrapper" #profileWrapper>
           <button class="profile-btn" (click)="toggleProfileMenu()">
-            <img *ngIf="jobSeekerService.profile().avatar_url" [src]="jobSeekerService.profile().avatar_url" [alt]="jobSeekerService.profile().full_name" class="avatar-img" />
-            <div *ngIf="!jobSeekerService.profile().avatar_url" class="avatar-img avatar-fallback-box">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <img *ngIf="jobSeekerService.profile().avatar_url && !avatarError()"
+                 [src]="jobSeekerService.profile().avatar_url"
+                 [alt]="jobSeekerService.profile().full_name"
+                 (error)="onAvatarError()"
+                 class="avatar-img" />
+            <div *ngIf="!jobSeekerService.profile().avatar_url || avatarError()" class="avatar-img avatar-fallback-box">
+              <span>{{ userInitials }}</span>
             </div>
             <span class="user-name">{{ jobSeekerService.profile().full_name }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -78,6 +124,10 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               <span>Onboarding Wizard</span>
             </a>
+            <a routerLink="/job-seeker/saved-jobs" class="dropdown-item" (click)="isProfileMenuOpen.set(false)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              <span>Saved Jobs</span>
+            </a>
             <a routerLink="/job-seeker/settings" class="dropdown-item" (click)="isProfileMenuOpen.set(false)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               <span>Account & Settings</span>
@@ -93,12 +143,15 @@
     </div>
   </header>
 
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="sidebar-backdrop" *ngIf="mobileMenuOpen()" (click)="closeMobileMenu()"></div>
+
   <!-- Shell Body -->
   <div class="shell-body">
     <!-- Sidebar Navigation -->
     <aside class="sidebar" [class.open]="mobileMenuOpen()">
       <nav class="nav-menu">
-        <div class="nav-section-label">MAIN MENU</div>
+        <div class="nav-section-label">CAREER HUBS</div>
 
         <a routerLink="/job-seeker/dashboard" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
           <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
@@ -111,16 +164,16 @@
           <span class="nav-badge teal">Swipe</span>
         </a>
 
-        <a routerLink="/job-seeker/matches" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
-          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-          <span>Matches</span>
-          <span class="nav-badge" *ngIf="jobSeekerService.matches().length > 0">{{ jobSeekerService.matches().length }}</span>
-        </a>
-
         <a routerLink="/job-seeker/applications" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
-          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
           <span>Applications</span>
           <span class="nav-badge" *ngIf="jobSeekerService.applications().length > 0">{{ jobSeekerService.applications().length }}</span>
+        </a>
+
+        <a routerLink="/job-seeker/matches" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
+          <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span>Swipe Matches</span>
+          <span class="nav-badge" *ngIf="jobSeekerService.matches().length > 0">{{ jobSeekerService.matches().length }}</span>
         </a>
 
         <a routerLink="/job-seeker/saved-jobs" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
@@ -149,11 +202,11 @@
           <span class="nav-badge teal" *ngIf="jobSeekerService.unreadNotificationCount() > 0">{{ jobSeekerService.unreadNotificationCount() }}</span>
         </a>
 
-        <div class="nav-section-label">ACCOUNT & PROFILE</div>
+        <div class="nav-section-label">PROFILE & SETTINGS</div>
 
         <a routerLink="/job-seeker/profile" routerLinkActive="active" class="nav-item" (click)="closeMobileMenu()">
           <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <span>Profile</span>
+          <span>My Profile</span>
           <span class="nav-badge teal">{{ jobSeekerService.jobSeekerProfile().profile_completion_pct }}%</span>
         </a>
 
