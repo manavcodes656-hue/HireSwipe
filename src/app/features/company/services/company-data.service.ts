@@ -271,24 +271,71 @@ export class CompanyDataService {
     } as Notification)));
   }
 
+  /**
+   * Load the company's conversations through the Express backend.
+   * The backend derives the company from the caller's verified membership and
+   * returns the candidate, the last message and the unread count.
+   */
   async loadConversations(profileId: string): Promise<void> {
-    const raw = await this.messagesService.getConversations(profileId);
-    const convs: Conversation[] = (raw ?? []).map((row: any) => {
-      const conv = row.conversations;
-      const match = conv?.matches;
-      return {
-        id: conv?.id ?? row.conversation_id,
-        match_id: conv?.match_id ?? '',
-        created_at: conv?.created_at ?? '',
-        updated_at: conv?.updated_at ?? '',
-        job_title: match?.jobs?.title ?? '',
-        candidate_name: 'Candidate',
-        last_message: '',
-        last_message_at: conv?.updated_at ?? '',
-        unread_count: 0,
-      } as Conversation;
+    const raw = await this.messagesService.getCompanyConversations();
+    this.conversationsSubject.next((raw ?? []).map((row: any) => this.mapConversation(row)));
+  }
+
+  /**
+   * Load the message history of one conversation through the Express backend.
+   */
+  async loadMessages(conversationId: string): Promise<{ error: string | null }> {
+    const result = await this.messagesService.getCompanyConversation(conversationId);
+    if (!result) {
+      return { error: 'Conversation could not be loaded' };
+    }
+
+    const thread = (result.messages ?? []).map((message: any) => this.mapMessage(message));
+    this.messagesSubject.next({
+      ...this.messagesSubject.value,
+      [conversationId]: thread,
     });
-    this.conversationsSubject.next(convs);
+
+    return { error: null };
+  }
+
+  private mapConversation(raw: any): Conversation {
+    return {
+      id: raw.id,
+      match_id: raw.match_id ?? '',
+      job_id: raw.job?.id,
+      candidate_id: raw.candidate?.id,
+      company_id: raw.company_id ?? undefined,
+      created_at: raw.created_at ?? '',
+      updated_at: raw.updated_at ?? '',
+      candidate_name: raw.candidate?.full_name ?? 'Candidate',
+      candidate_avatar: raw.candidate?.avatar_url ?? null,
+      candidate_role: raw.candidate?.headline ?? null,
+      job_title: raw.job?.title ?? '',
+      last_message: raw.last_message?.message ?? '',
+      last_message_at: raw.last_message_at ?? raw.updated_at ?? '',
+      unread_count: raw.unread_count ?? 0,
+    } as Conversation;
+  }
+
+  private mapMessage(raw: any): Message {
+    const senderRole = raw.profiles?.role ?? null;
+    const isCompanySide = senderRole === 'company' || senderRole === 'admin';
+
+    return {
+      id: raw.id,
+      conversation_id: raw.conversation_id,
+      sender_id: raw.sender_id,
+      sender_type: isCompanySide ? 'company' : 'job_seeker',
+      sender_name: raw.profiles?.full_name ?? '',
+      content: raw.message ?? '',
+      message: raw.message ?? '',
+      message_type: raw.message_type ?? 'text',
+      attachments: [],
+      is_read: raw.is_read ?? false,
+      sent_at: raw.created_at,
+      created_at: raw.created_at,
+    } as Message;
   }
 
   // ── Refresh helpers ─────────────────────────────────────────────────────
@@ -483,7 +530,7 @@ export class CompanyDataService {
       candidate_id: raw.applications?.job_seeker_id,
       candidate_name: raw.applications?.job_seeker_profiles?.profiles?.full_name ?? 'Candidate',
       candidate_avatar: raw.applications?.job_seeker_profiles?.profiles?.avatar_url,
-      recruiter_name: 'Lead Recruiter',
+      recruiter_name: raw.profiles?.full_name ?? 'Lead Recruiter',
       job_title: raw.applications?.jobs?.title ?? raw.title ?? 'Role Interview',
       title: raw.title ?? 'Interview',
       description: raw.description ?? null,
@@ -700,31 +747,34 @@ export class CompanyDataService {
     }
   }
 
-  startConversationWithCandidate(candidateId: string, jobId?: string): Conversation {
-    const cand = this.candidateProfiles.find((c) => c.id === candidateId);
+  /**
+   * Find the conversation with a candidate.
+   *
+   * A conversation is created by the database when a match exists, and a match
+   * is created when the candidate likes one of the company's published jobs.
+   * The API can therefore only look the conversation up, never create one:
+   * when there is none, null is returned and no conversation is fabricated.
+   */
+  async startConversationWithCandidate(
+    candidateId: string,
+    jobId?: string
+  ): Promise<Conversation | null> {
     const existing = this.conversationsSubject.value.find((c) => c.candidate_id === candidateId);
-
     if (existing) return existing;
 
-    const job = jobId ? this.jobsSubject.value.find((j) => j.id === jobId) : undefined;
-    const newConv: Conversation = {
-      id: `conv-${Date.now()}`,
-      job_id: jobId,
-      job_title: job ? job.title : 'Direct Outreach',
-      candidate_id: candidateId,
-      candidate_name: cand ? cand.full_name : 'Candidate',
-      candidate_avatar: cand?.avatar_url,
-      candidate_role: cand?.headline,
-      company_id: this._companyId ?? '',
-      last_message: 'Conversation started',
-      last_message_at: new Date().toISOString(),
-      unread_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    const conversations = await this.messagesService.getCompanyConversations({
+      candidateId,
+      jobId,
+    });
+    const match = (conversations ?? [])[0];
+    if (!match) return null;
 
-    this.conversationsSubject.next([newConv, ...this.conversationsSubject.value]);
-    return newConv;
+    const conversation = this.mapConversation(match);
+    this.conversationsSubject.next([
+      conversation,
+      ...this.conversationsSubject.value.filter((c) => c.id !== conversation.id),
+    ]);
+    return conversation;
   }
 
   async markNotificationRead(id: string): Promise<void> {
@@ -756,93 +806,128 @@ export class CompanyDataService {
     return this.messagesSubject.value[conversationId] ?? [];
   }
 
+  /**
+   * Send a message to a candidate through the Express backend.
+   *
+   * The message is only shown once the database stored it, so the UI never
+   * shows a message that was not actually sent. The thread is reloaded from
+   * the server afterwards, which keeps it in sync with the stored history.
+   */
   async sendMessage(conversationId: string, text: string, attachments: any[] = []): Promise<{ error: string | null }> {
     const userId = this.authService.getCurrentUserId() ?? this._profileId;
     if (!userId) return { error: 'Not authenticated' };
+    if (!text.trim()) return { error: 'Message cannot be empty' };
 
-    const newMsg: Message = {
-      id: `msg-${Date.now()}`,
-      conversation_id: conversationId,
-      sender_id: userId,
-      sender_type: 'company',
-      sender_name: `${this.recruiterProfileSubject.value?.full_name || 'Recruiter'}`,
-      content: text,
-      message: text,
-      message_type: 'text',
-      attachments: attachments,
-      is_read: true,
-      sent_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-    };
-
-    const current = this.messagesSubject.value;
-    const thread = current[conversationId] ?? [];
-    this.messagesSubject.next({ ...current, [conversationId]: [...thread, newMsg] });
-
-    if (!conversationId.startsWith('conv-')) {
-      const result = await this.messagesService.sendMessage(conversationId, userId, text);
+    const result = await this.messagesService.sendCompanyMessage(conversationId, text.trim());
+    if (result.error) {
       return { error: result.error };
     }
+
+    await this.loadMessages(conversationId);
+    await this.loadConversations(userId);
+
     return { error: null };
   }
 
+  /**
+   * Subscribe to the messages of a conversation in real time.
+   * The subscription uses the caller's Supabase session (Realtime does not
+   * travel through Express) and the database RLS policies decide which rows
+   * are delivered. The returned function removes the channel again.
+   */
+  subscribeToMessages(conversationId: string, onMessage: (message: any) => void): () => void {
+    return this.messagesService.subscribeToMessages(conversationId, onMessage);
+  }
+
+  /**
+   * Upload an attachment to a conversation and send it as a file message.
+   */
+  async sendFileMessage(conversationId: string, file: File): Promise<{ error: string | null }> {
+    const userId = this.authService.getCurrentUserId() ?? this._profileId;
+    if (!userId) return { error: 'Not authenticated' };
+
+    const result = await this.messagesService.sendCompanyFileMessage(conversationId, file);
+    if (result.error) {
+      return { error: result.error };
+    }
+
+    await this.loadMessages(conversationId);
+    await this.loadConversations(userId);
+
+    return { error: null };
+  }
+
+  /**
+   * Schedule an interview through the Express backend and reload the list so
+   * the UI holds the persisted records (the API owns the id, the timestamps
+   * and the interviewer).
+   *
+   * The application is moved into the `interview` stage afterwards, using the
+   * applications endpoint of the previous phase.
+   */
   async scheduleInterview(
     data: any
   ): Promise<{ error: string | null; interview?: Interview }> {
-    const userId = this.authService.getCurrentUserId() ?? this._profileId;
     const app = this.applicationsSubject.value.find((a) => a.id === data.application_id);
     const candidateName = data.candidate_name || app?.profile?.full_name || 'Candidate';
-    const scheduledAt = data.scheduled_at || (data.date && data.time ? `${data.date}T${data.time}:00Z` : new Date().toISOString());
+    const scheduledAt =
+      data.scheduled_at || (data.date && data.time ? `${data.date}T${data.time}:00Z` : new Date().toISOString());
 
-    const result = await this.interviewsService.scheduleInterview(userId ?? 'u-recruiter', {
+    const result = await this.interviewsService.scheduleInterview({
       application_id: data.application_id,
-      title: data.job_title ? `${data.job_title} Interview` : 'Technical Interview',
-      description: data.notes ?? null,
+      title: data.title || (app?.job?.title ? `${app.job.title} Interview` : 'Technical Interview'),
+      description: data.notes ?? data.description ?? null,
       scheduled_at: scheduledAt,
       duration_minutes: data.duration_minutes ?? 45,
       meeting_url: data.meeting_link || data.meeting_url || null,
       location: data.location || 'Online Video Call',
-      status: 'scheduled',
     });
 
-    const newInterview: Interview = {
-      id: result.data?.id ?? `int-${Date.now()}`,
-      application_id: data.application_id,
-      job_id: data.job_id || app?.job_id,
-      candidate_id: data.candidate_id || app?.job_seeker_id,
-      candidate_name: candidateName,
-      candidate_avatar: app?.profile?.avatar_url,
-      recruiter_name: this.recruiterProfileSubject.value?.full_name || 'Recruiter',
-      job_title: data.job_title || app?.job?.title || 'Role Interview',
-      title: data.job_title ? `${data.job_title} Interview` : 'Interview',
-      scheduled_at: scheduledAt,
-      date: data.date || scheduledAt.split('T')[0],
-      time: data.time || '10:00 AM',
-      duration_minutes: data.duration_minutes ?? 45,
-      meeting_url: data.meeting_link || data.meeting_url,
-      meeting_link: data.meeting_link || data.meeting_url || 'https://meet.google.com',
-      location: data.location || 'Google Meet',
-      notes: data.notes,
-      status: 'scheduled',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    this.interviewsSubject.next([newInterview, ...this.interviewsSubject.value]);
-    if (data.application_id) {
-      await this.updateApplicationStatus(data.application_id, 'interview', `Interview scheduled with ${candidateName}`);
+    if (result.error || !result.data) {
+      return { error: result.error ?? 'Failed to schedule interview' };
     }
 
-    return { error: result.error, interview: newInterview };
+    const createdId = result.data.id;
+
+    // Reload from the backend: the stored record is the source of truth.
+    if (this._companyId) {
+      await this.loadInterviews(this._companyId);
+    }
+    const created = this.interviewsSubject.value.find((i) => i.id === createdId);
+
+    if (data.application_id) {
+      await this.updateApplicationStatus(
+        data.application_id,
+        'interview',
+        `Interview scheduled with ${candidateName}`
+      );
+    }
+
+    return { error: null, interview: created };
   }
 
-  async updateInterviewStatus(interviewId: string, status: InterviewStatus): Promise<void> {
+  /**
+   * Change the status of an interview (mark completed, cancel, reschedule).
+   * The backend enforces the permitted status transitions.
+   */
+  async updateInterviewStatus(
+    interviewId: string,
+    status: InterviewStatus
+  ): Promise<{ error: string | null }> {
     const dbStatus = status === 'upcoming' ? 'scheduled' : status;
-    await this.interviewsService.updateInterview(interviewId, { status: dbStatus as any });
-    const list = this.interviewsSubject.value.map((i) =>
-      i.id === interviewId ? { ...i, status } : i
-    );
-    this.interviewsSubject.next(list);
+    const result = await this.interviewsService.updateInterviewStatus(interviewId, dbStatus);
+    if (result.error) {
+      return { error: result.error };
+    }
+
+    if (result.interview) {
+      const updated = this.mapInterview(result.interview);
+      this.interviewsSubject.next(
+        this.interviewsSubject.value.map((i) => (i.id === interviewId ? updated : i))
+      );
+    }
+
+    return { error: null };
   }
 
   // ── Team Members management ───────────────────────────────────────────────

@@ -33,9 +33,9 @@ export class MatchesComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
-  startChat(match: Match): void {
+  async startChat(match: Match): Promise<void> {
     if (match.profile_id) {
-      this.dataService.startConversationWithCandidate(match.profile_id, match.job_id);
+      await this.dataService.startConversationWithCandidate(match.profile_id, match.job_id);
       this.router.navigate(['/company/messages']);
     }
   }

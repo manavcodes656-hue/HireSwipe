@@ -19,7 +19,13 @@ export class MessagesComponent implements OnInit, OnDestroy {
   messageText = '';
   searchQuery = '';
 
+  isLoading = false;
+  isSending = false;
+  errorMessage: string | null = null;
+
   private subs = new Subscription();
+  /** Removes the Realtime channel of the open conversation. */
+  private unsubscribeMessages: (() => void) | null = null;
 
   constructor(private dataService: CompanyDataService) {}
 
@@ -28,7 +34,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.dataService.conversations$.subscribe((cList) => {
         this.conversations = cList;
         if (cList.length > 0 && !this.activeConversation) {
-          this.activeConversation = cList[0];
+          this.selectConversation(cList[0]);
         }
       })
     );
@@ -42,6 +48,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    this.closeMessageSubscription();
   }
 
   get filteredConversations(): Conversation[] {
@@ -56,6 +63,17 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   selectConversation(conv: Conversation): void {
     this.activeConversation = conv;
+    this.errorMessage = null;
+    this.isLoading = true;
+
+    void this.dataService.loadMessages(conv.id).then((result) => {
+      this.isLoading = false;
+      if (result.error) {
+        this.errorMessage = result.error;
+      }
+    });
+
+    this.openMessageSubscription(conv.id);
   }
 
   get activeMessages(): Message[] {
@@ -63,20 +81,103 @@ export class MessagesComponent implements OnInit, OnDestroy {
     return this.messagesMap[this.activeConversation.id] || [];
   }
 
-  sendMessage(): void {
+  async sendMessage(): Promise<void> {
     if (!this.messageText.trim() || !this.activeConversation) return;
 
-    this.dataService.sendMessage(this.activeConversation.id, this.messageText.trim());
+    const text = this.messageText.trim();
+    this.errorMessage = null;
+    this.isSending = true;
+
+    const result = await this.dataService.sendMessage(this.activeConversation.id, text);
+
+    this.isSending = false;
+    if (result.error) {
+      this.errorMessage = result.error;
+      // Keep the text so the recruiter can retry without retyping it.
+      this.messageText = text;
+      return;
+    }
     this.messageText = '';
   }
 
-  sendAttachmentSimulation(): void {
-    if (!this.activeConversation) return;
+  /**
+   * Send the file the recruiter picked. The file goes to the conversation's
+   * storage folder and the message itself is created by the backend.
+   */
+  async sendAttachment(file: File): Promise<void> {
+    if (!file || !this.activeConversation) return;
 
-    this.dataService.sendMessage(
-      this.activeConversation.id,
-      'Attached interview pre-read documentation for review.',
-      [{ name: 'TechPulse_Interview_Prep.pdf', url: '#', type: 'pdf' }]
+    this.errorMessage = null;
+    this.isSending = true;
+
+    const result = await this.dataService.sendFileMessage(this.activeConversation.id, file);
+
+    this.isSending = false;
+    if (result.error) {
+      this.errorMessage = result.error;
+    }
+  }
+
+  /** Wire the hidden file input to the attachment flow. */
+  onAttachmentPicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files.length > 0 ? input.files[0] : null;
+    // Reset the input so the same file can be picked again.
+    input.value = '';
+    if (file) {
+      void this.sendAttachment(file);
+    }
+  }
+
+  // ── Realtime ──────────────────────────────────────────────────────────────
+
+  /**
+   * Listen for new messages in the open conversation. Realtime uses the
+   * caller's Supabase session, so the database RLS policies decide which rows
+   * are delivered.
+   */
+  private openMessageSubscription(conversationId: string): void {
+    this.closeMessageSubscription();
+    this.unsubscribeMessages = this.dataService.subscribeToMessages(
+      conversationId,
+      (message: any) => this.appendRealtimeMessage(conversationId, message),
     );
+  }
+
+  private closeMessageSubscription(): void {
+    if (this.unsubscribeMessages) {
+      this.unsubscribeMessages();
+      this.unsubscribeMessages = null;
+    }
+  }
+
+  private appendRealtimeMessage(conversationId: string, message: any): void {
+    const thread = this.messagesMap[conversationId] ?? [];
+    if (thread.some((existing) => existing.id === message.id)) return;
+
+    const conversation = this.conversations.find((c) => c.id === conversationId);
+    const outgoing = message.sender_id !== conversation?.candidate_id;
+
+    const mapped: Message = {
+      id: message.id,
+      conversation_id: message.conversation_id ?? conversationId,
+      sender_id: message.sender_id,
+      sender_type: outgoing ? 'company' : 'job_seeker',
+      sender_name: outgoing
+        ? this.dataService.currentRecruiterProfile?.full_name ?? 'You'
+        : conversation?.candidate_name ?? 'Candidate',
+      content: message.message ?? '',
+      message: message.message ?? '',
+      message_type: message.message_type ?? 'text',
+      attachments: [],
+      is_read: message.is_read ?? false,
+      sent_at: message.created_at,
+      created_at: message.created_at,
+    } as Message;
+
+    this.messagesMap = {
+      ...this.messagesMap,
+      [conversationId]: [...thread, mapped],
+    };
   }
 }

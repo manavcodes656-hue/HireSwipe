@@ -180,6 +180,8 @@
             <button type="button" class="act-btn reject" (click)="updateStatus('rejected')">✕ Reject
               Application</button>
           </div>
+
+          <p class="action-error" *ngIf="errorMessage">{{ errorMessage }}</p>
         </div>
 
         <!-- Status History Timeline -->
