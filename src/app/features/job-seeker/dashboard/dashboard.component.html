@@ -1,0 +1,345 @@
+<div class="dashboard-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Candidate Career Overview</h1>
+      <p class="page-subtitle">Real-time job matches, application statuses, and interview schedules for {{ jobSeekerService.profile().full_name }}</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/job-seeker/swipe" class="btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>Discover Jobs</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Attention Banner ("What Needs Your Attention") -->
+  <div class="attention-section">
+    <div class="attention-header">
+      <div class="att-title">
+        <span class="pulse-dot"></span>
+        <h2>What Needs Your Attention</h2>
+      </div>
+      <span class="att-count">{{ attentionItems.length }} Action Items</span>
+    </div>
+
+    <div class="attention-grid">
+      <div *ngFor="let item of attentionItems" class="att-card" [ngClass]="item.type">
+        <span class="att-icon" aria-hidden="true">
+          <!-- 1. Application Update Document Icon -->
+          <svg *ngIf="item.icon === 'application'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <!-- 2. Interview Calendar Icon -->
+          <svg *ngIf="item.icon === 'interview'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <!-- 3. Profile User Icon -->
+          <svg *ngIf="item.icon === 'profile'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </span>
+        <div class="att-content">
+          <h4>{{ item.title }}</h4>
+          <p>{{ item.desc }}</p>
+        </div>
+        <a [routerLink]="item.link" class="att-btn">{{ item.btnText }}</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Five Dashboard Metric Cards (synced with Company Dashboard visual language) -->
+  <div class="kpi-grid">
+    <!-- 1. Available Roles (Active Jobs adapted to Job Seeker) -->
+    <a routerLink="/job-seeker/swipe" class="kpi-card" title="Explore available roles in discovery deck">
+      <div class="kpi-icon-box teal" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Available Roles</span>
+        <span class="kpi-val">{{ jobSeekerService.jobs().length }}</span>
+        <span class="kpi-sub font-teal">Live in discovery deck</span>
+      </div>
+    </a>
+
+    <!-- 2. Total Applications -->
+    <a routerLink="/job-seeker/applications" class="kpi-card" title="View all submitted applications">
+      <div class="kpi-icon-box blue" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Total Applications</span>
+        <span class="kpi-val">{{ jobSeekerService.applications().length }}</span>
+        <span class="kpi-sub font-blue">{{ activeApplicationsCount }} active in review</span>
+      </div>
+    </a>
+
+    <!-- 3. Saved Jobs (Shortlisted Candidates adapted to Job Seeker) -->
+    <a routerLink="/job-seeker/saved-jobs" class="kpi-card" title="View bookmarked saved jobs">
+      <div class="kpi-icon-box amber" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Saved Jobs</span>
+        <span class="kpi-val">{{ jobSeekerService.savedJobs().length }}</span>
+        <span class="kpi-sub font-amber">Bookmarked opportunities</span>
+      </div>
+    </a>
+
+    <!-- 4. Mutual Matches -->
+    <a routerLink="/job-seeker/matches" class="kpi-card" title="View mutual matches">
+      <div class="kpi-icon-box emerald" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m11 17 2 2a1 1 0 0 0 1.4 0l4.3-4.3a1 1 0 0 0 0-1.4l-2-2"/>
+          <path d="m14 14 2.5 2.5"/>
+          <path d="m17 11 2.5 2.5"/>
+          <path d="m3 11 4-4a2 2 0 0 1 2.8 0l1.2 1.2"/>
+          <path d="m21 13-4 4a2 2 0 0 1-2.8 0l-1.2-1.2"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Mutual Matches</span>
+        <span class="kpi-val">{{ jobSeekerService.matches().length }}</span>
+        <span class="kpi-sub font-emerald">Direct messaging enabled</span>
+      </div>
+    </a>
+
+    <!-- 5. Upcoming Interviews -->
+    <a routerLink="/job-seeker/interviews" class="kpi-card" title="View scheduled interviews">
+      <div class="kpi-icon-box purple" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <div class="kpi-info">
+        <span class="kpi-label">Upcoming Interviews</span>
+        <span class="kpi-val">{{ upcomingInterviewsList.length }}</span>
+        <span class="kpi-sub font-purple">{{ upcomingInterviewsList.length > 0 ? ('Next: ' + upcomingInterviewsList[0].date) : '0 scheduled rounds' }}</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-main-grid">
+    <!-- Left Column (Applications Table & Recommended Jobs) -->
+    <div class="main-column">
+      <!-- Recent Applications Table Card -->
+      <div class="dash-card">
+        <div class="card-header">
+          <div>
+            <h3>Applications Status Tracker</h3>
+            <p class="card-sub">Monitor recruiter feedback, interview stages, and response updates</p>
+          </div>
+          <a routerLink="/job-seeker/applications" class="view-all-link">Manage Applications →</a>
+        </div>
+
+        <div class="table-responsive" *ngIf="jobSeekerService.applications().length > 0; else noApps">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th>Company & Role</th>
+                <th>Employment</th>
+                <th>Match Score</th>
+                <th>Applied Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let app of jobSeekerService.applications()">
+                <td>
+                  <div class="cand-cell">
+                    <img [src]="app.company_logo" [alt]="app.company_name" class="cand-avatar" />
+                    <div>
+                      <div class="cand-name">{{ app.job_title }}</div>
+                      <div class="cand-loc">{{ app.company_name }} • {{ app.job_location || 'Remote' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="role-title">{{ app.employment_type || 'Full-time' }}</span>
+                </td>
+                <td>
+                  <span class="match-score-pill">{{ formatMatchScore(app.match_score, '92%') }}</span>
+                </td>
+                <td>{{ app.applied_at | date:'mediumDate' }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="app.status">{{ app.status | titlecase }}</span>
+                </td>
+                <td>
+                  <a routerLink="/job-seeker/applications" class="table-btn">Track</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noApps>
+          <div class="empty-state-box">
+            <p>You haven't submitted any applications yet.</p>
+            <a routerLink="/job-seeker/swipe" class="btn-primary sm">Start Swiping Jobs</a>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Recommended Jobs Section -->
+      <div class="dash-card">
+        <div class="card-header">
+          <div>
+            <h3>Recommended Jobs For You</h3>
+            <p class="card-sub">Matched against your profile skills, experience, and location</p>
+          </div>
+          <a routerLink="/job-seeker/swipe" class="view-all-link">Launch Deck →</a>
+        </div>
+
+        <div class="jobs-perf-list" *ngIf="jobSeekerService.availableDeckJobs().length > 0; else noDeckJobs">
+          <div *ngFor="let job of jobSeekerService.availableDeckJobs().slice(0, 3)" class="job-perf-item">
+            <div class="jpi-header">
+              <div class="job-brand-header">
+                <img [src]="job.company_logo" [alt]="job.company_name" class="job-company-mini-logo" />
+                <div>
+                  <span class="jpi-title">{{ job.title }}</span>
+                  <div class="jpi-meta">{{ job.company_name }} • {{ job.location }} • {{ job.salary_display }}</div>
+                </div>
+              </div>
+              <span class="match-score-pill">{{ formatMatchScore(job.match_score, '96%') }}</span>
+            </div>
+
+            <div class="job-skills-chips" *ngIf="job.skills && job.skills.length > 0">
+              <span class="skill-chip" *ngFor="let s of job.skills.slice(0, 4)">{{ s }}</span>
+            </div>
+
+            <div class="jpi-actions-row">
+              <button
+                class="table-btn"
+                [class.saved]="isJobSaved(job.id)"
+                (click)="saveJob(job)"
+                [title]="isJobSaved(job.id) ? 'Job Saved to Bookmarks' : 'Save Job for Later'"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isJobSaved(job.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                <span>{{ isJobSaved(job.id) ? 'Saved' : 'Save' }}</span>
+              </button>
+              <button class="btn-primary sm" (click)="quickLikeJob(job)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Instant Swipe Like</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <ng-template #noDeckJobs>
+          <div class="empty-state-box">
+            <p>You've reviewed all recommended jobs for today!</p>
+            <a routerLink="/job-seeker/applications" class="btn-primary sm">View Applications</a>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Right Column (Interviews, Mutual Matches, Notifications) -->
+    <div class="side-column">
+      <!-- Upcoming Interviews Card -->
+      <div class="dash-card" *ngIf="upcomingInterviewsList.length > 0">
+        <div class="card-header">
+          <h3>Upcoming Interview</h3>
+          <a routerLink="/job-seeker/interviews" class="view-all-link">View All →</a>
+        </div>
+
+        <div class="interview-card" *ngFor="let int of upcomingInterviewsList">
+          <div class="int-top">
+            <img [src]="int.company_logo" [alt]="int.company_name" class="cand-avatar" />
+            <div class="int-info">
+              <div class="cand-name">{{ int.job_title }}</div>
+              <div class="cand-loc">{{ int.company_name }} • {{ int.location }}</div>
+            </div>
+          </div>
+          <div class="int-schedule-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>{{ int.date }} @ {{ int.time }}</span>
+          </div>
+          <a [href]="int.meeting_link" target="_blank" class="btn-primary w-full text-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+            <span>Join Video Call</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Mutual Matches -->
+      <div class="dash-card">
+        <div class="card-header">
+          <h3>Swipe Matches</h3>
+          <a routerLink="/job-seeker/matches" class="view-all-link">All Matches →</a>
+        </div>
+
+        <div class="compact-list" *ngIf="jobSeekerService.matches().length > 0; else noMatches">
+          <div class="compact-item" *ngFor="let m of jobSeekerService.matches().slice(0, 4)">
+            <img [src]="m.company_logo" [alt]="m.company_name" class="cand-avatar" />
+            <div class="compact-info">
+              <div class="cand-name">{{ m.company_name }}</div>
+              <div class="cand-loc">{{ m.job_title }}</div>
+              <span class="match-score-pill">{{ formatMatchScore(m.match_score, '95%') }}</span>
+            </div>
+            <button class="table-btn icon-only" (click)="openMatchChat(m.id)" title="Chat with recruiter">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </button>
+          </div>
+        </div>
+        <ng-template #noMatches>
+          <div class="empty-state-box">
+            <p>No matches yet. Discover and swipe right on jobs to match!</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Recent Notifications Card -->
+      <div class="dash-card">
+        <div class="card-header">
+          <h3>Recent Notifications</h3>
+          <a routerLink="/job-seeker/notifications" class="view-all-link">View All →</a>
+        </div>
+
+        <div class="compact-list">
+          <div
+            class="compact-item notif-row"
+            *ngFor="let n of jobSeekerService.notifications().slice(0, 4)"
+            [class.unread]="!n.read && !n.is_read"
+            [routerLink]="n.link_route"
+          >
+            <div class="notif-mini-icon">
+              <svg *ngIf="n.type === 'new_match' || n.type === 'match'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              <svg *ngIf="n.type === 'new_message' || n.type === 'message'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <svg *ngIf="n.type === 'interview'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <svg *ngIf="n.type === 'application_update' || n.type === 'application'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <svg *ngIf="n.type === 'job_recommendation' || n.type === 'system'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </div>
+            <div class="compact-info">
+              <div class="notif-text-title">{{ n.title }}</div>
+              <p class="notif-text-desc">{{ n.message }}</p>
+              <span class="notif-text-time">{{ n.created_at }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

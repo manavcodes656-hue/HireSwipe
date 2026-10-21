@@ -1,0 +1,164 @@
+<div class="candidates-page">
+  <!-- Toast Notification -->
+  <div class="toast-banner" *ngIf="toastMessage">
+    <span>✓ {{ toastMessage }}</span>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Candidate Discovery</h1>
+      <p class="page-subtitle">Search talent pool, inspect verified skills, shortlist candidates, and initiate outreach</p>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="filter-card">
+    <div class="search-field">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input
+        type="text"
+        placeholder="Search candidates by name, headline, or location..."
+        [(ngModel)]="searchQuery"
+      />
+    </div>
+
+    <div class="filter-selects">
+      <select [(ngModel)]="selectedSkillFilter">
+        <option value="">All Skills</option>
+        <option value="Angular">Angular</option>
+        <option value="Node.js">Node.js</option>
+        <option value="TypeScript">TypeScript</option>
+        <option value="Kubernetes">Kubernetes</option>
+        <option value="Figma">Figma</option>
+        <option value="PyTorch">PyTorch</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Candidate Cards Grid -->
+  <div class="candidate-grid" *ngIf="filteredCandidates.length > 0">
+    <div *ngFor="let cand of filteredCandidates" class="cand-card" (click)="openCandidateProfile(cand)">
+      <div class="cc-header">
+        <img [src]="cand.avatar_url" [alt]="cand.full_name" class="cc-avatar" />
+        <div class="cc-meta">
+          <div class="cc-name-row">
+            <h3 class="cc-name">{{ cand.full_name }}</h3>
+            <span class="match-pill">95%+ Match</span>
+          </div>
+          <p class="cc-headline">{{ cand.headline }}</p>
+          <p class="cc-loc">📍 {{ cand.location }} • {{ cand.experience_years }} Yrs Exp</p>
+        </div>
+      </div>
+
+      <div class="cc-skills">
+        <span *ngFor="let s of cand.skills" class="skill-tag">{{ s }}</span>
+      </div>
+
+      <div class="cc-edu" *ngIf="cand.education">
+        🎓 <span>{{ cand.education }}</span>
+      </div>
+
+      <div class="cc-actions">
+        <button type="button" class="btn-sm outline" (click)="openResumeModal(cand, $event)">
+          📄 View Resume
+        </button>
+        <button type="button" class="btn-sm shortlist" (click)="shortlist(cand, $event)">
+          ⭐ Shortlist
+        </button>
+        <button type="button" class="btn-sm contact" (click)="contact(cand, $event)">
+          💬 Message
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="filteredCandidates.length === 0" class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>No Candidates Found</h3>
+    <p>Try clearing your skill filter or broadening your search query.</p>
+  </div>
+
+  <!-- Candidate Profile Drawer / Modal -->
+  <div class="modal-backdrop" *ngIf="isProfileModalOpen" (click)="closeModals()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Candidate Profile Overview</h2>
+        <button type="button" class="close-btn" (click)="closeModals()">✕</button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedCandidate">
+        <div class="profile-hero">
+          <img [src]="selectedCandidate.avatar_url" [alt]="selectedCandidate.full_name" class="ph-avatar" />
+          <div class="ph-info">
+            <h2>{{ selectedCandidate.full_name }}</h2>
+            <p class="ph-headline">{{ selectedCandidate.headline }}</p>
+            <p class="ph-loc">📍 {{ selectedCandidate.location }} • {{ selectedCandidate.experience_years }} Years Experience</p>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <h4>Bio & Background</h4>
+          <p>{{ selectedCandidate.bio || 'Experienced software professional with demonstrated technical achievements.' }}</p>
+        </div>
+
+        <div class="section-box">
+          <h4>Verified Skills</h4>
+          <div class="cc-skills">
+            <span *ngFor="let s of selectedCandidate.skills" class="skill-tag lg">{{ s }}</span>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <h4>Education & Credentials</h4>
+          <p>{{ selectedCandidate.education }}</p>
+        </div>
+      </div>
+
+      <div class="modal-footer" *ngIf="selectedCandidate">
+        <button type="button" class="btn-secondary" (click)="openResumeModal(selectedCandidate)">View Resume Preview</button>
+        <button type="button" class="btn-danger-outline" (click)="reject(selectedCandidate); closeModals()">Pass Candidate</button>
+        <button type="button" class="btn-primary" (click)="shortlist(selectedCandidate); closeModals()">Shortlist & Match ⭐</button>
+        <button type="button" class="btn-teal" (click)="contact(selectedCandidate); closeModals()">Send Direct Message 💬</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resume Preview Modal -->
+  <div class="modal-backdrop" *ngIf="isResumeModalOpen" (click)="closeModals()">
+    <div class="modal-card lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Resume Document — {{ selectedCandidate?.full_name }}</h2>
+        <button type="button" class="close-btn" (click)="closeModals()">✕</button>
+      </div>
+
+      <div class="resume-preview-box">
+        <div class="resume-sheet">
+          <div class="rs-head">
+            <h2>{{ selectedCandidate?.full_name }}</h2>
+            <p>{{ selectedCandidate?.headline }}</p>
+            <p>Email: {{ selectedCandidate?.email }} • Phone: +91 98XXX XXXX (Protected Contact)</p>
+          </div>
+          <div class="rs-divider"></div>
+          <div class="rs-section">
+            <h3>WORK EXPERIENCE SUMMARY</h3>
+            <p><strong>Senior Software Engineer</strong> (2022 – Present)</p>
+            <p>Led development of high-concurrency microservices, front-end architecture, and design systems. Reduced bundle size by 35% and improved page speed scores to 98.</p>
+          </div>
+          <div class="rs-section">
+            <h3>TECHNICAL SKILLS</h3>
+            <p>{{ selectedCandidate?.skills?.join(', ') }}</p>
+          </div>
+          <div class="rs-section">
+            <h3>EDUCATION</h3>
+            <p>{{ selectedCandidate?.education }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeModals()">Close Resume</button>
+      </div>
+    </div>
+  </div>
+</div>

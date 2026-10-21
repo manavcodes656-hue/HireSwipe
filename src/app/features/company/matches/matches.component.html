@@ -1,0 +1,39 @@
+<div class="matches-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Swipe Matches</h1>
+      <p class="page-subtitle">Mutual interest established between your open job listings and top candidates</p>
+    </div>
+  </div>
+
+  <div class="matches-grid" *ngIf="matches.length > 0">
+    <div *ngFor="let m of matches" class="match-card">
+      <div class="mc-banner">
+        <span class="score-badge">🔥 {{ m.match_score }}% Match</span>
+      </div>
+
+      <div class="mc-body">
+        <img [src]="m.profile?.avatar_url" [alt]="m.profile?.full_name" class="mc-avatar" />
+        <h3 class="mc-name">{{ m.profile?.full_name }}</h3>
+        <p class="mc-headline">{{ m.profile?.headline }}</p>
+        <p class="mc-job">Matched for <strong>{{ m.job?.title }}</strong></p>
+        <p class="mc-date">Matched on {{ m.matched_at | date:'mediumDate' }}</p>
+
+        <div class="mc-skills">
+          <span *ngFor="let s of m.profile?.skills" class="skill-tag">{{ s }}</span>
+        </div>
+      </div>
+
+      <div class="mc-footer">
+        <a routerLink="/company/applications" class="btn-action outline">View Application</a>
+        <button type="button" class="btn-action primary" (click)="startChat(m)">Send Message 💬</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="matches.length === 0" class="empty-state">
+    <div class="empty-icon">🔥</div>
+    <h3>No Matches Yet</h3>
+    <p>When candidates swipe right on your job postings or you shortlist candidates, mutual matches will appear here.</p>
+  </div>
+</div>

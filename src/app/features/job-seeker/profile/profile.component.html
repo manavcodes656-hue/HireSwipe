@@ -1,0 +1,294 @@
+<div class="profile-page-wrapper">
+  <!-- Toast notification -->
+  <div class="toast-popup" *ngIf="toastMessage()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+    <span>{{ toastMessage() }}</span>
+  </div>
+
+  <!-- Hero Profile Banner -->
+  <div class="profile-hero-card">
+    <div class="hero-avatar-wrap">
+      <img *ngIf="jobSeekerService.profile().avatar_url" [src]="jobSeekerService.profile().avatar_url" [alt]="jobSeekerService.profile().full_name" class="profile-avatar" />
+      <div *ngIf="!jobSeekerService.profile().avatar_url" class="profile-avatar avatar-fallback-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      <label class="camera-overlay-badge" title="Change profile photo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
+      </label>
+      <span class="verified-badge" title="Verified Candidate">✓</span>
+    </div>
+
+    <div class="hero-details">
+      <div class="hero-title-row">
+        <h2>{{ jobSeekerService.profile().full_name }}</h2>
+        <span class="role-pill">{{ jobSeekerService.jobSeekerProfile().current_job_title }}</span>
+      </div>
+      <p class="headline-text">{{ jobSeekerService.jobSeekerProfile().headline }}</p>
+
+      <div class="meta-row">
+        <span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          {{ jobSeekerService.jobSeekerProfile().location }}
+        </span>
+        <span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          {{ jobSeekerService.profile().email }}
+        </span>
+        <span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          {{ jobSeekerService.profile().phone }}
+        </span>
+      </div>
+    </div>
+
+    <div class="score-card">
+      <div class="score-circle">
+        <span>{{ jobSeekerService.jobSeekerProfile().profile_completion_pct }}%</span>
+      </div>
+      <span class="score-text">Profile Strength</span>
+      <a routerLink="/job-seeker/onboarding" class="secondary-btn sm mt-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Edit Wizard</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Profile Sections Grid -->
+  <div class="profile-grid">
+    <!-- 1. Personal & Contact -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Personal Details
+        </h3>
+        <button class="icon-btn" (click)="openEditSection('personal')" aria-label="Edit personal details">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+        </button>
+      </div>
+      <div class="section-body">
+        <div class="info-row"><strong>Full Name:</strong> <span>{{ jobSeekerService.profile().full_name }}</span></div>
+        <div class="info-row"><strong>Email:</strong> <span>{{ jobSeekerService.profile().email }}</span></div>
+        <div class="info-row"><strong>Phone:</strong> <span>{{ jobSeekerService.profile().phone }}</span></div>
+        <div class="info-row"><strong>Location:</strong> <span>{{ jobSeekerService.jobSeekerProfile().location }}</span></div>
+        <div class="info-row"><strong>City/State/Country:</strong> <span>{{ jobSeekerService.jobSeekerProfile().city }}, {{ jobSeekerService.jobSeekerProfile().state }}, {{ jobSeekerService.jobSeekerProfile().country }}</span></div>
+      </div>
+    </div>
+
+    <!-- 2. Professional Summary & Links -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          Professional Summary & Links
+        </h3>
+        <button class="icon-btn" (click)="openEditSection('professional')" aria-label="Edit professional summary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+        </button>
+      </div>
+      <div class="section-body">
+        <div class="info-row"><strong>Current Company:</strong> <span>{{ jobSeekerService.jobSeekerProfile().current_company }}</span></div>
+        <div class="info-row"><strong>Experience:</strong> <span>{{ jobSeekerService.jobSeekerProfile().years_of_experience }} Years</span></div>
+        <div class="info-row"><strong>Notice Period:</strong> <span>{{ jobSeekerService.jobSeekerProfile().availability }}</span></div>
+        <p class="bio-text"><strong>Bio:</strong> {{ jobSeekerService.jobSeekerProfile().bio }}</p>
+        <div class="links-row">
+          <a [href]="jobSeekerService.jobSeekerProfile().linkedin_url" target="_blank" class="link-btn" *ngIf="jobSeekerService.jobSeekerProfile().linkedin_url">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            <span>LinkedIn</span>
+          </a>
+          <a [href]="jobSeekerService.jobSeekerProfile().github_url" target="_blank" class="link-btn" *ngIf="jobSeekerService.jobSeekerProfile().github_url">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+            <span>GitHub</span>
+          </a>
+          <a [href]="jobSeekerService.jobSeekerProfile().portfolio_url" target="_blank" class="link-btn" *ngIf="jobSeekerService.jobSeekerProfile().portfolio_url">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>Portfolio</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Education -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+          Education
+        </h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Manage in Wizard</a>
+      </div>
+      <div class="section-body">
+        <div class="edu-item" *ngFor="let edu of jobSeekerService.educationList()">
+          <h4>{{ edu.degree }} in {{ edu.field_of_study }}</h4>
+          <span class="sub-text">{{ edu.institution }} &bull; {{ edu.start_date }} - {{ edu.end_date }}</span>
+          <span class="grade-pill" *ngIf="edu.grade">{{ edu.grade }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Experience -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          Experience
+        </h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Manage in Wizard</a>
+      </div>
+      <div class="section-body">
+        <div class="exp-item" *ngFor="let exp of jobSeekerService.experienceList()">
+          <h4>{{ exp.job_title }}</h4>
+          <span class="sub-text">{{ exp.company }} &bull; {{ exp.location }} ({{ exp.employment_type }})</span>
+          <span class="date-text">{{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }}</span>
+          <p class="desc-text">{{ exp.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Skills -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          Skills ({{ jobSeekerService.userSkills().length }})
+        </h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Add Skills</a>
+      </div>
+      <div class="skills-wrap">
+        <div class="skill-tag-pill" *ngFor="let s of jobSeekerService.userSkills()">
+          <span class="sk-name">{{ s.skill_name }}</span>
+          <span class="sk-level">{{ s.proficiency_level }} ({{ s.years_of_experience }}y)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Resume -->
+    <div class="profile-section-card">
+      <div class="section-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          Primary Resume
+        </h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Upload / Replace</a>
+      </div>
+      <div class="section-body">
+        <div class="resume-preview-box" *ngFor="let r of jobSeekerService.resumes()">
+          <svg class="r-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <div>
+            <span class="r-name">{{ r.file_name }}</span>
+            <span class="r-meta">{{ r.file_size }} &bull; Primary Resume</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Preferences -->
+    <div class="profile-section-card full-width">
+      <div class="section-header">
+        <h3>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Match Preferences
+        </h3>
+        <a routerLink="/job-seeker/onboarding" class="text-link-btn">Update Preferences</a>
+      </div>
+      <div class="pref-grid">
+        <div><strong>Target Role:</strong> {{ jobSeekerService.preferences().preferred_job_title }}</div>
+        <div><strong>Preferred Location:</strong> {{ jobSeekerService.preferences().preferred_location }}</div>
+        <div><strong>Remote Work Mode:</strong> {{ jobSeekerService.preferences().remote_preference | uppercase }}</div>
+        <div><strong>Salary Expectation:</strong> ₹{{ ((jobSeekerService.preferences().min_salary || 0) / 100000) }}–{{ ((jobSeekerService.preferences().max_salary || 0) / 100000) }} LPA</div>
+        <div><strong>Seniority:</strong> {{ jobSeekerService.preferences().experience_level | uppercase }}</div>
+        <div><strong>Open to Relocate:</strong> {{ jobSeekerService.preferences().willing_to_relocate ? 'Yes' : 'No' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Personal Modal -->
+<div class="modal-backdrop" *ngIf="editingSection() === 'personal'">
+  <div class="modal-box" [formGroup]="personalForm">
+    <div class="modal-header">
+      <h3>Edit Personal Information</h3>
+      <button class="close-btn" (click)="closeEditSection()" aria-label="Close modal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" formControlName="full_name" />
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" formControlName="phone" />
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" formControlName="location" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" formControlName="city" />
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" formControlName="state" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeEditSection()">Cancel</button>
+      <button class="primary-btn" (click)="savePersonal()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Professional Modal -->
+<div class="modal-backdrop" *ngIf="editingSection() === 'professional'">
+  <div class="modal-box" [formGroup]="professionalForm">
+    <div class="modal-header">
+      <h3>Edit Professional Summary</h3>
+      <button class="close-btn" (click)="closeEditSection()" aria-label="Close modal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Professional Headline</label>
+        <input type="text" formControlName="headline" />
+      </div>
+      <div class="form-group">
+        <label>Bio Summary</label>
+        <textarea rows="4" formControlName="bio"></textarea>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Current Job Title</label>
+          <input type="text" formControlName="current_job_title" />
+        </div>
+        <div class="form-group">
+          <label>Current Company</label>
+          <input type="text" formControlName="current_company" />
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>LinkedIn URL</label>
+          <input type="text" formControlName="linkedin_url" />
+        </div>
+        <div class="form-group">
+          <label>GitHub URL</label>
+          <input type="text" formControlName="github_url" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeEditSection()">Cancel</button>
+      <button class="primary-btn" (click)="saveProfessional()">Save Changes</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,438 @@
+<section class="settings-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Settings</h1>
+      <p class="page-subtitle">Manage your company account, preferences, and integrations</p>
+    </div>
+    <div class="save-feedback" *ngIf="saveSuccess">
+      <span class="success-badge">✓ Changes saved successfully</span>
+    </div>
+  </div>
+
+  <!-- Tabs + Content -->
+  <div class="settings-layout">
+    <!-- Sidebar Tabs -->
+    <aside class="settings-sidebar">
+      <nav class="tab-nav">
+        <button class="tab-btn" [class.active]="activeTab === 'general'" (click)="setTab('general')">
+          <span class="tab-icon">🏢</span>
+          <div class="tab-text">
+            <span class="tab-label">General</span>
+            <span class="tab-desc">Company info & contact</span>
+          </div>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'notifications'" (click)="setTab('notifications')">
+          <span class="tab-icon">🔔</span>
+          <div class="tab-text">
+            <span class="tab-label">Notifications</span>
+            <span class="tab-desc">Email & in-app alerts</span>
+          </div>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'security'" (click)="setTab('security')">
+          <span class="tab-icon">🔐</span>
+          <div class="tab-text">
+            <span class="tab-label">Security</span>
+            <span class="tab-desc">Password & 2FA</span>
+          </div>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'billing'" (click)="setTab('billing')">
+          <span class="tab-icon">💳</span>
+          <div class="tab-text">
+            <span class="tab-label">Billing & Plan</span>
+            <span class="tab-desc">Subscription & invoices</span>
+          </div>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'integrations'" (click)="setTab('integrations')">
+          <span class="tab-icon">🔌</span>
+          <div class="tab-text">
+            <span class="tab-label">Integrations</span>
+            <span class="tab-desc">Connect external tools</span>
+          </div>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="settings-content">
+
+      <!-- GENERAL TAB -->
+      <div class="tab-panel" *ngIf="activeTab === 'general'">
+        <div class="panel-header">
+          <h2>Company Information</h2>
+          <p>Update your company's public profile and contact details.</p>
+        </div>
+
+        <form [formGroup]="generalForm" (ngSubmit)="saveGeneral()" class="settings-form" *ngIf="generalForm">
+          <div class="form-section">
+            <h3 class="section-title">Basic Info</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Company Name *</label>
+                <input type="text" class="form-input" formControlName="name" [class.error]="f['name'].invalid && f['name'].touched" />
+                <span class="form-error" *ngIf="f['name'].invalid && f['name'].touched">Company name is required</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Industry *</label>
+                <input type="text" class="form-input" formControlName="industry" [class.error]="f['industry'].invalid && f['industry'].touched" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Company Size *</label>
+                <select class="form-input" formControlName="size">
+                  <option value="1-10">1–10 employees</option>
+                  <option value="11-50">11–50 employees</option>
+                  <option value="51-200">51–200 employees</option>
+                  <option value="201-500">201–500 employees</option>
+                  <option value="500+">500+ employees</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Website *</label>
+                <input type="url" class="form-input" formControlName="website" placeholder="https://" [class.error]="f['website'].invalid && f['website'].touched" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-title">Contact Details</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-input" formControlName="email" [class.error]="f['email'].invalid && f['email'].touched" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone *</label>
+                <input type="tel" class="form-input" formControlName="phone" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-title">Location</h3>
+            <div class="form-grid form-grid-3">
+              <div class="form-group">
+                <label class="form-label">City *</label>
+                <input type="text" class="form-input" formControlName="city" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">State</label>
+                <input type="text" class="form-input" formControlName="state" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Country *</label>
+                <input type="text" class="form-input" formControlName="country" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-save" [disabled]="isSaving">
+              <span *ngIf="!isSaving">Save Changes</span>
+              <span *ngIf="isSaving" class="spinner">Saving…</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Danger Zone -->
+        <div class="danger-zone">
+          <h3 class="danger-title">⚠️ Danger Zone</h3>
+          <div class="danger-row">
+            <div>
+              <p class="danger-label">Delete Company Account</p>
+              <p class="danger-desc">Permanently delete your company and all associated data. This action cannot be undone.</p>
+            </div>
+            <button class="btn-danger">Delete Account</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS TAB -->
+      <div class="tab-panel" *ngIf="activeTab === 'notifications'">
+        <div class="panel-header">
+          <h2>Notification Preferences</h2>
+          <p>Control which alerts you receive and how they're delivered.</p>
+        </div>
+
+        <div class="notif-groups">
+          <div class="notif-group">
+            <h3 class="notif-group-title">Recruitment Activity</h3>
+            <div class="notif-items">
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">New Application Received</span>
+                  <span class="notif-detail">When a candidate applies for one of your jobs</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.new_application" (change)="toggleNotif('new_application')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">New Match</span>
+                  <span class="notif-detail">When a strong candidate matches one of your jobs</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.new_match" (change)="toggleNotif('new_match')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">Message Received</span>
+                  <span class="notif-detail">When a candidate sends you a message</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.message_received" (change)="toggleNotif('message_received')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">Interview Reminder</span>
+                  <span class="notif-detail">24-hour reminder before scheduled interviews</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.interview_reminder" (change)="toggleNotif('interview_reminder')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">Job Expiry Alert</span>
+                  <span class="notif-detail">When a job posting is about to expire</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.job_expiry" (change)="toggleNotif('job_expiry')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="notif-group">
+            <h3 class="notif-group-title">Team & Platform</h3>
+            <div class="notif-items">
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">Team Updates</span>
+                  <span class="notif-detail">When team members are added, removed, or change roles</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.team_updates" (change)="toggleNotif('team_updates')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">Weekly Digest</span>
+                  <span class="notif-detail">Weekly summary of your recruitment activity</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.weekly_digest" (change)="toggleNotif('weekly_digest')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="notif-item">
+                <div class="notif-info">
+                  <span class="notif-name">Marketing & Tips</span>
+                  <span class="notif-detail">Product updates, hiring tips, and HireSwipe news</span>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" [checked]="notifPrefs.marketing" (change)="toggleNotif('marketing')" />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-save" (click)="saveNotifications()" [disabled]="isSaving">
+            <span *ngIf="!isSaving">Save Preferences</span>
+            <span *ngIf="isSaving">Saving…</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SECURITY TAB -->
+      <div class="tab-panel" *ngIf="activeTab === 'security'">
+        <div class="panel-header">
+          <h2>Security Settings</h2>
+          <p>Keep your account secure by updating your password and enabling two-factor authentication.</p>
+        </div>
+
+        <div class="security-section">
+          <h3 class="section-title">Change Password</h3>
+          <form [formGroup]="securityForm" (ngSubmit)="changePassword()" class="settings-form" *ngIf="securityForm">
+            <div class="form-group">
+              <label class="form-label">Current Password *</label>
+              <input type="password" class="form-input" formControlName="currentPassword"
+                [class.error]="sf['currentPassword'].invalid && sf['currentPassword'].touched" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password *</label>
+              <input type="password" class="form-input" formControlName="newPassword"
+                [class.error]="sf['newPassword'].invalid && sf['newPassword'].touched" />
+              <span class="form-error" *ngIf="sf['newPassword'].invalid && sf['newPassword'].touched">
+                Password must be at least 8 characters
+              </span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm New Password *</label>
+              <input type="password" class="form-input" formControlName="confirmPassword"
+                [class.error]="sf['confirmPassword'].invalid && sf['confirmPassword'].touched" />
+              <span class="form-error" *ngIf="securityForm.errors?.['passwordMismatch'] && sf['confirmPassword'].touched">
+                Passwords do not match
+              </span>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-save" [disabled]="isSaving">
+                <span *ngIf="!isSaving">Update Password</span>
+                <span *ngIf="isSaving">Updating…</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="security-section">
+          <h3 class="section-title">Two-Factor Authentication</h3>
+          <div class="tfa-card">
+            <div class="tfa-info">
+              <span class="tfa-icon">📱</span>
+              <div>
+                <p class="tfa-label">Authenticator App</p>
+                <p class="tfa-desc">Use an app like Google Authenticator or Authy to generate one-time codes.</p>
+              </div>
+            </div>
+            <button class="btn-outline-primary">Enable 2FA</button>
+          </div>
+          <div class="tfa-card">
+            <div class="tfa-info">
+              <span class="tfa-icon">📧</span>
+              <div>
+                <p class="tfa-label">Email OTP</p>
+                <p class="tfa-desc">Receive a one-time code to your registered email on every login.</p>
+              </div>
+            </div>
+            <span class="badge-enabled">Enabled</span>
+          </div>
+        </div>
+
+        <div class="security-section">
+          <h3 class="section-title">Active Sessions</h3>
+          <div class="session-card">
+            <div class="session-info">
+              <span class="session-icon">💻</span>
+              <div>
+                <p class="session-device">Chrome on Windows — Bengaluru, India</p>
+                <p class="session-time">Current session • Active now</p>
+              </div>
+            </div>
+            <span class="badge-current">Current</span>
+          </div>
+          <div class="session-card">
+            <div class="session-info">
+              <span class="session-icon">📱</span>
+              <div>
+                <p class="session-device">Safari on iPhone — Bengaluru, India</p>
+                <p class="session-time">Last active 2 hours ago</p>
+              </div>
+            </div>
+            <button class="btn-revoke">Revoke</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BILLING TAB -->
+      <div class="tab-panel" *ngIf="activeTab === 'billing'">
+        <div class="panel-header">
+          <h2>Billing & Plan</h2>
+          <p>Manage your subscription, seats, and billing information.</p>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-header-row">
+            <div>
+              <h3 class="plan-name">{{ currentPlan }}</h3>
+              <p class="plan-cycle">{{ billingCycle }} billing · Next payment on {{ nextBillingDate }}</p>
+            </div>
+            <div class="plan-badge">Active</div>
+          </div>
+          <div class="plan-stats">
+            <div class="plan-stat">
+              <span class="stat-value">{{ usedSeats }}/{{ seats }}</span>
+              <span class="stat-label">Seats used</span>
+            </div>
+            <div class="plan-stat">
+              <span class="stat-value">Unlimited</span>
+              <span class="stat-label">Active jobs</span>
+            </div>
+            <div class="plan-stat">
+              <span class="stat-value">Priority</span>
+              <span class="stat-label">Support level</span>
+            </div>
+          </div>
+          <div class="seat-bar">
+            <div class="seat-fill" [style.width.%]="(usedSeats / seats) * 100"></div>
+          </div>
+          <div class="plan-actions">
+            <button class="btn-save">Upgrade Plan</button>
+            <button class="btn-outline">Manage Seats</button>
+            <button class="btn-outline">Download Invoices</button>
+          </div>
+        </div>
+
+        <div class="billing-history">
+          <h3 class="section-title">Invoice History</h3>
+          <div class="invoice-table">
+            <div class="invoice-row header-row">
+              <span>Date</span><span>Plan</span><span>Amount</span><span>Status</span><span></span>
+            </div>
+            <div class="invoice-row">
+              <span>Oct 5, 2026</span><span>Professional</span><span>₹2,999</span>
+              <span class="status-paid">Paid</span><button class="btn-link">Download</button>
+            </div>
+            <div class="invoice-row">
+              <span>Sep 5, 2026</span><span>Professional</span><span>₹2,999</span>
+              <span class="status-paid">Paid</span><button class="btn-link">Download</button>
+            </div>
+            <div class="invoice-row">
+              <span>Aug 5, 2026</span><span>Professional</span><span>₹2,999</span>
+              <span class="status-paid">Paid</span><button class="btn-link">Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTEGRATIONS TAB -->
+      <div class="tab-panel" *ngIf="activeTab === 'integrations'">
+        <div class="panel-header">
+          <h2>Integrations</h2>
+          <p>Connect HireSwipe with your favorite tools to streamline your workflow.</p>
+        </div>
+
+        <div class="integrations-grid">
+          <div class="integration-card" *ngFor="let integration of integrations">
+            <div class="integration-top">
+              <span class="integration-icon">{{ integration.icon }}</span>
+              <div class="integration-info">
+                <span class="integration-name">{{ integration.name }}</span>
+                <span class="integration-desc">{{ integration.description }}</span>
+              </div>
+              <span class="conn-badge" [class.connected]="integration.connected">
+                {{ integration.connected ? 'Connected' : 'Disconnected' }}
+              </span>
+            </div>
+            <div class="integration-actions">
+              <button class="btn-integration" [class.disconnect]="integration.connected" (click)="toggleIntegration(integration)">
+                {{ integration.connected ? 'Disconnect' : 'Connect' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>

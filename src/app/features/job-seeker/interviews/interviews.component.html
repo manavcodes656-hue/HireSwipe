@@ -1,0 +1,103 @@
+<div class="interviews-page-wrapper">
+  <!-- Page Header -->
+  <div class="page-header-card">
+    <div>
+      <h1 class="page-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Interview Schedule
+      </h1>
+      <p class="page-sub">Manage your upcoming technical rounds, screening calls, and interview prep notes.</p>
+    </div>
+
+    <div class="tabs-row">
+      <button class="tab-btn" [class.active]="activeTab() === 'upcoming'" (click)="activeTab.set('upcoming')">
+        Upcoming
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'completed'" (click)="activeTab.set('completed')">
+        Completed
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'cancelled'" (click)="activeTab.set('cancelled')">
+        Cancelled
+      </button>
+    </div>
+  </div>
+
+  <!-- Interviews List -->
+  <div class="interviews-grid" *ngIf="filteredInterviews().length > 0; else emptyInts">
+    <div class="interview-card" *ngFor="let int of filteredInterviews()">
+      <div class="card-top">
+        <div class="comp-row">
+          <img [src]="int.company_logo" [alt]="int.company_name" class="comp-logo" />
+          <div>
+            <h3 class="role-title">{{ int.job_title }}</h3>
+            <span class="comp-name">{{ int.company_name }}</span>
+          </div>
+        </div>
+        <span class="status-badge" [class]="int.status">{{ int.status | titlecase }}</span>
+      </div>
+
+      <div class="card-body">
+        <div class="meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span><strong>Date:</strong> {{ int.date | date:'fullDate' }}</span>
+        </div>
+        <div class="meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span><strong>Time:</strong> {{ int.time }} ({{ int.duration_minutes }} mins)</span>
+        </div>
+        <div class="meta-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+          <span><strong>Location:</strong> {{ int.location }}</span>
+        </div>
+        <div class="notes-box" *ngIf="int.notes">
+          <strong>Prep Notes:</strong> {{ int.notes }}
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="secondary-btn sm" (click)="openNotesModal(int)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <span>{{ int.notes ? 'Edit Prep Notes' : '+ Add Notes' }}</span>
+        </button>
+
+        <a [href]="int.meeting_link" target="_blank" class="primary-btn sm" *ngIf="int.status === 'upcoming'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+          <span>Join Meeting Call</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #emptyInts>
+    <div class="empty-card">
+      <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><line x1="10" y1="14" x2="14" y2="18"></line><line x1="14" y1="14" x2="10" y2="18"></line></svg>
+      <h2>No {{ activeTab() }} interviews</h2>
+      <p>Interview schedules with matched recruiters will appear here automatically.</p>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Notes Edit Modal -->
+<div class="modal-backdrop" *ngIf="editingNotesId()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Interview Preparation & Notes</h3>
+      <button class="close-btn" (click)="closeModal()" aria-label="Close modal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <label>Your Personal Notes & Questions for Interviewer</label>
+      <textarea
+        rows="5"
+        [ngModel]="notesInput()"
+        (ngModelChange)="notesInput.set($event)"
+        placeholder="Key topics to highlight, system design diagrams, questions to ask engineering manager..."
+      ></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeModal()">Cancel</button>
+      <button class="primary-btn" (click)="saveNotes()">Save Notes</button>
+    </div>
+  </div>
+</div>

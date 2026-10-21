@@ -1,0 +1,226 @@
+<div class="job-create-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ isEditMode ? 'Edit Job Opening' : 'Create New Job Listing' }}</h1>
+      <p class="page-subtitle">Publish role requirements, salary band, and skills to receive matched candidates</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" routerLink="/company/jobs">Cancel</button>
+      <button type="button" class="btn-outline" (click)="saveJob('draft')">Save as Draft</button>
+      <button type="button" class="btn-primary" (click)="saveJob('active')">
+        {{ isEditMode ? 'Save & Publish Changes' : 'Publish Job Listing 🚀' }}
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="jobForm" class="create-form-layout">
+    <!-- Main Form Section -->
+    <div class="form-main">
+      <!-- Section 1: Role Overview -->
+      <div class="form-card">
+        <div class="card-title-row">
+          <h3>1. Role Overview</h3>
+          <span class="required-note">* Required fields</span>
+        </div>
+
+        <div class="form-group">
+          <label>Job Title *</label>
+          <input type="text" formControlName="title" placeholder="e.g. Senior Full Stack Engineer (Angular & Node)" />
+          <span class="err-text" *ngIf="jobForm.get('title')?.touched && jobForm.get('title')?.invalid">Title is required.</span>
+        </div>
+
+        <div class="form-group">
+          <label>Job Description *</label>
+          <textarea rows="6" formControlName="description" placeholder="Provide a detailed overview of day-to-day responsibilities, key projects, team structure, and growth potential..."></textarea>
+          <span class="err-text" *ngIf="jobForm.get('description')?.touched && jobForm.get('description')?.invalid">Description must be at least 30 characters.</span>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Employment Type *</label>
+            <select formControlName="employment_type">
+              <option *ngFor="let et of employmentTypes" [value]="et.value">{{ et.label }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Experience Level *</label>
+            <select formControlName="experience_level">
+              <option *ngFor="let el of experienceLevels" [value]="el.value">{{ el.label }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Remote Policy *</label>
+            <select formControlName="remote_type">
+              <option *ngFor="let rt of remoteTypes" [value]="rt.value">{{ rt.label }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Compensation & Experience Range -->
+      <div class="form-card">
+        <h3>2. Compensation & Experience Band</h3>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Min Experience (Years) *</label>
+            <input type="number" formControlName="experience_min" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Max Experience (Years) *</label>
+            <input type="number" formControlName="experience_max" min="0" />
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Salary Minimum (Annual) *</label>
+            <input type="number" formControlName="salary_min" placeholder="2800000" />
+          </div>
+          <div class="form-group">
+            <label>Salary Maximum (Annual) *</label>
+            <input type="number" formControlName="salary_max" placeholder="4200000" />
+          </div>
+          <div class="form-group">
+            <label>Currency *</label>
+            <select formControlName="salary_currency">
+              <option value="INR">INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="salary-preview">
+          Calculated Band: <strong>{{ jobForm.value.salary_currency }} {{ (jobForm.value.salary_min / 100000) | number:'1.1-1' }}–{{ (jobForm.value.salary_max / 100000) | number:'1.1-1' }} LPA</strong>
+        </div>
+      </div>
+
+      <!-- Section 3: Skills & Requirements -->
+      <div class="form-card">
+        <h3>3. Required Skills & Key Requirements</h3>
+
+        <div class="skills-selector">
+          <label>Required Tech Stack & Skills *</label>
+          <div class="skills-chips">
+            <button
+              type="button"
+              *ngFor="let s of skillsList"
+              class="chip-btn"
+              [class.active]="selectedSkills.includes(s)"
+              (click)="toggleSkill(s)"
+            >
+              {{ s }} {{ selectedSkills.includes(s) ? '✓' : '+' }}
+            </button>
+          </div>
+
+          <div class="add-input-row">
+            <input
+              type="text"
+              placeholder="Add custom skill..."
+              [(ngModel)]="customSkillInput"
+              [ngModelOptions]="{standalone: true}"
+              (keyup.enter)="addCustomSkill()"
+            />
+            <button type="button" class="btn-secondary" (click)="addCustomSkill()">+ Add Skill</button>
+          </div>
+        </div>
+
+        <div class="list-editor">
+          <label>Job Requirements & Qualifications</label>
+          <div class="item-list">
+            <div *ngFor="let req of requirementsList; let i = index" class="item-row">
+              <span class="bullet">•</span>
+              <span class="item-text">{{ req }}</span>
+              <button type="button" class="btn-remove" (click)="removeRequirement(i)">✕</button>
+            </div>
+          </div>
+
+          <div class="add-input-row">
+            <input
+              type="text"
+              placeholder="e.g. 5+ years experience building complex web apps..."
+              [(ngModel)]="customRequirementInput"
+              [ngModelOptions]="{standalone: true}"
+              (keyup.enter)="addRequirement()"
+            />
+            <button type="button" class="btn-secondary" (click)="addRequirement()">+ Add Requirement</button>
+          </div>
+        </div>
+
+        <div class="list-editor">
+          <label>Perks & Benefits</label>
+          <div class="item-list">
+            <div *ngFor="let ben of benefitsList; let i = index" class="item-row">
+              <span class="bullet">🎁</span>
+              <span class="item-text">{{ ben }}</span>
+              <button type="button" class="btn-remove" (click)="removeBenefit(i)">✕</button>
+            </div>
+          </div>
+
+          <div class="add-input-row">
+            <input
+              type="text"
+              placeholder="e.g. Annual health coverage, remote stipend..."
+              [(ngModel)]="customBenefitInput"
+              [ngModelOptions]="{standalone: true}"
+              (keyup.enter)="addBenefit()"
+            />
+            <button type="button" class="btn-secondary" (click)="addBenefit()">+ Add Benefit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Settings -->
+    <div class="form-sidebar">
+      <div class="form-card">
+        <h3>Location & Openings</h3>
+
+        <div class="form-group">
+          <label>Display Location *</label>
+          <input type="text" formControlName="location" placeholder="Bengaluru, India" />
+        </div>
+
+        <div class="form-group">
+          <label>City *</label>
+          <input type="text" formControlName="city" placeholder="Bengaluru" />
+        </div>
+
+        <div class="form-group">
+          <label>State *</label>
+          <input type="text" formControlName="state" placeholder="Karnataka" />
+        </div>
+
+        <div class="form-group">
+          <label>Country *</label>
+          <input type="text" formControlName="country" placeholder="India" />
+        </div>
+
+        <div class="form-group">
+          <label>Number of Openings *</label>
+          <input type="number" formControlName="openings" min="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Application Deadline *</label>
+          <input type="date" formControlName="application_deadline" />
+        </div>
+      </div>
+
+      <div class="form-card publishing-card">
+        <h3>Publishing Actions</h3>
+        <p class="pub-desc">Once published, candidates matching your criteria will be notified and can swipe to apply instantly.</p>
+
+        <button type="button" class="btn-primary full-width" (click)="saveJob('active')">
+          Publish Job Listing
+        </button>
+        <button type="button" class="btn-outline full-width" (click)="saveJob('draft')">
+          Save Draft Only
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
