@@ -1,62 +1,62 @@
-<div class="onboarding-container">
-  <!-- Top Stepper Header -->
-  <div class="stepper-header-card">
-    <div class="stepper-top-row">
-      <div>
-        <span class="step-badge">STEP {{ currentStep() }} OF {{ totalSteps }}</span>
-        <h1 class="step-title">{{ stepTitles[currentStep() - 1] }}</h1>
-        <p class="step-subtitle">{{ stepSubtitles[currentStep() - 1] }}</p>
+<div class="onboarding-page">
+  <div class="onboarding-card">
+    <!-- Header -->
+    <div class="ob-header">
+      <div class="ob-brand">
+        <img src="logo.png" alt="HireSwipe" class="brand-logo-img" style="height: 32px; width: auto;" />
+        <h2>Job Seeker Account Setup</h2>
       </div>
-
-      <!-- Auto Save Toast -->
-      <div class="auto-save-toast" *ngIf="saveSuccessMessage()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        <span>{{ saveSuccessMessage() }}</span>
-      </div>
+      <p class="ob-subtitle">Complete your candidate profile to discover matching roles and swipe top engineering jobs on HireSwipe</p>
     </div>
 
-    <!-- Progress Bar -->
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" [style.width.%]="(currentStep() / totalSteps) * 100"></div>
-    </div>
-
-    <!-- Step Indicator Pills -->
-    <div class="stepper-pills">
-      <button
-        *ngFor="let title of stepTitles; let i = index"
-        class="step-pill"
-        [class.completed]="i + 1 < currentStep()"
-        [class.active]="i + 1 === currentStep()"
-        (click)="goToStep(i + 1)"
-        [attr.aria-label]="title"
+    <!-- Stepper Tracker -->
+    <div class="stepper">
+      <div
+        *ngFor="let s of [1, 2, 3, 4, 5, 6]"
+        class="step-item"
+        [class.active]="currentStep === s"
+        [class.completed]="currentStep > s"
+        (click)="goToStep(s)"
       >
-        <span class="pill-number" *ngIf="i + 1 >= currentStep()">{{ i + 1 }}</span>
-        <svg class="pill-check" *ngIf="i + 1 < currentStep()" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span class="pill-name">{{ title }}</span>
-      </button>
+        <div class="step-num">
+          <span *ngIf="currentStep <= s">{{ s }}</span>
+          <svg *ngIf="currentStep > s" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <span class="step-title">
+          {{ s === 1 ? 'Personal' : s === 2 ? 'Profile' : s === 3 ? 'Experience' : s === 4 ? 'Preferences' : s === 5 ? 'Review' : 'Complete' }}
+        </span>
+      </div>
     </div>
-  </div>
 
-  <!-- STEP CONTENT CARD -->
-  <div class="step-card">
+    <!-- Error Alert Banner -->
+    <div *ngIf="errorMessage" class="ob-error-alert" role="alert">
+      <span>⚠️ {{ errorMessage }}</span>
+      <button type="button" class="btn-dismiss-err" (click)="errorMessage = null" aria-label="Dismiss error">×</button>
+    </div>
 
-    <!-- STEP 1: Personal Information & Profile Photo -->
-    <div *ngIf="currentStep() === 1" [formGroup]="personalForm" class="step-form-body">
-      <!-- Refined Profile Photo Upload Section -->
+    <!-- STEP 1: Personal Details & Contact -->
+    <form *ngIf="currentStep === 1" [formGroup]="step1Form" (ngSubmit)="nextStep()" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 1 — Personal Details & Contact</h3>
+        <p>Basic personal and contact information for your candidate profile</p>
+      </div>
+
+      <!-- Profile Photo Upload Section -->
       <div class="profile-photo-upload-container">
         <div class="photo-avatar-wrapper">
           <img
-            *ngIf="personalForm.get('avatar_url')?.value"
-            [src]="personalForm.get('avatar_url')?.value"
-            alt="Candidate profile preview"
+            *ngIf="step1Form.get('avatar_url')?.value"
+            [src]="step1Form.get('avatar_url')?.value"
+            alt="Profile photo preview"
+            class="photo-avatar-img"
+            (error)="onAvatarError($event)"
+          />
+          <img
+            *ngIf="!step1Form.get('avatar_url')?.value"
+            src="default-avatar.svg"
+            alt="Default profile photo"
             class="photo-avatar-img"
           />
-          <div *ngIf="!personalForm.get('avatar_url')?.value" class="photo-avatar-img avatar-fallback-box">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
           <label class="camera-overlay-badge" title="Upload new photo">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
@@ -65,894 +65,757 @@
 
         <div class="photo-controls-content">
           <h3 class="photo-title">Profile Photo</h3>
-          <p class="photo-desc">Upload a clear professional headshot. Visually aligned across your application, sidebar, and recruiter chats.</p>
+          <p class="photo-desc">Upload a clear professional headshot. If not provided, a neutral profile photo is displayed automatically across discovery cards and recruiter messages.</p>
 
           <div class="photo-action-buttons">
-            <label class="secondary-btn sm upload-photo-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-              <span>Upload Photo</span>
+            <label class="btn-secondary sm upload-photo-btn">
+              Upload Photo
               <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
             </label>
-
-            <button type="button" class="tertiary-btn sm" (click)="removeAvatar()" *ngIf="personalForm.get('avatar_url')?.value">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              <span>Reset</span>
+            <button type="button" class="btn-secondary sm" (click)="removeAvatar()" *ngIf="step1Form.get('avatar_url')?.value">
+              Remove Photo
             </button>
           </div>
-
-          <div class="avatar-presets-row">
-            <span class="presets-label">Or select a default avatar:</span>
-            <div class="presets-chips">
-              <button
-                type="button"
-                class="preset-chip"
-                (click)="selectPresetAvatar('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80')"
-              >
-                Avatar 1
-              </button>
-              <button
-                type="button"
-                class="preset-chip"
-                (click)="selectPresetAvatar('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80')"
-              >
-                Avatar 2
-              </button>
-              <button
-                type="button"
-                class="preset-chip"
-                (click)="selectPresetAvatar('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80')"
-              >
-                Avatar 3
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
       <div class="form-grid">
-        <div class="form-group full-width">
-          <label for="full_name">Full Name <span class="req">*</span></label>
-          <input
-            id="full_name"
-            type="text"
-            formControlName="full_name"
-            placeholder="e.g. Krish Sharma"
-            [class.is-invalid]="personalForm.get('full_name')?.invalid && (personalForm.get('full_name')?.touched || submittedStep())"
-          />
-          <span class="error-msg" *ngIf="personalForm.get('full_name')?.invalid && (personalForm.get('full_name')?.touched || submittedStep())">
-            Please enter your full name.
-          </span>
+        <div class="form-group col-span-2">
+          <label>Full Name *</label>
+          <input type="text" formControlName="full_name" placeholder="e.g. Krish Sharma" />
+          <span class="err-text" *ngIf="step1Form.get('full_name')?.touched && step1Form.get('full_name')?.invalid">Full name is required (at least 2 characters).</span>
         </div>
 
         <div class="form-group">
-          <label for="phone">Phone Number <span class="req">*</span></label>
-          <input
-            id="phone"
-            type="text"
-            formControlName="phone"
-            placeholder="+91 98765 43210"
-            [class.is-invalid]="personalForm.get('phone')?.invalid && (personalForm.get('phone')?.touched || submittedStep())"
-          />
-          <span class="error-msg" *ngIf="personalForm.get('phone')?.invalid && (personalForm.get('phone')?.touched || submittedStep())">
-            Valid phone number is required.
-          </span>
+          <label>Phone Number *</label>
+          <input type="tel" formControlName="phone" placeholder="+91 98765 43210" />
+          <span class="err-text" *ngIf="step1Form.get('phone')?.touched && step1Form.get('phone')?.invalid">A valid phone number is required.</span>
         </div>
 
         <div class="form-group">
-          <label for="location">Current Location <span class="req">*</span></label>
-          <input
-            id="location"
-            type="text"
-            formControlName="location"
-            placeholder="e.g. Bengaluru, Karnataka, India"
-            [class.is-invalid]="personalForm.get('location')?.invalid && (personalForm.get('location')?.touched || submittedStep())"
-          />
+          <label>City *</label>
+          <input type="text" formControlName="city" placeholder="e.g. Bengaluru" (input)="onCityStateChange()" />
+          <span class="err-text" *ngIf="step1Form.get('city')?.touched && step1Form.get('city')?.invalid">City is required.</span>
         </div>
 
         <div class="form-group">
-          <label for="city">City <span class="req">*</span></label>
-          <input id="city" type="text" formControlName="city" placeholder="e.g. Bengaluru" />
+          <label>State / Region *</label>
+          <input type="text" formControlName="state" placeholder="e.g. Karnataka" (input)="onCityStateChange()" />
+          <span class="err-text" *ngIf="step1Form.get('state')?.touched && step1Form.get('state')?.invalid">State is required.</span>
         </div>
 
         <div class="form-group">
-          <label for="state">State / Province <span class="req">*</span></label>
-          <input id="state" type="text" formControlName="state" placeholder="e.g. Karnataka" />
+          <label>Country *</label>
+          <input type="text" formControlName="country" placeholder="e.g. India" (input)="onCityStateChange()" />
+          <span class="err-text" *ngIf="step1Form.get('country')?.touched && step1Form.get('country')?.invalid">Country is required.</span>
         </div>
 
-        <div class="form-group">
-          <label for="country">Country <span class="req">*</span></label>
-          <input id="country" type="text" formControlName="country" placeholder="e.g. India" />
+        <div class="form-group col-span-2">
+          <label>Primary Location Display *</label>
+          <input type="text" formControlName="location" placeholder="e.g. Bengaluru, Karnataka, India" />
+          <span class="err-text" *ngIf="step1Form.get('location')?.touched && step1Form.get('location')?.invalid">Location display is required.</span>
         </div>
       </div>
-    </div>
 
-    <!-- STEP 2: Professional Information -->
-    <div *ngIf="currentStep() === 2" [formGroup]="professionalForm" class="step-form-body">
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" routerLink="/job-seeker/dashboard">Cancel</button>
+        <button type="submit" class="btn-primary">Continue to Step 2 →</button>
+      </div>
+    </form>
+
+    <!-- STEP 2: Professional Background & Online Presence -->
+    <form *ngIf="currentStep === 2" [formGroup]="step2Form" (ngSubmit)="nextStep()" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 2 — Professional Background & Online Presence</h3>
+        <p>Tell employers about your current role, experience, and links</p>
+      </div>
+
       <div class="form-grid">
-        <div class="form-group full-width">
-          <label for="headline">Professional Headline <span class="req">*</span></label>
-          <input
-            id="headline"
-            type="text"
-            formControlName="headline"
-            placeholder="e.g. Senior Full Stack Engineer | Angular, TypeScript, Node.js"
-            [class.is-invalid]="professionalForm.get('headline')?.invalid && (professionalForm.get('headline')?.touched || submittedStep())"
-          />
-          <span class="error-msg" *ngIf="professionalForm.get('headline')?.invalid && (professionalForm.get('headline')?.touched || submittedStep())">
-            Headline is required (min 5 characters).
-          </span>
+        <div class="form-group col-span-2">
+          <label>Professional Headline *</label>
+          <input type="text" formControlName="headline" placeholder="e.g. Senior Full Stack Engineer | Angular, TypeScript, Node.js" />
+          <span class="err-text" *ngIf="step2Form.get('headline')?.touched && step2Form.get('headline')?.invalid">Professional headline is required (min 5 characters).</span>
         </div>
 
-        <div class="form-group full-width">
-          <label for="bio">Professional Bio / Summary <span class="req">*</span></label>
-          <textarea
-            id="bio"
-            rows="4"
-            formControlName="bio"
-            placeholder="Write a brief overview of your technical background, achievements, and career goals..."
-            [class.is-invalid]="professionalForm.get('bio')?.invalid && (professionalForm.get('bio')?.touched || submittedStep())"
-          ></textarea>
+        <div class="form-group col-span-2">
+          <label>About You (Bio / Summary) *</label>
+          <textarea rows="3" formControlName="bio" placeholder="Describe your technical expertise, architectural experience, and the kinds of engineering challenges you enjoy solving..."></textarea>
+          <span class="err-text" *ngIf="step2Form.get('bio')?.touched && step2Form.get('bio')?.invalid">Bio is required (min 10 characters).</span>
         </div>
 
         <div class="form-group">
-          <label for="current_job_title">Current / Recent Job Title <span class="req">*</span></label>
-          <input id="current_job_title" type="text" formControlName="current_job_title" placeholder="e.g. Senior Frontend Engineer" />
+          <label>Current / Most Recent Job Title *</label>
+          <input type="text" formControlName="current_job_title" placeholder="e.g. Senior Frontend Engineer" />
+          <span class="err-text" *ngIf="step2Form.get('current_job_title')?.touched && step2Form.get('current_job_title')?.invalid">Current job title is required.</span>
         </div>
 
         <div class="form-group">
-          <label for="current_company">Current / Recent Company <span class="req">*</span></label>
-          <input id="current_company" type="text" formControlName="current_company" placeholder="e.g. TechFlow Systems" />
+          <label>Current / Most Recent Company *</label>
+          <input type="text" formControlName="current_company" placeholder="e.g. TechFlow Systems" />
+          <span class="err-text" *ngIf="step2Form.get('current_company')?.touched && step2Form.get('current_company')?.invalid">Current company is required.</span>
         </div>
 
         <div class="form-group">
-          <label for="years_of_experience">Years of Experience <span class="req">*</span></label>
-          <input id="years_of_experience" type="number" formControlName="years_of_experience" min="0" max="40" />
+          <label>Total Years of Experience *</label>
+          <input type="number" formControlName="years_of_experience" placeholder="e.g. 5" min="0" />
+          <span class="err-text" *ngIf="step2Form.get('years_of_experience')?.touched && step2Form.get('years_of_experience')?.invalid">Valid years of experience is required.</span>
         </div>
 
         <div class="form-group">
-          <label for="availability">Notice Period / Availability <span class="req">*</span></label>
-          <select id="availability" formControlName="availability">
-            <option value="Immediate">Immediate (Serving notice)</option>
-            <option value="15 Days">15 Days</option>
-            <option value="30 Days">30 Days</option>
-            <option value="60 Days">60 Days</option>
-            <option value="90 Days">90 Days</option>
+          <label>Availability / Notice Period *</label>
+          <select formControlName="availability">
+            <option *ngFor="let opt of availabilityOptions" [value]="opt">{{ opt }}</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="linkedin_url">LinkedIn Profile URL</label>
-          <input id="linkedin_url" type="text" formControlName="linkedin_url" placeholder="https://linkedin.com/in/username" />
+          <label>LinkedIn Profile URL</label>
+          <input type="url" formControlName="linkedin_url" placeholder="https://linkedin.com/in/username" />
+          <span class="err-text" *ngIf="step2Form.get('linkedin_url')?.touched && step2Form.get('linkedin_url')?.invalid">Please enter a valid URL (starting with http:// or https://).</span>
         </div>
 
         <div class="form-group">
-          <label for="github_url">GitHub Profile URL</label>
-          <input id="github_url" type="text" formControlName="github_url" placeholder="https://github.com/username" />
+          <label>GitHub Profile URL</label>
+          <input type="url" formControlName="github_url" placeholder="https://github.com/username" />
+          <span class="err-text" *ngIf="step2Form.get('github_url')?.touched && step2Form.get('github_url')?.invalid">Please enter a valid URL (starting with http:// or https://).</span>
         </div>
 
-        <div class="form-group full-width">
-          <label for="portfolio_url">Portfolio / Personal Website</label>
-          <input id="portfolio_url" type="text" formControlName="portfolio_url" placeholder="https://yourportfolio.dev" />
+        <div class="form-group col-span-2">
+          <label>Portfolio / Personal Website</label>
+          <input type="text" formControlName="portfolio_url" placeholder="https://krishsharma.dev" />
         </div>
       </div>
-    </div>
 
-    <!-- STEP 3: Education History -->
-    <div *ngIf="currentStep() === 3" class="step-form-body">
-      <div class="section-top-actions">
-        <div>
-          <h3>Academic Records</h3>
-          <p class="section-desc">Add your degree(s), college, or university details.</p>
-        </div>
-        <button class="primary-btn sm" type="button" (click)="openAddEduModal()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>Add Education</span>
-        </button>
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
+        <button type="submit" class="btn-primary">Continue to Experience →</button>
+      </div>
+    </form>
+
+    <!-- STEP 3: Education & Work Experience -->
+    <div *ngIf="currentStep === 3" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 3 — Education & Work Experience</h3>
+        <p>Add your academic credentials and professional work history</p>
       </div>
 
-      <!-- Empty State -->
-      <div class="empty-box" *ngIf="jobSeekerService.educationList().length === 0">
-        <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-        <p>No education records added yet. Click above to add your qualification.</p>
-      </div>
-
-      <!-- Education Cards List -->
-      <div class="records-grid">
-        <div class="record-card" *ngFor="let edu of jobSeekerService.educationList()">
-          <div class="record-header">
+      <div class="form-stack">
+        <!-- Work Experience Section -->
+        <div class="record-section">
+          <div class="section-top-row">
             <div>
-              <h4 class="record-title">{{ edu.degree }} in {{ edu.field_of_study }}</h4>
-              <span class="record-subtitle">{{ edu.institution }}</span>
+              <h4 class="section-title">Work Experience</h4>
+              <p class="section-desc">Add previous employment, roles, and achievements</p>
             </div>
-            <div class="record-actions">
-              <button class="icon-action-btn" (click)="openEditEduModal(edu)" title="Edit">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-              </button>
-              <button class="icon-action-btn danger" (click)="deleteEdu(edu.id)" title="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
+            <button type="button" class="btn-secondary sm" (click)="openAddExpModal()">+ Add Experience</button>
+          </div>
+
+          <div *ngIf="jobSeekerService.experienceList().length === 0" class="empty-record-box">
+            <p>No work experience added yet. Click "+ Add Experience" above to list your roles.</p>
+          </div>
+
+          <div class="records-list" *ngIf="jobSeekerService.experienceList().length > 0">
+            <div *ngFor="let exp of jobSeekerService.experienceList()" class="record-card">
+              <div class="record-card-head">
+                <div>
+                  <h5 class="rc-role">{{ exp.job_title }}</h5>
+                  <span class="rc-sub">{{ exp.company || exp.company_name }} • {{ exp.location }}</span>
+                  <span class="rc-dates">{{ exp.start_date }} — {{ exp.end_date || 'Present' }} ({{ exp.employment_type }})</span>
+                </div>
+                <div class="record-actions">
+                  <button type="button" class="btn-text-action" (click)="openEditExpModal(exp)">Edit</button>
+                  <button type="button" class="btn-text-action danger" (click)="deleteExp(exp.id)">Delete</button>
+                </div>
+              </div>
+              <p class="rc-text" *ngIf="exp.description">{{ exp.description }}</p>
             </div>
           </div>
-          <div class="record-meta">
-            <span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              {{ edu.start_date }} to {{ edu.end_date }}
-            </span>
-            <span *ngIf="edu.grade" class="grade-tag">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-              {{ edu.grade }}
-            </span>
-          </div>
-          <p class="record-desc" *ngIf="edu.description">{{ edu.description }}</p>
         </div>
-      </div>
-    </div>
 
-    <!-- STEP 4: Work Experience -->
-    <div *ngIf="currentStep() === 4" class="step-form-body">
-      <div class="section-top-actions">
-        <div>
-          <h3>Employment History</h3>
-          <p class="section-desc">List your previous or current full-time, contract, or internship positions.</p>
-        </div>
-        <button class="primary-btn sm" type="button" (click)="openAddExpModal()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>Add Experience</span>
-        </button>
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-box" *ngIf="jobSeekerService.experienceList().length === 0">
-        <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-        <p>No work experience entries added yet. Click above to add your employment history.</p>
-      </div>
-
-      <!-- Experience Cards List -->
-      <div class="records-grid">
-        <div class="record-card" *ngFor="let exp of jobSeekerService.experienceList()">
-          <div class="record-header">
+        <!-- Education History Section -->
+        <div class="record-section">
+          <div class="section-top-row">
             <div>
-              <h4 class="record-title">{{ exp.job_title }}</h4>
-              <span class="record-subtitle">{{ exp.company }} &bull; {{ exp.location }}</span>
+              <h4 class="section-title">Education Credentials</h4>
+              <p class="section-desc">Add your degrees, institutions, and academic qualifications</p>
             </div>
-            <div class="record-actions">
-              <button class="icon-action-btn" (click)="openEditExpModal(exp)" title="Edit">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-              </button>
-              <button class="icon-action-btn danger" (click)="deleteExp(exp.id)" title="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
+            <button type="button" class="btn-secondary sm" (click)="openAddEduModal()">+ Add Education</button>
+          </div>
+
+          <div *ngIf="jobSeekerService.educationList().length === 0" class="empty-record-box">
+            <p>No education records added yet. Click "+ Add Education" above to list your credentials.</p>
+          </div>
+
+          <div class="records-list" *ngIf="jobSeekerService.educationList().length > 0">
+            <div *ngFor="let edu of jobSeekerService.educationList()" class="record-card">
+              <div class="record-card-head">
+                <div>
+                  <h5 class="rc-role">{{ edu.degree }} <span *ngIf="edu.field_of_study">— {{ edu.field_of_study }}</span></h5>
+                  <span class="rc-sub">{{ edu.institution }}</span>
+                  <span class="rc-dates">{{ edu.start_date }} — {{ edu.end_date }} <span *ngIf="edu.grade">• {{ edu.grade }}</span></span>
+                </div>
+                <div class="record-actions">
+                  <button type="button" class="btn-text-action" (click)="openEditEduModal(edu)">Edit</button>
+                  <button type="button" class="btn-text-action danger" (click)="deleteEdu(edu.id)">Delete</button>
+                </div>
+              </div>
+              <p class="rc-text" *ngIf="edu.description">{{ edu.description }}</p>
             </div>
           </div>
-          <div class="record-meta">
-            <span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              {{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }}
-            </span>
-            <span class="type-badge">{{ exp.employment_type }}</span>
-          </div>
-          <p class="record-desc">{{ exp.description }}</p>
         </div>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
+        <button type="button" class="btn-primary" (click)="nextStep()">Continue to Preferences →</button>
       </div>
     </div>
 
-    <!-- STEP 5: Skills & Expertise (Popular Skills Static + Dynamic Search Dropdown) -->
-    <div *ngIf="currentStep() === 5" class="step-form-body">
-      
-      <!-- Static Popular Skills Section (ALWAYS REMAINS VISIBLE) -->
-      <div class="popular-skills-section">
-        <div class="popular-header">
-          <span class="popular-title">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            Popular Skills
-          </span>
-          <span class="popular-sub">Click any skill below to add it instantly to your candidate profile:</span>
-        </div>
-        <div class="popular-chips-wrap">
-          <button
-            type="button"
-            class="popular-chip"
-            *ngFor="let pSkill of popularSkills"
-            [class.selected]="isSkillAlreadySelected(pSkill)"
-            (click)="addSkillFromCatalog(pSkill)"
-            [disabled]="isSkillAlreadySelected(pSkill)"
-          >
-            <span *ngIf="!isSkillAlreadySelected(pSkill)">+</span>
-            <svg *ngIf="isSkillAlreadySelected(pSkill)" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            {{ pSkill }}
-          </button>
-        </div>
+    <!-- STEP 4: Skills, Resume & Job Preferences -->
+    <div *ngIf="currentStep === 4" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 4 — Skills, Resume & Job Preferences</h3>
+        <p>Define your core technical skills, upload your resume, and configure dream role parameters</p>
       </div>
 
-      <!-- Interactive Skill Search Field & Dynamic Results Dropdown -->
-      <div class="skill-search-wrapper">
-        <div class="search-input-box">
-          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input
-            type="text"
-            [ngModel]="skillSearchQuery()"
-            (ngModelChange)="skillSearchQuery.set($event)"
-            placeholder="Search for skills (e.g. React, Next.js, Docker, Kubernetes, Figma...)"
-          />
-          <button
-            class="secondary-btn sm custom-add-btn"
-            type="button"
-            (click)="addCustomSkill()"
-            *ngIf="skillSearchQuery()"
-          >
-            + Add "{{ skillSearchQuery() }}"
-          </button>
-        </div>
+      <div class="form-stack">
+        <!-- 4A. Skills Subsection -->
+        <div class="step-subsection">
+          <h4 class="section-title">Core Technical Skills *</h4>
+          <p class="section-desc">Add relevant programming languages, frameworks, and engineering tools</p>
 
-        <!-- Proficiency & YOE Controls -->
-        <div class="skill-level-pickers">
-          <div class="form-group">
-            <label>Default Proficiency</label>
-            <select [ngModel]="selectedProficiency()" (ngModelChange)="selectedProficiency.set($event)">
+          <div class="skills-input-row">
+            <div class="skill-search-wrapper">
+              <input
+                type="text"
+                placeholder="Search skills (e.g. Angular, TypeScript, Python)..."
+                [ngModel]="skillSearchQuery()"
+                (ngModelChange)="skillSearchQuery.set($event)"
+              />
+              <div class="skill-search-dropdown" *ngIf="searchSkillResults().length > 0">
+                <button
+                  type="button"
+                  *ngFor="let s of searchSkillResults()"
+                  class="dropdown-item"
+                  (click)="addSkillFromCatalog(s.name)"
+                >
+                  <span>{{ s.name }}</span>
+                  <span class="cat-pill" *ngIf="s.category">{{ s.category }}</span>
+                </button>
+              </div>
+            </div>
+
+            <select [ngModel]="selectedProficiency()" (ngModelChange)="selectedProficiency.set($event)" class="sm-select">
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
               <option value="advanced">Advanced</option>
               <option value="expert">Expert</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label>Years of Experience</label>
-            <input type="number" min="1" max="30" [ngModel]="selectedSkillYoe()" (ngModelChange)="selectedSkillYoe.set($event)" />
-          </div>
-        </div>
 
-        <!-- Floating Dynamic Search Results Dropdown -->
-        <div class="search-results-dropdown" *ngIf="skillSearchQuery()">
-          <div class="dropdown-header">Matching Local Skills:</div>
-          <div class="dropdown-list" *ngIf="searchSkillResults().length > 0; else noMatchResults">
-            <div
-              class="dropdown-item"
-              *ngFor="let item of searchSkillResults()"
-              (click)="addSkillFromCatalog(item.name)"
-            >
-              <div class="item-name">{{ item.name }}</div>
-              <span class="item-cat">{{ item.category }}</span>
-            </div>
+            <select [ngModel]="selectedSkillYoe()" (ngModelChange)="selectedSkillYoe.set(+$event)" class="sm-select">
+              <option [value]="1">1 yr exp</option>
+              <option [value]="2">2 yrs exp</option>
+              <option [value]="3">3 yrs exp</option>
+              <option [value]="5">5+ yrs exp</option>
+              <option [value]="8">8+ yrs exp</option>
+            </select>
+
+            <button type="button" class="btn-secondary" (click)="addCustomSkill()" [disabled]="!skillSearchQuery().trim()">
+              + Add
+            </button>
           </div>
-          <ng-template #noMatchResults>
-            <div class="no-match-box">
-              <span>No exact match found in local catalog.</span>
-              <button type="button" class="text-link-btn" (click)="addCustomSkill()">
-                Click to add "{{ skillSearchQuery() }}" as custom skill
+
+          <!-- Popular Skills Quick Pick -->
+          <div class="popular-skills-wrap">
+            <span class="popular-label">Popular Skills:</span>
+            <div class="popular-chips">
+              <button
+                type="button"
+                *ngFor="let s of popularSkills"
+                class="popular-chip"
+                [class.added]="isSkillAlreadySelected(s)"
+                (click)="!isSkillAlreadySelected(s) && addSkillFromCatalog(s)"
+              >
+                {{ s }} {{ isSkillAlreadySelected(s) ? '✓' : '+' }}
               </button>
             </div>
-          </ng-template>
-        </div>
-      </div>
+          </div>
 
-      <!-- Selected Candidate Skills Grid -->
-      <div class="selected-skills-container">
-        <h3 class="section-title">Your Selected Skills ({{ jobSeekerService.userSkills().length }})</h3>
-        
-        <div class="empty-box" *ngIf="jobSeekerService.userSkills().length === 0">
-          <p>No skills added yet. Select from Popular Skills above or search for skills.</p>
-        </div>
-
-        <div class="user-skills-grid" *ngIf="jobSeekerService.userSkills().length > 0">
-          <div class="user-skill-tag" *ngFor="let s of jobSeekerService.userSkills()">
-            <div class="tag-left">
-              <span class="skill-name">{{ s.skill_name }}</span>
-              <span class="skill-badge" [class]="s.proficiency_level">{{ s.proficiency_level }} &bull; {{ s.years_of_experience }}y</span>
+          <!-- User Added Skills Chips -->
+          <div class="selected-skills-box">
+            <span class="section-label">Your Added Skills ({{ jobSeekerService.userSkills().length }})</span>
+            <div class="skills-chip-grid">
+              <div *ngFor="let us of jobSeekerService.userSkills()" class="user-skill-chip">
+                <span class="usk-name">{{ us.skill_name }}</span>
+                <span class="usk-level">{{ us.proficiency_level }}</span>
+                <span class="usk-yoe" *ngIf="us.years_experience">{{ us.years_experience }}y</span>
+                <button type="button" class="usk-remove" (click)="removeSkill(us.id)" aria-label="Remove skill">×</button>
+              </div>
             </div>
-            <button type="button" class="remove-skill-btn" (click)="removeSkill(s.id)" title="Remove skill">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
+            <span class="err-text" *ngIf="jobSeekerService.userSkills().length === 0">Please add at least one technical skill.</span>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- STEP 6: Resume Upload UI -->
-    <div *ngIf="currentStep() === 6" class="step-form-body">
-      <!-- Upload Zone (Shown when uploading or adding resume) -->
-      <div
-        class="resume-dropzone-card"
-        [class.dragover]="resumeDragOver()"
-        (dragover)="$event.preventDefault(); resumeDragOver.set(true)"
-        (dragleave)="resumeDragOver.set(false)"
-        (drop)="onFileDropped($event)"
-      >
-        <div class="dropzone-icon-circle">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 12 15 15"></polyline></svg>
-        </div>
+        <!-- 4B. Resume Upload Subsection -->
+        <div class="step-subsection">
+          <h4 class="section-title">Resume & CV</h4>
+          <p class="section-desc">Upload your latest PDF or DOCX resume for employer review</p>
 
-        <div class="dropzone-text-box">
-          <h3>Upload your Resume / CV</h3>
-          <p>Drag and drop your file here, or click browse to choose a document from your device.</p>
-          <span class="file-specs-text">Accepted formats: PDF, DOCX, DOC (Max file size: 10MB)</span>
-        </div>
-
-        <label class="primary-btn sm browse-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-          <span>Browse File</span>
-          <input type="file" (change)="onFileSelected($event)" accept=".pdf,.docx,.doc" class="hidden-file-input" />
-        </label>
-      </div>
-
-      <!-- Uploaded Resumes List Cards -->
-      <div class="uploaded-resumes-container" *ngIf="jobSeekerService.resumes().length > 0">
-        <h3 class="section-title">Uploaded Document ({{ jobSeekerService.resumes().length }})</h3>
-
-        <div class="resume-file-card" *ngFor="let r of jobSeekerService.resumes()">
-          <div class="file-card-left">
-            <div class="pdf-icon-box">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <div
+            class="resume-upload-zone"
+            [class.drag-over]="resumeDragOver()"
+            (dragover)="resumeDragOver.set(true); $event.preventDefault()"
+            (dragleave)="resumeDragOver.set(false)"
+            (drop)="onFileDropped($event)"
+          >
+            <div class="ruz-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
             </div>
-            <div class="file-info-details">
-              <div class="file-title-row">
-                <span class="file-name">{{ r.file_name }}</span>
-                <span class="primary-pill" *ngIf="r.is_primary">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                  Primary Resume
+            <p class="ruz-title">Drag & drop your resume PDF here, or <label class="browse-link">browse files<input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" class="hidden-file-input" /></label></p>
+            <span class="help-text">Supports PDF, DOC, DOCX up to 10MB</span>
+          </div>
+
+          <div class="resume-list" *ngIf="jobSeekerService.resumes().length > 0">
+            <div *ngFor="let res of jobSeekerService.resumes()" class="resume-item-card">
+              <div class="ric-left">
+                <span class="ric-icon">📄</span>
+                <div>
+                  <h5 class="ric-name">{{ res.file_name }}</h5>
+                  <span class="ric-meta">{{ res.file_size }} • Uploaded</span>
+                </div>
+              </div>
+              <div class="ric-right">
+                <span class="primary-pill" *ngIf="res.is_primary">Primary CV</span>
+                <button type="button" class="btn-text-action" *ngIf="!res.is_primary" (click)="setPrimaryResume(res.id)">Set Primary</button>
+                <button type="button" class="btn-text-action danger" (click)="deleteResume(res.id)">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4C. Job Preferences Subsection -->
+        <form [formGroup]="preferencesForm" class="step-subsection">
+          <h4 class="section-title">Job Search Preferences</h4>
+          <p class="section-desc">Specify your ideal role, location, remote setup, and salary requirements</p>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Target Job Title *</label>
+              <input type="text" formControlName="preferred_job_title" placeholder="e.g. Senior Full Stack Engineer" />
+              <span class="err-text" *ngIf="preferencesForm.get('preferred_job_title')?.touched && preferencesForm.get('preferred_job_title')?.invalid">Target job title is required.</span>
+            </div>
+
+            <div class="form-group">
+              <label>Target Location *</label>
+              <input type="text" formControlName="preferred_location" placeholder="e.g. Bengaluru, India" />
+              <span class="err-text" *ngIf="preferencesForm.get('preferred_location')?.touched && preferencesForm.get('preferred_location')?.invalid">Target location is required.</span>
+            </div>
+
+            <div class="form-group col-span-2">
+              <label class="section-label" id="work-mode-label">Work Mode Preference *</label>
+              <div class="work-mode-cards-grid" role="radiogroup" aria-labelledby="work-mode-label">
+                <div
+                  *ngFor="let r of remoteOptions"
+                  class="work-mode-card"
+                  [class.selected]="preferencesForm.value.remote_preference === r.value"
+                  role="radio"
+                  [attr.aria-checked]="preferencesForm.value.remote_preference === r.value"
+                  tabindex="0"
+                  (click)="selectRemotePref(r.value)"
+                  (keydown.enter)="selectRemotePref(r.value)"
+                  (keydown.space)="$event.preventDefault(); selectRemotePref(r.value)"
+                >
+                  <input
+                    type="radio"
+                    formControlName="remote_preference"
+                    [value]="r.value"
+                    class="sr-only"
+                    tabindex="-1"
+                  />
+                  <div class="wmc-header">
+                    <div class="wmc-icon-box" [class.active]="preferencesForm.value.remote_preference === r.value">
+                      <!-- Remote: Laptop & Globe -->
+                      <svg *ngIf="r.value === 'remote'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                      </svg>
+                      <!-- Hybrid: Modern Split Building/Home -->
+                      <svg *ngIf="r.value === 'hybrid'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                      <!-- On-site: High-rise office building -->
+                      <svg *ngIf="r.value === 'on_site'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                        <line x1="9" y1="6" x2="9.01" y2="6"></line>
+                        <line x1="15" y1="6" x2="15.01" y2="6"></line>
+                        <line x1="9" y1="10" x2="9.01" y2="10"></line>
+                        <line x1="15" y1="10" x2="15.01" y2="10"></line>
+                        <line x1="9" y1="14" x2="9.01" y2="14"></line>
+                        <line x1="15" y1="14" x2="15.01" y2="14"></line>
+                        <line x1="9" y1="18" x2="15" y2="18"></line>
+                      </svg>
+                    </div>
+                    <div class="wmc-indicator" [class.checked]="preferencesForm.value.remote_preference === r.value">
+                      <svg *ngIf="preferencesForm.value.remote_preference === r.value" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="wmc-body">
+                    <span class="wmc-title">{{ r.label }}</span>
+                    <span class="wmc-desc">{{ r.desc }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Employment Type *</label>
+              <select formControlName="employment_type">
+                <option *ngFor="let e of employmentTypeOptions" [value]="e.value">{{ e.label }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Experience Level *</label>
+              <select formControlName="experience_level">
+                <option *ngFor="let exp of experienceLevelOptions" [value]="exp.value">{{ exp.label }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Minimum Expected Salary (INR / Year) *</label>
+              <input type="number" formControlName="min_salary" placeholder="e.g. 2800000" />
+            </div>
+
+            <div class="form-group">
+              <label>Maximum Expected Salary (INR / Year) *</label>
+              <input type="number" formControlName="max_salary" placeholder="e.g. 4500000" />
+            </div>
+
+            <div class="form-group col-span-2">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="willing_to_relocate" />
+                <span>Willing to relocate for the right role</span>
+              </label>
+            </div>
+
+            <div class="form-group col-span-2">
+              <label>Target Industries</label>
+              <div class="industry-input-row">
+                <input
+                  type="text"
+                  placeholder="e.g. FinTech, SaaS, AI/ML, E-Commerce"
+                  [ngModel]="industryInput()"
+                  (ngModelChange)="industryInput.set($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  (keydown.enter)="$event.preventDefault(); addIndustry()"
+                />
+                <button type="button" class="btn-secondary" (click)="addIndustry()" [disabled]="!industryInput().trim()">+ Add Industry</button>
+              </div>
+              <div class="industry-chips-wrap" *ngIf="(jobSeekerService.preferences().preferred_industries ?? []).length > 0">
+                <span *ngFor="let ind of (jobSeekerService.preferences().preferred_industries ?? [])" class="industry-chip">
+                  {{ ind }}
+                  <button type="button" (click)="removeIndustry(ind)">×</button>
                 </span>
               </div>
-              <span class="file-meta">{{ r.file_size }} &bull; Uploaded {{ r.uploaded_at | date:'mediumDate' }}</span>
             </div>
           </div>
+        </form>
+      </div>
 
-          <div class="file-card-actions">
-            <button class="secondary-btn sm" *ngIf="!r.is_primary" (click)="setPrimaryResume(r.id)">
-              Set Primary
-            </button>
-            <button class="icon-action-btn danger" (click)="deleteResume(r.id)" title="Delete resume">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
-          </div>
-        </div>
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
+        <button type="button" class="btn-primary" (click)="nextStep()">Review All Details →</button>
       </div>
     </div>
 
-    <!-- STEP 7: Job Preferences UI (Choice Cards & Refined Inputs) -->
-    <div *ngIf="currentStep() === 7" [formGroup]="preferencesForm" class="step-form-body">
-      <div class="pref-sections-container">
-        
-        <!-- Desired Job Title -->
-        <div class="form-group full-width">
-          <label for="preferred_job_title">Desired Job Title(s) <span class="req">*</span></label>
-          <input id="preferred_job_title" type="text" formControlName="preferred_job_title" placeholder="e.g. Senior Full Stack Engineer, Lead Frontend Architect" />
-        </div>
-
-        <!-- Work Mode / Remote Preference Choice Cards -->
-        <div class="pref-card-group">
-          <label>Remote / Work Mode Preference <span class="req">*</span></label>
-          <div class="choice-cards-grid">
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('remote_preference')?.value === 'hybrid'"
-              (click)="selectRemotePref('hybrid')"
-            >
-              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="9" y1="18" x2="9" y2="18.01"></line><line x1="15" y1="18" x2="15" y2="18.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line></svg>
-              <span class="choice-title">Hybrid</span>
-              <span class="choice-sub">Office + Remote flexibility</span>
-            </div>
-
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('remote_preference')?.value === 'remote'"
-              (click)="selectRemotePref('remote')"
-            >
-              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="20" x2="22" y2="20"></line></svg>
-              <span class="choice-title">100% Remote</span>
-              <span class="choice-sub">Work from anywhere</span>
-            </div>
-
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('remote_preference')?.value === 'on_site'"
-              (click)="selectRemotePref('on_site')"
-            >
-              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              <span class="choice-title">On-Site</span>
-              <span class="choice-sub">In-office full time</span>
-            </div>
-
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('remote_preference')?.value === 'any'"
-              (click)="selectRemotePref('any')"
-            >
-              <svg class="choice-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-              <span class="choice-title">Open to Any</span>
-              <span class="choice-sub">Flexible work modes</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Employment Type Choice Cards -->
-        <div class="pref-card-group">
-          <label>Employment Type <span class="req">*</span></label>
-          <div class="choice-cards-grid">
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('employment_type')?.value === 'full_time'"
-              (click)="selectEmploymentType('full_time')"
-            >
-              <span class="choice-title">Full-time</span>
-              <span class="choice-sub">Permanent role</span>
-            </div>
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('employment_type')?.value === 'contract'"
-              (click)="selectEmploymentType('contract')"
-            >
-              <span class="choice-title">Contract</span>
-              <span class="choice-sub">Project-based</span>
-            </div>
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('employment_type')?.value === 'part_time'"
-              (click)="selectEmploymentType('part_time')"
-            >
-              <span class="choice-title">Part-time</span>
-              <span class="choice-sub">Flexible hours</span>
-            </div>
-            <div
-              class="choice-card"
-              [class.selected]="preferencesForm.get('employment_type')?.value === 'internship'"
-              (click)="selectEmploymentType('internship')"
-            >
-              <span class="choice-title">Internship</span>
-              <span class="choice-sub">Early career</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Seniority & Salary expectations -->
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="experience_level">Target Seniority Level <span class="req">*</span></label>
-            <select id="experience_level" formControlName="experience_level">
-              <option value="entry">Entry Level (0-2 yrs)</option>
-              <option value="mid">Mid Level (2-4 yrs)</option>
-              <option value="senior">Senior Level (5-8 yrs)</option>
-              <option value="lead">Lead / Principal (8+ yrs)</option>
-              <option value="executive">Executive</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="preferred_location">Preferred Job Location <span class="req">*</span></label>
-            <input id="preferred_location" type="text" formControlName="preferred_location" placeholder="e.g. Bengaluru, Remote" />
-          </div>
-
-          <div class="form-group">
-            <label for="min_salary">Minimum Salary Expectation (INR) <span class="req">*</span></label>
-            <input id="min_salary" type="number" formControlName="min_salary" step="100000" />
-          </div>
-
-          <div class="form-group">
-            <label for="max_salary">Maximum Salary Target (INR) <span class="req">*</span></label>
-            <input id="max_salary" type="number" formControlName="max_salary" step="100000" />
-          </div>
-        </div>
-
-        <!-- Relocation toggle & Industries -->
-        <div class="form-group">
-          <div class="checkbox-toggle-wrap">
-            <input id="willing_to_relocate" type="checkbox" formControlName="willing_to_relocate" />
-            <label for="willing_to_relocate">Yes, I am open to relocating for the right opportunity</label>
-          </div>
-        </div>
-
-        <!-- Preferred Industries Chips -->
-        <div class="form-group full-width">
-          <label>Preferred Industries</label>
-          <div class="industry-tag-input-row">
-            <input
-              type="text"
-              [ngModel]="industryInput()"
-              (ngModelChange)="industryInput.set($event)"
-              [ngModelOptions]="{ standalone: true }"
-              placeholder="e.g. FinTech, SaaS, HealthTech, AI/ML..."
-            />
-            <button class="secondary-btn sm" type="button" (click)="addIndustry()">+ Add</button>
-          </div>
-          <div class="industry-chips mt-2">
-            <span class="ind-chip" *ngFor="let ind of jobSeekerService.preferences().preferred_industries">
-              {{ ind }}
-              <svg (click)="removeIndustry(ind)" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </span>
-          </div>
-        </div>
-
+    <!-- STEP 5: Review Candidate Profile -->
+    <div *ngIf="currentStep === 5" class="step-content">
+      <div class="step-heading">
+        <h3>STEP 5 — Review Candidate Profile</h3>
+        <p>Verify all entered data before completing your onboarding</p>
       </div>
-    </div>
 
-    <!-- STEP 8: Review Profile (Properly Arranged Cards) -->
-    <div *ngIf="currentStep() === 8" class="step-form-body">
-      <!-- Profile Header Banner -->
-      <div class="review-banner-card">
-        <div class="review-user-info">
-          <img *ngIf="jobSeekerService.profile().avatar_url" [src]="jobSeekerService.profile().avatar_url" alt="Candidate profile photo" class="review-avatar-img" />
-          <div *ngIf="!jobSeekerService.profile().avatar_url" class="review-avatar-img avatar-fallback-box">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
+      <div class="review-grid">
+        <!-- 1. Personal Details -->
+        <div class="review-card">
+          <div class="rc-head">
+            <h4>Personal Information</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(1)">Edit</button>
+          </div>
+          <div class="rc-body">
+            <p><strong>Name:</strong> {{ step1Form.value.full_name }}</p>
+            <p><strong>Phone:</strong> {{ step1Form.value.phone }}</p>
+            <p><strong>Location:</strong> {{ step1Form.value.location }}</p>
+            <p><strong>City/Country:</strong> {{ step1Form.value.city }}, {{ step1Form.value.country }}</p>
+          </div>
+        </div>
+
+        <!-- 2. Professional Profile -->
+        <div class="review-card">
+          <div class="rc-head">
+            <h4>Professional Profile</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(2)">Edit</button>
+          </div>
+          <div class="rc-body">
+            <p><strong>Headline:</strong> {{ step2Form.value.headline }}</p>
+            <p><strong>Current Role:</strong> {{ step2Form.value.current_job_title }} at {{ step2Form.value.current_company }}</p>
+            <p><strong>Experience:</strong> {{ step2Form.value.years_of_experience }} Years • {{ step2Form.value.availability }}</p>
+            <p *ngIf="step2Form.value.linkedin_url"><strong>LinkedIn:</strong> {{ step2Form.value.linkedin_url }}</p>
+            <p *ngIf="step2Form.value.github_url"><strong>GitHub:</strong> {{ step2Form.value.github_url }}</p>
+          </div>
+        </div>
+
+        <!-- 3. Education & Work Experience -->
+        <div class="review-card">
+          <div class="rc-head">
+            <h4>Education & Experience</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(3)">Edit</button>
+          </div>
+          <div class="rc-body">
+            <p><strong>Work Roles:</strong> {{ jobSeekerService.experienceList().length }} listed</p>
+            <p *ngIf="jobSeekerService.experienceList().length > 0">
+              Latest: {{ jobSeekerService.experienceList()[0].job_title }} ({{ jobSeekerService.experienceList()[0].company || jobSeekerService.experienceList()[0].company_name }})
+            </p>
+            <p><strong>Education:</strong> {{ jobSeekerService.educationList().length }} credentials</p>
+            <p *ngIf="jobSeekerService.educationList().length > 0">
+              {{ jobSeekerService.educationList()[0].degree }} ({{ jobSeekerService.educationList()[0].institution }})
+            </p>
+          </div>
+        </div>
+
+        <!-- 4. Skills & Resume -->
+        <div class="review-card">
+          <div class="rc-head">
+            <h4>Skills & Resume</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(4)">Edit</button>
+          </div>
+          <div class="rc-body">
+            <p><strong>Skills Tagged:</strong> {{ jobSeekerService.userSkills().length }} skills</p>
+            <div class="review-chips-preview">
+              <span *ngFor="let s of jobSeekerService.userSkills()" class="mini-skill-chip">{{ s.skill_name }}</span>
+            </div>
+            <p class="mt-2">
+              <strong>Resume:</strong>
+              {{ jobSeekerService.resumes().length > 0 ? jobSeekerService.resumes()[0].file_name : 'No file uploaded' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- 5. Job Preferences (Span 2 columns) -->
+        <div class="review-card col-span-2">
+          <div class="rc-head">
+            <h4>Job Preferences</h4>
+            <button type="button" class="btn-edit" (click)="goToStep(4)">Edit</button>
+          </div>
+          <div class="rc-body inline-flex-wrap">
+            <p><strong>Target Role:</strong> {{ preferencesForm.value.preferred_job_title }}</p>
+            <p><strong>Location:</strong> {{ preferencesForm.value.preferred_location }}</p>
+            <p><strong>Work Type:</strong> {{ preferencesForm.value.remote_preference | uppercase }} • {{ preferencesForm.value.employment_type }}</p>
+            <p><strong>Expected Salary:</strong> ₹{{ preferencesForm.value.min_salary }} — ₹{{ preferencesForm.value.max_salary }}</p>
+            <p><strong>Relocate:</strong> {{ preferencesForm.value.willing_to_relocate ? 'Yes' : 'No' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Error Banner with Actionable Retry Button -->
+      <div *ngIf="errorMessage && currentStep === 5" class="save-error-banner" role="alert">
+        <div class="seb-content">
+          <svg class="seb-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div class="seb-text">
+            <strong>Unable to complete onboarding</strong>
+            <p>{{ errorMessage }}</p>
+          </div>
+        </div>
+        <button type="button" class="btn-retry" (click)="finishOnboarding()" [disabled]="isSubmitting">
+          Retry Save
+        </button>
+      </div>
+
+      <div class="step-actions">
+        <button type="button" class="btn-secondary" [disabled]="isSubmitting" (click)="prevStep()">← Back</button>
+        <button type="button" class="btn-primary" [disabled]="isSubmitting" (click)="finishOnboarding()">
+          <span *ngIf="!isSubmitting">Complete Onboarding & Save ✓</span>
+          <span *ngIf="isSubmitting" class="spinner-btn-wrap">
+            <svg class="spinner-icon" viewBox="0 0 24 24" width="16" height="16">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round"></circle>
             </svg>
-          </div>
-          <div>
-            <h2 class="review-name">{{ jobSeekerService.profile().full_name }}</h2>
-            <p class="review-headline">{{ jobSeekerService.jobSeekerProfile().headline }}</p>
-            <span class="review-location">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              {{ jobSeekerService.jobSeekerProfile().location }}
-            </span>
-          </div>
-        </div>
-
-        <div class="completion-status-box">
-          <span class="score-number">100%</span>
-          <span class="score-label">Profile Completed</span>
-        </div>
-      </div>
-
-      <div class="review-notice-bar">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        <span>Everything is ready! Please review your candidate summary before launching discovery.</span>
-      </div>
-
-      <!-- Reorganized Summary Cards Grid -->
-      <div class="review-sections-grid">
-        
-        <!-- Personal Info -->
-        <div class="review-card">
-          <div class="card-head">
-            <h4>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              Personal Information
-            </h4>
-            <button class="text-link-btn" (click)="goToStep(1)">Edit</button>
-          </div>
-          <div class="card-body-list">
-            <div><strong>Email:</strong> {{ jobSeekerService.profile().email }}</div>
-            <div><strong>Phone:</strong> {{ jobSeekerService.profile().phone }}</div>
-            <div><strong>City / State:</strong> {{ jobSeekerService.jobSeekerProfile().city }}, {{ jobSeekerService.jobSeekerProfile().state }}</div>
-            <div><strong>Country:</strong> {{ jobSeekerService.jobSeekerProfile().country }}</div>
-          </div>
-        </div>
-
-        <!-- Professional Summary -->
-        <div class="review-card">
-          <div class="card-head">
-            <h4>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-              Professional Information
-            </h4>
-            <button class="text-link-btn" (click)="goToStep(2)">Edit</button>
-          </div>
-          <div class="card-body-list">
-            <div><strong>Current Role:</strong> {{ jobSeekerService.jobSeekerProfile().current_job_title }}</div>
-            <div><strong>Company:</strong> {{ jobSeekerService.jobSeekerProfile().current_company }}</div>
-            <div><strong>Experience:</strong> {{ jobSeekerService.jobSeekerProfile().years_of_experience }} Years</div>
-            <div><strong>Notice Period:</strong> {{ jobSeekerService.jobSeekerProfile().availability }}</div>
-          </div>
-        </div>
-
-        <!-- Education History -->
-        <div class="review-card">
-          <div class="card-head">
-            <h4>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
-              Education ({{ jobSeekerService.educationList().length }})
-            </h4>
-            <button class="text-link-btn" (click)="goToStep(3)">Edit</button>
-          </div>
-          <div class="card-body-list">
-            <div *ngFor="let edu of jobSeekerService.educationList()">
-              <strong>{{ edu.degree }} in {{ edu.field_of_study }}</strong> &bull; {{ edu.institution }} ({{ edu.start_date }} - {{ edu.end_date }})
-            </div>
-          </div>
-        </div>
-
-        <!-- Work Experience -->
-        <div class="review-card">
-          <div class="card-head">
-            <h4>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-              Work Experience ({{ jobSeekerService.experienceList().length }})
-            </h4>
-            <button class="text-link-btn" (click)="goToStep(4)">Edit</button>
-          </div>
-          <div class="card-body-list">
-            <div *ngFor="let exp of jobSeekerService.experienceList()">
-              <strong>{{ exp.job_title }}</strong> at {{ exp.company }} ({{ exp.start_date }} &ndash; {{ exp.currently_working ? 'Present' : exp.end_date }})
-            </div>
-          </div>
-        </div>
-
-        <!-- Skills -->
-        <div class="review-card">
-          <div class="card-head">
-            <h4>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-              Skills ({{ jobSeekerService.userSkills().length }})
-            </h4>
-            <button class="text-link-btn" (click)="goToStep(5)">Edit</button>
-          </div>
-          <div class="skills-inline-chips">
-            <span class="sk-pill" *ngFor="let sk of jobSeekerService.userSkills()">{{ sk.skill_name }}</span>
-          </div>
-        </div>
-
-        <!-- Uploaded Resume -->
-        <div class="review-card">
-          <div class="card-head">
-            <h4>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-              Uploaded Resume
-            </h4>
-            <button class="text-link-btn" (click)="goToStep(6)">Edit</button>
-          </div>
-          <div class="card-body-list" *ngFor="let r of jobSeekerService.resumes()">
-            <div><strong>File:</strong> {{ r.file_name }} ({{ r.file_size }})</div>
-            <div>
-              <span class="primary-pill">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                Primary Candidate CV
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Preferences -->
-        <div class="review-card full-width">
-          <div class="card-head">
-            <h4>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              Job Preferences
-            </h4>
-            <button class="text-link-btn" (click)="goToStep(7)">Edit</button>
-          </div>
-          <div class="card-body-list flex-row-wrap">
-            <div><strong>Target Role:</strong> {{ jobSeekerService.preferences().preferred_job_title }}</div>
-            <div><strong>Work Mode:</strong> {{ jobSeekerService.preferences().remote_preference | uppercase }}</div>
-            <div><strong>Salary Target:</strong> ₹{{ ((jobSeekerService.preferences().min_salary || 0) / 100000) }}–{{ ((jobSeekerService.preferences().max_salary || 0) / 100000) }} LPA</div>
-            <div><strong>Relocation:</strong> {{ jobSeekerService.preferences().willing_to_relocate ? 'Yes' : 'No' }}</div>
-          </div>
-        </div>
+            Saving Profile...
+          </span>
+        </button>
       </div>
     </div>
 
-    <!-- STEP FOOTER CONTROLS -->
-    <div class="step-footer-controls">
-      <button class="secondary-btn" type="button" (click)="prevStep()" [disabled]="currentStep() === 1">
-        &larr; Back
-      </button>
+    <!-- STEP 6: Completion Celebration -->
+    <div *ngIf="currentStep === 6" class="step-content text-center">
+      <div class="completion-box">
+        <div class="success-ring">✓</div>
+        <h3>Job Seeker Profile Complete!</h3>
+        <p>Your candidate profile is {{ calculatedProgress() }}% complete and ready for discovery.</p>
 
-      <div class="footer-right-group">
-        <button
-          *ngIf="currentStep() < totalSteps"
-          class="primary-btn"
-          type="button"
-          (click)="nextStep()"
-        >
-          Continue &rarr;
-        </button>
+        <div class="meter-bar-container">
+          <div class="meter-fill" [style.width.%]="calculatedProgress()"></div>
+        </div>
+        <span class="meter-pct-label">{{ calculatedProgress() }}% Profile Strength</span>
 
-        <button
-          *ngIf="currentStep() === totalSteps"
-          class="primary-btn complete-btn"
-          type="button"
-          (click)="completeOnboarding()"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-          <span>Complete Profile & Launch Dashboard</span>
-        </button>
+        <div class="completion-next-steps">
+          <h4>Recommended Next Steps</h4>
+          <div class="ns-grid">
+            <a routerLink="/job-seeker/swipe" class="ns-card">
+              <span class="ns-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </span>
+              <h5>Discover & Swipe Jobs</h5>
+              <p>Browse curated engineering roles matched to your skills.</p>
+            </a>
+            <a routerLink="/job-seeker/applications" class="ns-card">
+              <span class="ns-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+              </span>
+              <h5>Track Applications</h5>
+              <p>Monitor application reviews and stage updates in real time.</p>
+            </a>
+            <a routerLink="/job-seeker/matches" class="ns-card">
+              <span class="ns-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </span>
+              <h5>Explore Matches & Chats</h5>
+              <p>Connect and chat directly with verified recruiters.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-actions center">
+        <button type="button" class="btn-primary lg" (click)="goToDashboard()">Go to Job Seeker Dashboard →</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Education Modal -->
+<!-- Modal: Add / Edit Education -->
 <div class="modal-backdrop" *ngIf="showEduModal()">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>{{ editingEduId() ? 'Edit Education' : 'Add Education Record' }}</h3>
-      <button class="close-btn" (click)="showEduModal.set(false)" aria-label="Close modal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
+      <h3>{{ editingEduId() ? 'Edit Education Record' : 'Add Education Record' }}</h3>
+      <button class="close-btn" (click)="showEduModal.set(false)" aria-label="Close modal">×</button>
     </div>
     <div class="modal-body" [formGroup]="educationForm">
-      <div class="form-group">
-        <label>Institution / University <span class="req">*</span></label>
-        <input type="text" formControlName="institution" placeholder="e.g. IIT Madras" />
-      </div>
-      <div class="form-group">
-        <label>Degree <span class="req">*</span></label>
-        <input type="text" formControlName="degree" placeholder="e.g. B.Tech" />
-      </div>
-      <div class="form-group">
-        <label>Field of Study <span class="req">*</span></label>
-        <input type="text" formControlName="field_of_study" placeholder="e.g. Computer Science" />
-      </div>
-      <div class="form-grid-2">
+      <div class="form-stack">
         <div class="form-group">
-          <label>Start Date <span class="req">*</span></label>
-          <input type="date" formControlName="start_date" />
+          <label>Institution / University *</label>
+          <input type="text" formControlName="institution" placeholder="e.g. Indian Institute of Technology (IIT), Madras" />
         </div>
         <div class="form-group">
-          <label>End Date <span class="req">*</span></label>
-          <input type="date" formControlName="end_date" />
+          <label>Degree *</label>
+          <input type="text" formControlName="degree" placeholder="e.g. Bachelor of Technology (B.Tech)" />
         </div>
-      </div>
-      <div class="form-group">
-        <label>Grade / CGPA</label>
-        <input type="text" formControlName="grade" placeholder="e.g. 8.9 CGPA" />
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea rows="3" formControlName="description" placeholder="Highlights, specializations..."></textarea>
+        <div class="form-group">
+          <label>Field of Study *</label>
+          <input type="text" formControlName="field_of_study" placeholder="e.g. Computer Science and Engineering" />
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Start Date *</label>
+            <input type="date" formControlName="start_date" />
+          </div>
+          <div class="form-group">
+            <label>End Date *</label>
+            <input type="date" formControlName="end_date" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Grade / CGPA</label>
+          <input type="text" formControlName="grade" placeholder="e.g. 8.9 CGPA" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea rows="2" formControlName="description" placeholder="Relevant coursework, student leadership, achievements..."></textarea>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="secondary-btn" (click)="showEduModal.set(false)">Cancel</button>
-      <button class="primary-btn" (click)="saveEdu()">Save Record</button>
+      <button type="button" class="btn-secondary" (click)="showEduModal.set(false)">Cancel</button>
+      <button type="button" class="btn-primary" (click)="saveEdu()">Save Record</button>
     </div>
   </div>
 </div>
 
-<!-- Experience Modal -->
+<!-- Modal: Add / Edit Experience -->
 <div class="modal-backdrop" *ngIf="showExpModal()">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>{{ editingExpId() ? 'Edit Work Experience' : 'Add Work Experience' }}</h3>
-      <button class="close-btn" (click)="showExpModal.set(false)" aria-label="Close modal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
+      <h3>{{ editingExpId() ? 'Edit Experience Record' : 'Add Work Experience' }}</h3>
+      <button class="close-btn" (click)="showExpModal.set(false)" aria-label="Close modal">×</button>
     </div>
     <div class="modal-body" [formGroup]="experienceForm">
-      <div class="form-group">
-        <label>Company Name <span class="req">*</span></label>
-        <input type="text" formControlName="company" placeholder="e.g. TechFlow Systems" />
-      </div>
-      <div class="form-group">
-        <label>Job Title <span class="req">*</span></label>
-        <input type="text" formControlName="job_title" placeholder="e.g. Senior Frontend Engineer" />
-      </div>
-      <div class="form-grid-2">
+      <div class="form-stack">
         <div class="form-group">
-          <label>Employment Type <span class="req">*</span></label>
-          <select formControlName="employment_type">
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Contract">Contract</option>
-            <option value="Internship">Internship</option>
-          </select>
+          <label>Company Name *</label>
+          <input type="text" formControlName="company" placeholder="e.g. TechFlow Systems" />
         </div>
         <div class="form-group">
-          <label>Location <span class="req">*</span></label>
-          <input type="text" formControlName="location" placeholder="e.g. Bengaluru" />
+          <label>Job Title *</label>
+          <input type="text" formControlName="job_title" placeholder="e.g. Senior Frontend Engineer" />
         </div>
-      </div>
-      <div class="form-grid-2">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Employment Type *</label>
+            <select formControlName="employment_type">
+              <option value="Full-time">Full-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Internship">Internship</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" formControlName="location" placeholder="e.g. Bengaluru, India (Hybrid)" />
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Start Date *</label>
+            <input type="date" formControlName="start_date" />
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" formControlName="end_date" [disabled]="experienceForm.get('currently_working')?.value" />
+          </div>
+        </div>
         <div class="form-group">
-          <label>Start Date <span class="req">*</span></label>
-          <input type="date" formControlName="start_date" />
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="currently_working" />
+            <span>I currently work here</span>
+          </label>
         </div>
-        <div class="form-group" *ngIf="!experienceForm.get('currently_working')?.value">
-          <label>End Date</label>
-          <input type="date" formControlName="end_date" />
+        <div class="form-group">
+          <label>Role Summary & Achievements *</label>
+          <textarea rows="3" formControlName="description" placeholder="Describe your responsibilities, technologies used, and key accomplishments..."></textarea>
         </div>
-      </div>
-      <div class="form-group">
-        <div class="checkbox-toggle-wrap">
-          <input id="currently_working" type="checkbox" formControlName="currently_working" />
-          <label for="currently_working">I am currently working in this role</label>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Description & Key Achievements <span class="req">*</span></label>
-        <textarea rows="4" formControlName="description" placeholder="Describe your responsibilities, tech stack used, and key impact..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="secondary-btn" (click)="showExpModal.set(false)">Cancel</button>
-      <button class="primary-btn" (click)="saveExp()">Save Experience</button>
+      <button type="button" class="btn-secondary" (click)="showExpModal.set(false)">Cancel</button>
+      <button type="button" class="btn-primary" (click)="saveExp()">Save Record</button>
     </div>
   </div>
 </div>
