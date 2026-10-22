@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CompanyDataService } from '../../features/company/services/company-data.service';
+import { JobSeekerService } from '../../features/job-seeker/services/job-seeker.service';
+import { AuthService, UserRole } from '../../core/services/auth.service';
 
 export type AuthRole = 'jobseeker' | 'company';
 export type AuthMode = 'login' | 'signup';
@@ -52,6 +54,8 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   styleUrl: './auth.component.css',
 })
 export class AuthComponent implements OnInit, OnDestroy {
+  private authService?: AuthService | null;
+
   role: AuthRole = 'jobseeker';
   mode: AuthMode = 'login';
 
@@ -206,8 +210,20 @@ export class AuthComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private companyDataService: CompanyDataService
-  ) { }
+    private companyDataService: CompanyDataService,
+    private jobSeekerService: JobSeekerService,
+    authService?: AuthService
+  ) {
+    if (authService !== undefined) {
+      this.authService = authService;
+    } else {
+      try {
+        this.authService = inject(AuthService, { optional: true });
+      } catch {
+        this.authService = null;
+      }
+    }
+  }
 
   ngOnInit(): void {
     this.initForms();
@@ -329,7 +345,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     return this.mode === 'login' ? this.loginForm : this.signupForm;
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     this.submitted = true;
     this.successMessage = '';
 
@@ -339,17 +355,32 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
 
     const formVal = this.currentForm.value;
+    const userRole: UserRole = this.role === 'jobseeker' ? 'job_seeker' : 'company';
     const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
     const actionName = this.mode === 'login' ? 'Signed in' : 'Account created';
 
     this.successMessage = `${actionName} successfully as ${roleName} (${formVal.email}). Redirecting...`;
 
+    if (this.authService) {
+      if (this.mode === 'signup') {
+        await this.authService.signUp(formVal.email, formVal.password, formVal.fullName || 'User', userRole);
+      } else {
+        await this.authService.signIn(formVal.email, formVal.password, userRole);
+      }
+    }
+
     if (this.role === 'jobseeker') {
-      setTimeout(() => {
+      setTimeout(async () => {
         if (this.mode === 'signup') {
+          this.jobSeekerService.setOnboardingCompleted(false);
           this.router.navigate(['/job-seeker/onboarding']);
         } else {
-          this.router.navigate(['/job-seeker/dashboard']);
+          await this.jobSeekerService.ensureProfileLoaded();
+          if (this.jobSeekerService.isOnboardingCompleted()) {
+            this.router.navigate(['/job-seeker/dashboard']);
+          } else {
+            this.router.navigate(['/job-seeker/onboarding']);
+          }
         }
       }, 500);
     } else if (this.role === 'company') {
@@ -368,15 +399,31 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
   }
 
-  onGoogleAuth(): void {
+  async onGoogleAuth(): Promise<void> {
     const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
+    const userRole: UserRole = this.role === 'jobseeker' ? 'job_seeker' : 'company';
     this.successMessage = `Google authentication initiated for ${roleName}. Redirecting...`;
-    setTimeout(() => {
+
+    if (this.authService) {
+      this.authService.setDemoSession(
+        userRole,
+        this.role === 'jobseeker' ? 'krish.developer@hireswipe.io' : 'company@hireswipe.io',
+        this.role === 'jobseeker' ? 'Krish Sharma' : 'Company Admin'
+      );
+    }
+
+    setTimeout(async () => {
       if (this.role === 'jobseeker') {
         if (this.mode === 'signup') {
+          this.jobSeekerService.setOnboardingCompleted(false);
           this.router.navigate(['/job-seeker/onboarding']);
         } else {
-          this.router.navigate(['/job-seeker/dashboard']);
+          await this.jobSeekerService.ensureProfileLoaded();
+          if (this.jobSeekerService.isOnboardingCompleted()) {
+            this.router.navigate(['/job-seeker/dashboard']);
+          } else {
+            this.router.navigate(['/job-seeker/onboarding']);
+          }
         }
       } else {
         if (this.mode === 'signup') {

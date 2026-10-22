@@ -20,9 +20,10 @@
                [alt]="jobSeekerService.profile().full_name"
                (error)="onAvatarError()"
                class="company-mini-logo" />
-          <div *ngIf="!jobSeekerService.profile().avatar_url || avatarError()" class="company-mini-logo avatar-fallback-box">
-            <span>{{ userInitials }}</span>
-          </div>
+          <img *ngIf="!jobSeekerService.profile().avatar_url || avatarError()"
+               src="default-avatar.svg"
+               alt="Default avatar"
+               class="company-mini-logo" />
         </div>
         <div class="company-info-text">
           <div class="company-name-row">

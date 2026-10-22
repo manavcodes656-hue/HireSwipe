@@ -77,6 +77,13 @@ export class ProfileComponent {
     }
   }
 
+  onAvatarError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.src = 'default-avatar.svg';
+    }
+  }
+
   showToast(msg: string) {
     this.toastMessage.set(msg);
     setTimeout(() => this.toastMessage.set(''), 3000);

@@ -8,13 +8,15 @@
   <!-- Hero Profile Banner -->
   <div class="profile-hero-card">
     <div class="hero-avatar-wrap">
-      <img *ngIf="jobSeekerService.profile().avatar_url" [src]="jobSeekerService.profile().avatar_url" [alt]="jobSeekerService.profile().full_name" class="profile-avatar" />
-      <div *ngIf="!jobSeekerService.profile().avatar_url" class="profile-avatar avatar-fallback-box">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </div>
+      <img *ngIf="jobSeekerService.profile().avatar_url"
+           [src]="jobSeekerService.profile().avatar_url"
+           [alt]="jobSeekerService.profile().full_name"
+           class="profile-avatar"
+           (error)="onAvatarError($event)" />
+      <img *ngIf="!jobSeekerService.profile().avatar_url"
+           src="default-avatar.svg"
+           alt="Default profile photo"
+           class="profile-avatar" />
       <label class="camera-overlay-badge" title="Change profile photo">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
         <input type="file" (change)="onAvatarFileSelected($event)" accept="image/*" class="hidden-file-input" />
