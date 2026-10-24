@@ -81,20 +81,31 @@ export class TeamComponent implements OnInit, OnDestroy {
     this.isInviteModalOpen = false;
   }
 
-  sendInvite(): void {
+  inviteError = '';
+
+  async sendInvite(): Promise<void> {
     if (this.inviteForm.invalid) {
       this.inviteForm.markAllAsTouched();
       return;
     }
 
     const { email, role, full_name } = this.inviteForm.value;
-    this.dataService.inviteTeamMember(email, role, full_name);
+    this.inviteError = '';
+    const { error } = await this.dataService.inviteTeamMember(email, role, full_name);
+    if (error) {
+      this.inviteError = error;
+      return;
+    }
     this.inviteForm.reset({ role: 'recruiter' });
     this.closeInviteModal();
   }
 
-  toggleStatus(member: CompanyMember): void {
+  teamError = '';
+
+  async toggleStatus(member: CompanyMember): Promise<void> {
     const nextStatus = member.status === 'active' ? 'deactivated' : 'active';
-    this.dataService.toggleTeamMemberStatus(member.id, nextStatus);
+    this.teamError = '';
+    const { error } = await this.dataService.toggleTeamMemberStatus(member.id, nextStatus);
+    if (error) this.teamError = error;
   }
 }

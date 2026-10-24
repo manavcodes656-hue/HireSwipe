@@ -4,6 +4,7 @@
     <div>
       <div class="breadcrumb">
         <a routerLink="/company/jobs">← Back to Jobs</a>
+        <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>
       </div>
       <div class="title-row">
         <h1 class="page-title">{{ job.title }}</h1>

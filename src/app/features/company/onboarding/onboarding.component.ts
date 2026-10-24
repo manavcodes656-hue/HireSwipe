@@ -20,6 +20,11 @@ export class OnboardingComponent implements OnInit {
   step2Form!: FormGroup;
   step3LogoUrl = '';
   step3BannerUrl = '';
+  /** Selected logo file; uploaded to the company-logos bucket once the company exists. */
+  private logoFile: File | null = null;
+
+  onboardingError = '';
+  isSaving = false;
   step4Form!: FormGroup;
 
   company!: Company;
@@ -115,11 +120,13 @@ export class OnboardingComponent implements OnInit {
     });
 
     // Step 2: Description
+    // culture/mission/values have no columns on public.companies yet, so they are
+    // optional and labelled as not saved (see supabase/proposed/004_*.sql).
     this.step2Form = this.fb.group({
       description: [this.company.description || '', [Validators.required, Validators.minLength(20)]],
-      culture: [this.company.culture || '', Validators.required],
-      mission: [this.company.mission || '', Validators.required],
-      valuesInput: [(this.company.values || []).join(', '), Validators.required],
+      culture: [this.company.culture || ''],
+      mission: [this.company.mission || ''],
+      valuesInput: [(this.company.values || []).join(', ')],
     });
 
     // Step 3: Branding
@@ -182,8 +189,10 @@ export class OnboardingComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
+      this.logoFile = file;
       const reader = new FileReader();
       reader.onload = (e) => {
+        // Data URL is for the preview only; the file itself is uploaded on finish.
         this.step3LogoUrl = e.target?.result as string;
         this.recalculateCompletion();
       };
@@ -204,31 +213,71 @@ export class OnboardingComponent implements OnInit {
   }
 
   async finishOnboarding(): Promise<void> {
-    const valuesArray = this.step2Form.value.valuesInput
-      ? this.step2Form.value.valuesInput.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0)
-      : (this.company.values || []);
+    if (this.isSaving) return;
+    if (this.step1Form.invalid || this.step2Form.invalid || this.step4Form.invalid) {
+      this.onboardingError = 'Some required fields are missing. Please review the previous steps.';
+      return;
+    }
+    this.isSaving = true;
+    this.onboardingError = '';
+    try {
+      await this.saveOnboarding();
+    } finally {
+      this.isSaving = false;
+    }
+  }
 
-    await this.dataService.updateCompanyProfile({
+  /**
+   * Persist only schema-backed company fields. culture/mission/values/banner_url
+   * have no DB columns yet and are not written. onboarding_completed is set last,
+   * only after every required save succeeded.
+   */
+  private async saveOnboarding(): Promise<void> {
+    const companyFields: Partial<Company> = {
       ...this.step1Form.value,
       company_size: this.step1Form.value.size,
       description: this.step2Form.value.description,
-      culture: this.step2Form.value.culture,
-      mission: this.step2Form.value.mission,
-      values: valuesArray,
-      logo_url: this.step3LogoUrl,
-      banner_url: this.step3BannerUrl,
-      onboarding_completed: true,
-    });
+    };
 
-    await this.dataService.updateRecruiterProfile({
+    // New company users have no company yet: create it (and the owner membership).
+    const { error: ensureError } = await this.dataService.ensureCompanyForOnboarding(companyFields);
+    if (ensureError) return this.fail('Could not create your company', ensureError);
+
+    const { error: companyError } = await this.dataService.updateCompanyProfile({
+      ...companyFields,
+      completion_percentage: this.calculateCompletionFromForms(),
+    });
+    if (companyError) return this.fail('Could not save company details', companyError);
+
+    if (this.logoFile) {
+      const { error: logoError } = await this.dataService.uploadCompanyLogo(this.logoFile);
+      if (logoError) return this.fail('Could not upload the logo', logoError);
+    }
+
+    const { error: profileError } = await this.dataService.updateRecruiterProfile({
       full_name: this.step4Form.value.full_name,
-      email: this.step4Form.value.email,
       phone: this.step4Form.value.phone,
     });
+    if (profileError) return this.fail('Could not save your recruiter profile', profileError);
 
-    this.dataService.setOnboardingCompleted(true);
+    const { error: flagError } = await this.dataService.setOnboardingCompleted(true);
+    if (flagError) return this.fail('Could not mark onboarding as complete', flagError);
 
     this.router.navigate(['/company/dashboard']);
+  }
+
+  private fail(step: string, error: string): void {
+    console.error(`[onboarding] ${step}:`, error);
+    this.onboardingError = `${step}: ${error}`;
+  }
+
+  private calculateCompletionFromForms(): number {
+    return this.dataService.calculateCompanyCompletion({
+      ...this.step1Form.value,
+      company_size: this.step1Form.value.size,
+      description: this.step2Form.value.description,
+      logo_url: this.step3LogoUrl,
+    });
   }
 }
 

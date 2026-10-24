@@ -26,6 +26,8 @@
   </div>
 
   <!-- Interview Cards Grid -->
+  <p class="form-error" *ngIf="actionError" role="alert">{{ actionError }}</p>
+
   <div class="interviews-grid" *ngIf="filteredInterviews.length > 0">
     <div *ngFor="let item of filteredInterviews" class="interview-card">
       <div class="ic-header">
@@ -143,9 +145,13 @@
           <textarea rows="3" formControlName="notes" placeholder="Technical live coding session details..."></textarea>
         </div>
 
+        <p class="form-error" *ngIf="scheduleError" role="alert">{{ scheduleError }}</p>
+
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="closeScheduleModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Schedule & Notify Candidate →</button>
+          <button type="submit" class="btn-primary" [disabled]="isScheduling">
+            {{ isScheduling ? 'Scheduling…' : 'Schedule Interview →' }}
+          </button>
         </div>
       </form>
     </div>

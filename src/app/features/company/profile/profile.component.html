@@ -1,7 +1,8 @@
 <div class="profile-page">
   <div class="toast-banner" *ngIf="isSavedToast">
-    <span>✓ Company Profile updated successfully! Completion score updated.</span>
+    <span>✓ Company profile saved. Culture, mission, values and banner are not stored yet.</span>
   </div>
+  <p class="form-error" *ngIf="saveError" role="alert">{{ saveError }}</p>
 
   <div class="page-header">
     <div>

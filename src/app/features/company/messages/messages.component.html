@@ -68,6 +68,8 @@
         </div>
       </div>
 
+      <p class="form-error" *ngIf="sendError" role="alert">{{ sendError }}</p>
+
       <!-- Message Composer -->
       <div class="chat-composer">
         <button type="button" class="btn-attach" (click)="sendAttachmentSimulation()" title="Attach Document">📎</button>
@@ -77,7 +79,7 @@
           [(ngModel)]="messageText"
           (keyup.enter)="sendMessage()"
         />
-        <button type="button" class="btn-send" (click)="sendMessage()">Send Message</button>
+        <button type="button" class="btn-send" (click)="sendMessage()" [disabled]="isSending">Send Message</button>
       </div>
     </div>
 

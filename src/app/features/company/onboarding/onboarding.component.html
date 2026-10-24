@@ -118,18 +118,20 @@
           <textarea rows="4" formControlName="description" placeholder="Describe what your company builds, products, and core technology stack..."></textarea>
         </div>
 
+        <p class="form-note" role="note">Culture, mission and values are not stored yet (no database fields). They are optional for now.</p>
+
         <div class="form-group">
-          <label>Company Culture & Environment *</label>
+          <label>Company Culture & Environment</label>
           <textarea rows="3" formControlName="culture" placeholder="Describe workplace vibe, hybrid flexibility, autonomy, learning budget..."></textarea>
         </div>
 
         <div class="form-group">
-          <label>Mission Statement *</label>
+          <label>Mission Statement</label>
           <textarea rows="2" formControlName="mission" placeholder="What is your organization overarching mission?"></textarea>
         </div>
 
         <div class="form-group">
-          <label>Core Values (Comma separated) *</label>
+          <label>Core Values (Comma separated)</label>
           <input type="text" formControlName="valuesInput" placeholder="Engineering Excellence, Transparency, Customer Obsession" />
         </div>
       </div>
@@ -301,9 +303,13 @@
         </div>
       </div>
 
+      <p class="form-error" *ngIf="onboardingError" role="alert">{{ onboardingError }}</p>
+
       <div class="step-actions">
         <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
-        <button type="button" class="btn-primary" (click)="finishOnboarding()">Complete Onboarding & Save ✓</button>
+        <button type="button" class="btn-primary" (click)="finishOnboarding()" [disabled]="isSaving">
+          {{ isSaving ? 'Saving…' : 'Complete Onboarding & Save ✓' }}
+        </button>
       </div>
     </div>
 

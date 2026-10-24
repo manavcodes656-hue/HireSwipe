@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
 import { Application, ApplicationStatus, Job } from '../models/company.models';
@@ -26,7 +27,12 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   private subs = new Subscription();
 
-  constructor(private dataService: CompanyDataService) {}
+  statusError = '';
+
+  constructor(
+    private dataService: CompanyDataService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.subs.add(
@@ -82,26 +88,27 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     this.isReviewDrawerOpen = false;
   }
 
-  updateStatus(newStatus: ApplicationStatus): void {
+  async updateStatus(newStatus: ApplicationStatus): Promise<void> {
     if (this.selectedApplication) {
-      this.dataService.updateApplicationStatus(this.selectedApplication.id, newStatus, this.statusNotes);
+      this.statusError = '';
+      const { error } = await this.dataService.updateApplicationStatus(
+        this.selectedApplication.id,
+        newStatus,
+        this.statusNotes
+      );
+      if (error) {
+        this.statusError = error;
+        return;
+      }
       this.statusNotes = '';
     }
   }
 
+  /** Open the interview scheduler pre-filled with this application (real date/link entered there). */
   scheduleInterviewForApp(): void {
     if (this.selectedApplication) {
-      this.dataService.scheduleInterview({
-        application_id: this.selectedApplication.id,
-        job_id: this.selectedApplication.job_id,
-        candidate_id: this.selectedApplication.profile_id,
-        candidate_name: this.selectedApplication.profile?.full_name || 'Candidate',
-        date: '2026-10-08',
-        time: '14:00',
-        duration_minutes: 45,
-        meeting_link: 'https://meet.google.com/hireswipe-live-round',
-        location: 'Google Meet',
-        notes: 'Technical assessment round.',
+      this.router.navigate(['/company/interviews'], {
+        queryParams: { schedule: this.selectedApplication.id },
       });
     }
   }
