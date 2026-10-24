@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CompanyDataService } from '../../features/company/services/company-data.service';
+import { AuthService, UserRole } from '../../core/services/auth.service';
 
 export type AuthRole = 'jobseeker' | 'company';
 export type AuthMode = 'login' | 'signup';
@@ -60,6 +61,7 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   submitted = false;
   successMessage = '';
+  authError = '';
 
   // Stacked Card Rotation State
   activeCompanyIndex = 0;
@@ -206,7 +208,8 @@ export class AuthComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private companyDataService: CompanyDataService
+    private companyDataService: CompanyDataService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -331,6 +334,7 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     this.submitted = true;
+    this.authError = '';
     this.successMessage = '';
 
     if (this.currentForm.invalid) {
@@ -339,58 +343,67 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
 
     const formVal = this.currentForm.value;
-    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
-    const actionName = this.mode === 'login' ? 'Signed in' : 'Account created';
+    const isCompany = this.role === 'company';
 
-    this.successMessage = `${actionName} successfully as ${roleName} (${formVal.email}). Redirecting...`;
-
-    if (this.role === 'jobseeker') {
-      setTimeout(() => {
-        if (this.mode === 'signup') {
-          this.router.navigate(['/job-seeker/onboarding']);
-        } else {
-          this.router.navigate(['/job-seeker/dashboard']);
-        }
-      }, 500);
-    } else if (this.role === 'company') {
-      setTimeout(() => {
-        if (this.mode === 'signup') {
-          this.companyDataService.setOnboardingCompleted(false);
-          this.router.navigate(['/company/onboarding']);
-        } else {
-          if (this.companyDataService.isOnboardingCompleted()) {
-            this.router.navigate(['/company/dashboard']);
-          } else {
-            this.router.navigate(['/company/onboarding']);
+    if (this.mode === 'login') {
+      void this.authService.signIn(formVal.email, formVal.password).then(
+        ({ error }) => {
+          if (error) {
+            // A rejected password / unknown account / network failure must stay a
+            // failure: never fabricate a session or navigate to a dashboard.
+            this.authError = error.message ?? 'Sign in failed. Please check your credentials and try again.';
+            return;
           }
+          this.successMessage = `Signed in successfully as ${isCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
+          this.navigateAfterLogin(isCompany);
+        },
+        (err) => {
+          // Transport/auth-service failure: surface it instead of leaving an
+          // unhandled rejection or fabricating a session.
+          this.authError = err?.message ?? 'Sign in failed. Please try again.';
         }
-      }, 500);
+      );
+    } else {
+      const authRole: UserRole = isCompany ? 'company' : 'job_seeker';
+      void this.authService.signUp(formVal.email, formVal.password, formVal.fullName, authRole).then(
+        ({ error }) => {
+          if (error) {
+            this.authError = error.message ?? 'Account creation failed. Please try again.';
+            return;
+          }
+          this.successMessage = `Account created successfully as ${isCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
+          if (isCompany) {
+            this.companyDataService.setOnboardingCompleted(false);
+            this.router.navigate(['/company/onboarding']);
+          } else {
+            this.router.navigate(['/job-seeker/onboarding']);
+          }
+        },
+        (err) => {
+          this.authError = err?.message ?? 'Account creation failed. Please try again.';
+        }
+      );
+    }
+  }
+
+  private navigateAfterLogin(isCompany: boolean): void {
+    if (isCompany) {
+      if (this.companyDataService.isOnboardingCompleted()) {
+        this.router.navigate(['/company/dashboard']);
+      } else {
+        this.router.navigate(['/company/onboarding']);
+      }
+    } else {
+      this.router.navigate(['/job-seeker/dashboard']);
     }
   }
 
   onGoogleAuth(): void {
-    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
-    this.successMessage = `Google authentication initiated for ${roleName}. Redirecting...`;
-    setTimeout(() => {
-      if (this.role === 'jobseeker') {
-        if (this.mode === 'signup') {
-          this.router.navigate(['/job-seeker/onboarding']);
-        } else {
-          this.router.navigate(['/job-seeker/dashboard']);
-        }
-      } else {
-        if (this.mode === 'signup') {
-          this.companyDataService.setOnboardingCompleted(false);
-          this.router.navigate(['/company/onboarding']);
-        } else {
-          if (this.companyDataService.isOnboardingCompleted()) {
-            this.router.navigate(['/company/dashboard']);
-          } else {
-            this.router.navigate(['/company/onboarding']);
-          }
-        }
-      }
-    }, 500);
+    // signInWithOAuth triggers a browser redirect. Do not show a fabricated
+    // success message before the OAuth flow completes.
+    const isCompany = this.role === 'company';
+    const authRole: UserRole = isCompany ? 'company' : 'job_seeker';
+    void this.authService.signInWithGoogle(authRole);
   }
 
   isFieldInvalid(fieldName: string): boolean {

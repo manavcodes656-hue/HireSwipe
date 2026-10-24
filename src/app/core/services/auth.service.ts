@@ -14,9 +14,10 @@ export interface AuthUser {
 /**
  * AuthService — wraps Supabase Auth for HireSwipe.
  *
- * Single authentication system for both job seekers and companies.
- * Role is stored in auth.users.raw_user_meta_data and mirrored
- * into public.profiles via the on_auth_user_created database trigger.
+ * Role authority:
+ * - Trusted source for authorization is public.profiles.role (same as Express).
+ * - user_metadata.role is only used as a temporary bootstrap until the profile loads.
+ * - Privileges must never be taken from request bodies or unverified client claims.
  *
  * SECURITY NOTE:
  * - Passwords are NEVER stored in PostgreSQL application tables.
@@ -31,13 +32,16 @@ export class AuthService {
   private readonly supabase = inject(SupabaseService);
   private readonly router = inject(Router);
 
-  // Reactive signals
   readonly session = signal<AuthSession | null>(null);
   readonly user = signal<User | null>(null);
   readonly loading = signal<boolean>(true);
+  /** Role from public.profiles — preferred over JWT metadata. */
+  readonly profileRole = signal<UserRole | null>(null);
 
   readonly isAuthenticated = computed(() => !!this.session());
   readonly userRole = computed<UserRole | null>(() => {
+    const fromProfile = this.profileRole();
+    if (fromProfile) return fromProfile;
     const u = this.user();
     return (u?.user_metadata?.['role'] as UserRole) ?? null;
   });
@@ -46,33 +50,47 @@ export class AuthService {
   readonly isAdmin = computed(() => this.userRole() === 'admin');
 
   constructor() {
-    // Initialize session from storage on startup
     this.supabase.client.auth.getSession().then(({ data }) => {
       this.session.set(data.session);
       this.user.set(data.session?.user ?? null);
+      void this.refreshProfileRole(data.session?.user?.id);
       this.loading.set(false);
     });
 
-    // Listen for auth state changes
     this.supabase.client.auth.onAuthStateChange((_event, session) => {
       this.session.set(session);
       this.user.set(session?.user ?? null);
+      void this.refreshProfileRole(session?.user?.id);
       this.loading.set(false);
     });
   }
 
   /**
-   * Sign up with email, password, full name, and role.
-   * The role is passed as user metadata so the database trigger
-   * can set it correctly in public.profiles.
+   * Load role from profiles table. Clears role when logged out.
    */
+  private async refreshProfileRole(userId: string | undefined): Promise<void> {
+    if (!userId) {
+      this.profileRole.set(null);
+      return;
+    }
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
+    if (error || !data?.role) {
+      this.profileRole.set(null);
+      return;
+    }
+    this.profileRole.set(data.role as UserRole);
+  }
+
   async signUp(
     email: string,
     password: string,
     fullName: string,
     role: UserRole
   ): Promise<{ error: AuthError | null }> {
-    // Split full name into first/last for the profiles trigger
     const nameParts = fullName.trim().split(' ');
     const firstName = nameParts[0] ?? '';
     const lastName = nameParts.slice(1).join(' ') || null;
@@ -92,9 +110,6 @@ export class AuthService {
     return { error };
   }
 
-  /**
-   * Sign in with email and password.
-   */
   async signIn(
     email: string,
     password: string
@@ -106,11 +121,7 @@ export class AuthService {
     return { error };
   }
 
-  /**
-   * Sign in with Google OAuth.
-   * Role is passed so the profile trigger can set it on first OAuth login.
-   */
-  async signInWithGoogle(role: UserRole): Promise<{ error: AuthError | null }> {
+  async signInWithGoogle(_role: UserRole): Promise<{ error: AuthError | null }> {
     const { error } = await this.supabase.client.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -125,24 +136,40 @@ export class AuthService {
   }
 
   /**
-   * Sign out and redirect to home.
+   * Change password after verifying the current password.
    */
+  async changePassword(
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ error: string | null }> {
+    const { error: reauthError } = await this.supabase.client.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+    if (reauthError) {
+      return { error: reauthError.message };
+    }
+    const { error } = await this.supabase.client.auth.updateUser({ password: newPassword });
+    if (error) return { error: error.message };
+    return { error: null };
+  }
+
   async signOut(): Promise<void> {
     await this.supabase.client.auth.signOut();
+    // Clear every local auth/role signal immediately so no stale session,
+    // user, or role survives sign-out (onAuthStateChange also fires, but we
+    // must not rely on it for a clean signed-out state).
+    this.session.set(null);
+    this.user.set(null);
+    this.profileRole.set(null);
     this.router.navigate(['/']);
   }
 
-  /**
-   * Get the current user's Supabase Auth ID.
-   */
   getCurrentUserId(): string | null {
     return this.user()?.id ?? null;
   }
 
-  /**
-   * Navigate to the correct dashboard/onboarding based on role.
-   * Call after successful login or signup.
-   */
   navigateAfterAuth(mode: 'login' | 'signup'): void {
     const role = this.userRole();
     if (role === 'job_seeker') {
