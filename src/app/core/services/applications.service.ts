@@ -45,7 +45,7 @@ export class ApplicationsService {
   ): Promise<(ApplicationRow & { job: any; job_seeker: any })[]> {
     let query = this.supabase.client
       .from('applications')
-      .select('*, jobs(title), job_seeker_profiles(profile_id, headline, profiles(full_name, avatar_url, email, phone)), application_status_history(old_status, new_status, created_at)')
+      .select('*, jobs(title), job_seeker_profiles(profile_id, headline, bio, location, experience_years, profiles(id, full_name, avatar_url, email, phone)), application_status_history(id, old_status, new_status, note, changed_by, created_at)')
       .eq('company_id', companyId)
       .order('applied_at', { ascending: false });
 

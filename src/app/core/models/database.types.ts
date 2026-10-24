@@ -1456,6 +1456,14 @@ export type Database = {
         Args: { p_company_id: string; p_user_id?: string }
         Returns: boolean
       }
+      create_company_with_owner: {
+        Args: { p_company: Json }
+        Returns: string
+      }
+      find_profile_for_team_invite: {
+        Args: { p_company_id: string; p_email: string }
+        Returns: { id: string; email: string; full_name: string }[] | null
+      }
     }
     Enums: {
       application_status:

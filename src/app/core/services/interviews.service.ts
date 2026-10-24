@@ -54,8 +54,9 @@ export class InterviewsService {
   async updateInterview(
     interviewId: string,
     updates: Partial<Omit<InterviewRow, 'id' | 'application_id' | 'created_at' | 'updated_at'>>
-  ): Promise<void> {
-    await this.supabase.client.from('interviews').update(updates).eq('id', interviewId);
+  ): Promise<{ error: string | null }> {
+    const { error } = await this.supabase.client.from('interviews').update(updates).eq('id', interviewId);
+    return { error: error?.message ?? null };
   }
 
   async cancelInterview(interviewId: string): Promise<void> {

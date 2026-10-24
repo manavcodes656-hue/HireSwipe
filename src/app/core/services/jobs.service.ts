@@ -44,11 +44,11 @@ export class JobsService {
   async getCompanyJobs(companyId: string): Promise<JobRow[]> {
     const { data, error } = await this.supabase.client
       .from('jobs')
-      .select('*')
+      .select('*, job_skills(skill_id, is_required, skills(name)), job_requirements(id, requirement, is_required), job_benefits(id, benefit)')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false });
     if (error) console.error('[JobsService] getCompanyJobs:', error.message);
-    return data ?? [];
+    return (data ?? []) as any;
   }
 
   async getJob(jobId: string): Promise<JobRow | null> {
@@ -128,36 +128,68 @@ export class JobsService {
   async setJobSkills(
     jobId: string,
     skills: { skill_id: string; is_required: boolean; minimum_proficiency?: string }[]
-  ): Promise<void> {
+  ): Promise<{ error: string | null }> {
     // Delete existing and re-insert
-    await this.supabase.client.from('job_skills').delete().eq('job_id', jobId);
+    const { error: deleteError } = await this.supabase.client.from('job_skills').delete().eq('job_id', jobId);
+    if (deleteError) return { error: deleteError.message };
     if (skills.length > 0) {
-      await this.supabase.client.from('job_skills').insert(
+      const { error } = await this.supabase.client.from('job_skills').insert(
         skills.map((s) => ({ job_id: jobId, ...s }))
       );
+      if (error) return { error: error.message };
     }
+    return { error: null };
+  }
+
+  /**
+   * Resolve skill names to rows in the shared skills catalog.
+   * Only admins may add catalog entries (RLS), so unknown names are returned
+   * separately instead of being created here.
+   */
+  async findSkillsByName(
+    names: string[]
+  ): Promise<{ skills: { id: string; name: string }[]; unknown: string[]; error: string | null }> {
+    const wanted = [...new Set(names.map((n) => n.trim()).filter(Boolean))];
+    if (wanted.length === 0) return { skills: [], unknown: [], error: null };
+
+    const { data, error } = await this.supabase.client
+      .from('skills')
+      .select('id, name')
+      .in('name', wanted);
+    if (error) return { skills: [], unknown: wanted, error: error.message };
+
+    const found = data ?? [];
+    const foundNames = new Set(found.map((s) => s.name.toLowerCase()));
+    const unknown = wanted.filter((n) => !foundNames.has(n.toLowerCase()));
+    return { skills: found, unknown, error: null };
   }
 
   // ── Job Requirements ──────────────────────────────────────────────────────
 
-  async setJobRequirements(jobId: string, requirements: string[]): Promise<void> {
-    await this.supabase.client.from('job_requirements').delete().eq('job_id', jobId);
+  async setJobRequirements(jobId: string, requirements: string[]): Promise<{ error: string | null }> {
+    const { error: deleteError } = await this.supabase.client.from('job_requirements').delete().eq('job_id', jobId);
+    if (deleteError) return { error: deleteError.message };
     if (requirements.length > 0) {
-      await this.supabase.client.from('job_requirements').insert(
+      const { error } = await this.supabase.client.from('job_requirements').insert(
         requirements.map((req) => ({ job_id: jobId, requirement: req, is_required: true }))
       );
+      if (error) return { error: error.message };
     }
+    return { error: null };
   }
 
   // ── Job Benefits ──────────────────────────────────────────────────────────
 
-  async setJobBenefits(jobId: string, benefits: string[]): Promise<void> {
-    await this.supabase.client.from('job_benefits').delete().eq('job_id', jobId);
+  async setJobBenefits(jobId: string, benefits: string[]): Promise<{ error: string | null }> {
+    const { error: deleteError } = await this.supabase.client.from('job_benefits').delete().eq('job_id', jobId);
+    if (deleteError) return { error: deleteError.message };
     if (benefits.length > 0) {
-      await this.supabase.client.from('job_benefits').insert(
+      const { error } = await this.supabase.client.from('job_benefits').insert(
         benefits.map((b) => ({ job_id: jobId, benefit: b }))
       );
+      if (error) return { error: error.message };
     }
+    return { error: null };
   }
 
   // ── Saved Jobs ────────────────────────────────────────────────────────────
