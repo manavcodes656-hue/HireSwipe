@@ -15,7 +15,7 @@ vi.mock('./supabase-server.js', () => ({
 
 import { supabase, createUserClient } from './supabase-server.js'
 import { app } from './server.js'
-import { validateCompanyProfile } from './company-routes.js'
+import { validateCompanyProfile, validateJobPayload } from './company-routes.js'
 
 const COMPANY_ID = '11111111-1111-4111-8111-111111111111'
 const OTHER_COMPANY_ID = '22222222-2222-4222-8222-222222222222'
@@ -500,6 +500,374 @@ describe('validateCompanyProfile', () => {
     expect(validateCompanyProfile(body, 'create')).toEqual({ values: body })
     expect(validateCompanyProfile({ ...body, onboarding_completed: true, completion_percentage: 80 }, 'update')).toEqual({
       values: { ...body, onboarding_completed: true, completion_percentage: 80 },
+    })
+  })
+})
+
+const JOB_ID = '33333333-3333-4333-8333-333333333333'
+const OTHER_JOB_ID = '44444444-4444-4444-8444-444444444444'
+
+describe('validateJobPayload', () => {
+  it('rejects non-objects', () => {
+    expect(validateJobPayload(null, 'create').errors).toBeDefined()
+    expect(validateJobPayload([], 'create').errors).toBeDefined()
+    expect(validateJobPayload('string', 'create').errors).toBeDefined()
+  })
+
+  it('requires title, description, and employment_type on create', () => {
+    const { errors } = validateJobPayload({}, 'create')
+    expect(errors.title).toBe('is required')
+    expect(errors.description).toBe('is required')
+    expect(errors.employment_type).toBe('is required')
+  })
+
+  it('rejects invalid employment_type', () => {
+    const { errors } = validateJobPayload({
+      title: 'Engineer',
+      description: 'Building software',
+      employment_type: 'invalid_type',
+    }, 'create')
+    expect(errors.employment_type).toContain('must be one of')
+  })
+
+  it('rejects experience_max < experience_min', () => {
+    const { errors } = validateJobPayload({
+      title: 'Engineer',
+      description: 'Building software',
+      employment_type: 'full_time',
+      experience_min: 5,
+      experience_max: 2,
+    }, 'create')
+    expect(errors.experience_max).toBe('cannot be less than experience_min')
+  })
+
+  it('normalizes status active to published', () => {
+    const { values } = validateJobPayload({
+      title: 'Engineer',
+      description: 'Building software',
+      employment_type: 'full_time',
+      status: 'active',
+    }, 'create')
+    expect(values.status).toBe('published')
+  })
+})
+
+describe('Company Jobs API', () => {
+  const VALID_JOB_CREATE = {
+    title: 'Senior Frontend Engineer',
+    description: 'Lead frontend architecture in Angular and TypeScript',
+    employment_type: 'full_time',
+    experience_level: 'senior',
+    salary_min: 100000,
+    salary_max: 140000,
+    location: 'Remote',
+    requirements: ['TypeScript', 'Angular'],
+    benefits: ['Health insurance', '401k'],
+  }
+
+  describe('GET /api/company/jobs', () => {
+    it('returns 401 without token', async () => {
+      const res = await call('GET', '/api/company/jobs', { token: '' })
+      expect(res.status).toBe(401)
+    })
+
+    it('returns 403 when user has no active company membership', async () => {
+      const userDb = signIn('company')
+      userDb.from.mockReturnValueOnce(query({ data: null, error: null }))
+
+      const res = await call('GET', '/api/company/jobs')
+      expect(res.status).toBe(403)
+      const body = await res.json()
+      expect(body.error.code).toBe('FORBIDDEN')
+    })
+
+    it('returns 200 with company jobs when caller is a member', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', role: 'owner', company_id: COMPANY_ID, companies: COMPANY }, error: null }))
+        .mockReturnValueOnce(query({
+          data: [{ id: JOB_ID, company_id: COMPANY_ID, title: 'Engineer', status: 'published' }],
+          error: null,
+        }))
+
+      const res = await call('GET', '/api/company/jobs')
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.status).toBe('ok')
+      expect(body.jobs).toHaveLength(1)
+      expect(body.jobs[0].title).toBe('Engineer')
+    })
+  })
+
+  describe('GET /api/company/jobs/:jobId', () => {
+    it('returns 400 for non-UUID jobId', async () => {
+      signIn('company')
+      const res = await call('GET', '/api/company/jobs/not-a-uuid')
+      expect(res.status).toBe(400)
+    })
+
+    it('returns 404 if job does not exist', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', role: 'owner', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: null, error: null }))
+
+      const res = await call('GET', `/api/company/jobs/${JOB_ID}`)
+      expect(res.status).toBe(404)
+      const body = await res.json()
+      expect(body.error.code).toBe('JOB_NOT_FOUND')
+    })
+
+    it('returns 403 if job belongs to another company', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', role: 'owner', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: OTHER_JOB_ID, company_id: OTHER_COMPANY_ID, title: 'Other Job' }, error: null }))
+
+      const res = await call('GET', `/api/company/jobs/${OTHER_JOB_ID}`)
+      expect(res.status).toBe(403)
+      const body = await res.json()
+      expect(body.error.code).toBe('FORBIDDEN')
+    })
+
+    it('returns 200 with job details for authorized company member', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', role: 'owner', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: JOB_ID, company_id: COMPANY_ID, title: 'My Job' }, error: null }))
+
+      const res = await call('GET', `/api/company/jobs/${JOB_ID}`)
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.job.title).toBe('My Job')
+    })
+  })
+
+  describe('POST /api/company/jobs', () => {
+    it('returns 400 on validation error (missing required title)', async () => {
+      signIn('company')
+      const res = await call('POST', '/api/company/jobs', { body: { description: 'desc', employment_type: 'full_time' } })
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.error.fields.title).toBe('is required')
+    })
+
+    it('creates job and returns 201 on success', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', role: 'owner', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: JOB_ID, company_id: COMPANY_ID, ...VALID_JOB_CREATE }, error: null }))
+        .mockReturnValueOnce(query({ data: [], error: null })) // job_requirements
+        .mockReturnValueOnce(query({ data: [], error: null })) // job_benefits
+        .mockReturnValueOnce(query({ data: { id: JOB_ID, company_id: COMPANY_ID, ...VALID_JOB_CREATE }, error: null })) // reload
+
+      const res = await call('POST', '/api/company/jobs', { body: VALID_JOB_CREATE })
+      expect(res.status).toBe(201)
+      const body = await res.json()
+      expect(body.status).toBe('ok')
+      expect(body.job.id).toBe(JOB_ID)
+    })
+  })
+
+  describe('PATCH /api/company/jobs/:jobId/status', () => {
+    it('returns 400 for invalid status', async () => {
+      signIn('company')
+      const res = await call('PATCH', `/api/company/jobs/${JOB_ID}/status`, { body: { status: 'invalid_status' } })
+      expect(res.status).toBe(400)
+    })
+
+    it('updates status and returns 200', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', role: 'owner', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: JOB_ID, company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: JOB_ID, status: 'paused' }, error: null }))
+
+      const res = await call('PATCH', `/api/company/jobs/${JOB_ID}/status`, { body: { status: 'paused' } })
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.job.status).toBe('paused')
+    })
+  })
+})
+
+describe('Company Applications API', () => {
+  const APPLICATION_ID = '55555555-5555-4555-8555-555555555555'
+  const OTHER_APPLICATION_ID = '66666666-6666-4666-8666-666666666666'
+
+  describe('GET /api/company/applications', () => {
+    it('returns 401 without token', async () => {
+      const res = await call('GET', '/api/company/applications', { token: '' })
+      expect(res.status).toBe(401)
+    })
+
+    it('returns 403 when user has no active company membership', async () => {
+      const userDb = signIn('company')
+      userDb.from.mockReturnValueOnce(query({ data: null, error: null }))
+
+      const res = await call('GET', '/api/company/applications')
+      expect(res.status).toBe(403)
+      const body = await res.json()
+      expect(body.error.code).toBe('FORBIDDEN')
+    })
+
+    it('returns 400 for non-UUID jobId query', async () => {
+      const userDb = signIn('company')
+      userDb.from.mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+
+      const res = await call('GET', '/api/company/applications?jobId=not-a-uuid')
+      expect(res.status).toBe(400)
+    })
+
+    it('returns 403 when jobId belongs to another company', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: OTHER_JOB_ID, company_id: OTHER_COMPANY_ID }, error: null }))
+
+      const res = await call('GET', `/api/company/applications?jobId=${OTHER_JOB_ID}`)
+      expect(res.status).toBe(403)
+      const body = await res.json()
+      expect(body.error.code).toBe('FORBIDDEN')
+    })
+
+    it('returns 400 for invalid status query', async () => {
+      const userDb = signIn('company')
+      userDb.from.mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+
+      const res = await call('GET', '/api/company/applications?status=invalid_status')
+      expect(res.status).toBe(400)
+    })
+
+    it('returns 200 with applications list for authorized company member', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({
+          data: [{ id: APPLICATION_ID, company_id: COMPANY_ID, job_id: JOB_ID, status: 'pending' }],
+          error: null,
+        }))
+
+      const res = await call('GET', '/api/company/applications')
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.status).toBe('ok')
+      expect(body.applications).toHaveLength(1)
+      expect(body.applications[0].id).toBe(APPLICATION_ID)
+    })
+  })
+
+  describe('GET /api/company/applications/:applicationId', () => {
+    it('returns 400 for non-UUID applicationId', async () => {
+      signIn('company')
+      const res = await call('GET', '/api/company/applications/not-a-uuid')
+      expect(res.status).toBe(400)
+    })
+
+    it('returns 404 when application does not exist', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: null, error: null }))
+
+      const res = await call('GET', `/api/company/applications/${APPLICATION_ID}`)
+      expect(res.status).toBe(404)
+      const body = await res.json()
+      expect(body.error.code).toBe('APPLICATION_NOT_FOUND')
+    })
+
+    it('returns 403 when application belongs to another company', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: OTHER_APPLICATION_ID, company_id: OTHER_COMPANY_ID }, error: null }))
+
+      const res = await call('GET', `/api/company/applications/${OTHER_APPLICATION_ID}`)
+      expect(res.status).toBe(403)
+      const body = await res.json()
+      expect(body.error.code).toBe('FORBIDDEN')
+    })
+
+    it('returns 200 with application details for authorized company member', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: APPLICATION_ID, company_id: COMPANY_ID, status: 'pending' }, error: null }))
+
+      const res = await call('GET', `/api/company/applications/${APPLICATION_ID}`)
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.status).toBe('ok')
+      expect(body.application.id).toBe(APPLICATION_ID)
+    })
+  })
+
+  describe('PATCH /api/company/applications/:applicationId/status', () => {
+    it('returns 400 for invalid status', async () => {
+      signIn('company')
+      const res = await call('PATCH', `/api/company/applications/${APPLICATION_ID}/status`, { body: { status: 'invalid_status' } })
+      expect(res.status).toBe(400)
+    })
+
+    it('returns 400 when status is withdrawn (only candidates can withdraw)', async () => {
+      signIn('company')
+      const res = await call('PATCH', `/api/company/applications/${APPLICATION_ID}/status`, { body: { status: 'withdrawn' } })
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.error.code).toBe('INVALID_STATUS')
+    })
+
+    it('returns 404 when application does not exist', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: null, error: null }))
+
+      const res = await call('PATCH', `/api/company/applications/${APPLICATION_ID}/status`, { body: { status: 'reviewing' } })
+      expect(res.status).toBe(404)
+    })
+
+    it('returns 403 when application belongs to another company', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: OTHER_APPLICATION_ID, company_id: OTHER_COMPANY_ID, status: 'pending' }, error: null }))
+
+      const res = await call('PATCH', `/api/company/applications/${OTHER_APPLICATION_ID}/status`, { body: { status: 'reviewing' } })
+      expect(res.status).toBe(403)
+      const body = await res.json()
+      expect(body.error.code).toBe('FORBIDDEN')
+    })
+
+    it('returns 400 when application is already in withdrawn status', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: APPLICATION_ID, company_id: COMPANY_ID, status: 'withdrawn' }, error: null }))
+
+      const res = await call('PATCH', `/api/company/applications/${APPLICATION_ID}/status`, { body: { status: 'reviewing' } })
+      expect(res.status).toBe(400)
+      const body = await res.json()
+      expect(body.error.code).toBe('INVALID_TRANSITION')
+    })
+
+    it('updates application status and returns 200 with updated application', async () => {
+      const userDb = signIn('company')
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(query({ data: { id: APPLICATION_ID, company_id: COMPANY_ID, status: 'pending' }, error: null }))
+        .mockReturnValueOnce(query({ data: null, error: null })) // update
+        .mockReturnValueOnce(query({ data: { id: 'hist-1' }, error: null })) // latestHist find
+        .mockReturnValueOnce(query({ data: null, error: null })) // update note
+        .mockReturnValueOnce(query({ data: { id: APPLICATION_ID, company_id: COMPANY_ID, status: 'shortlisted' }, error: null })) // reload
+
+      const res = await call('PATCH', `/api/company/applications/${APPLICATION_ID}/status`, {
+        body: { status: 'shortlisted', note: 'Strong candidate background' },
+      })
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.status).toBe('ok')
+      expect(body.application.status).toBe('shortlisted')
     })
   })
 })

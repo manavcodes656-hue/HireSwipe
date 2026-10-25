@@ -11,7 +11,7 @@
 
   <!-- Tabs Filter -->
   <div class="tabs-card">
-    <button class="tab-btn" [class.active]="activeTab === 'scheduled'" (click)="setTab('scheduled')">
+    <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="setTab('upcoming')">
       Upcoming Sessions
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'completed'" (click)="setTab('completed')">
@@ -23,6 +23,11 @@
     <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="setTab('all')">
       All Sessions
     </button>
+  </div>
+
+  <!-- API error -->
+  <div class="alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
   </div>
 
   <!-- Interview Cards Grid -->
@@ -68,13 +73,13 @@
       </div>
 
       <div class="ic-actions">
-        <button *ngIf="item.status === 'scheduled'" type="button" class="btn-sm complete" (click)="markCompleted(item)">
+        <button *ngIf="isActionable(item)" type="button" class="btn-sm complete" (click)="markCompleted(item)">
           ✓ Mark Completed
         </button>
-        <button *ngIf="item.status === 'scheduled'" type="button" class="btn-sm reschedule" (click)="reschedule(item)">
+        <button *ngIf="isActionable(item)" type="button" class="btn-sm reschedule" (click)="reschedule(item)">
           🔄 Reschedule
         </button>
-        <button *ngIf="item.status === 'scheduled'" type="button" class="btn-sm cancel" (click)="markCancelled(item)">
+        <button *ngIf="isActionable(item)" type="button" class="btn-sm cancel" (click)="markCancelled(item)">
           ✕ Cancel
         </button>
       </div>
@@ -149,8 +154,13 @@
 
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="closeScheduleModal()">Cancel</button>
+ feature/backend-foundation
           <button type="submit" class="btn-primary" [disabled]="isScheduling">
             {{ isScheduling ? 'Scheduling…' : 'Schedule Interview →' }}
+
+          <button type="submit" class="btn-primary" [disabled]="isSaving">
+            {{ isSaving ? 'Scheduling…' : 'Schedule Interview →' }}
+ main
           </button>
         </div>
       </form>

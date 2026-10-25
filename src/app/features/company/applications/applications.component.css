@@ -210,6 +210,17 @@
 .notes-input input { padding: 0.45rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; outline: none; }
 
 .action-buttons-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+
+.action-error {
+  margin-top: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
 .act-btn { padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border); background: var(--surface); cursor: pointer; text-align: left; transition: all 0.15s ease; }
 .act-btn.review:hover { background: #e0f2fe; color: #0284c7; }
 .act-btn.shortlist:hover { background: #f0fdf4; color: #16a34a; }

@@ -18,8 +18,14 @@ export class InterviewsComponent implements OnInit, OnDestroy {
   applications: Application[] = [];
   jobs: Job[] = [];
 
-  activeTab: InterviewStatus | 'all' = 'scheduled';
+  /**
+   * The API stores `scheduled`; the view model aliases it to `upcoming`, so the
+   * tab matches both spellings.
+   */
+  activeTab: InterviewStatus | 'all' = 'upcoming';
   isScheduleModalOpen = false;
+  isSaving = false;
+  errorMessage: string | null = null;
   scheduleForm!: FormGroup;
 
   selectedInterviewForAction: Interview | null = null;
@@ -88,7 +94,15 @@ export class InterviewsComponent implements OnInit, OnDestroy {
 
   get filteredInterviews(): Interview[] {
     if (this.activeTab === 'all') return this.interviews;
+    if (this.activeTab === 'upcoming') {
+      return this.interviews.filter((i) => i.status === 'upcoming' || i.status === 'scheduled');
+    }
     return this.interviews.filter((i) => i.status === this.activeTab);
+  }
+
+  /** An interview that has not finished yet can still be acted on. */
+  isActionable(interview: Interview): boolean {
+    return interview.status === 'upcoming' || interview.status === 'scheduled';
   }
 
   setTab(tab: InterviewStatus | 'all'): void {
@@ -96,7 +110,11 @@ export class InterviewsComponent implements OnInit, OnDestroy {
   }
 
   openScheduleModal(): void {
+ feature/backend-foundation
     this.scheduleError = '';
+
+    this.errorMessage = null;
+ main
     this.isScheduleModalOpen = true;
   }
 
@@ -114,6 +132,7 @@ export class InterviewsComponent implements OnInit, OnDestroy {
     const app = this.applications.find((a) => a.id === val.application_id);
 
     if (!app) {
+ feature/backend-foundation
       this.scheduleError = 'Select an application to schedule an interview for.';
       return;
     }
@@ -139,10 +158,40 @@ export class InterviewsComponent implements OnInit, OnDestroy {
         return;
       }
       this.closeScheduleModal();
+
+      this.errorMessage = 'Select an application to schedule the interview for.';
+      return;
     }
+
+    this.errorMessage = null;
+    this.isSaving = true;
+
+    const result = await this.dataService.scheduleInterview({
+      application_id: app.id,
+      job_id: app.job_id,
+      candidate_id: app.profile_id,
+      candidate_name: app.profile?.full_name || 'Candidate',
+      date: val.date,
+      time: val.time,
+      duration_minutes: val.duration_minutes,
+      meeting_link: val.meeting_link,
+      location: val.location,
+      notes: val.notes,
+    });
+
+    this.isSaving = false;
+
+    if (result.error) {
+      this.errorMessage = result.error;
+      return;
+ main
+    }
+
+    this.closeScheduleModal();
   }
 
   async markCompleted(interview: Interview): Promise<void> {
+ feature/backend-foundation
     this.actionError = (await this.dataService.updateInterviewStatus(interview.id, 'completed')).error ?? '';
   }
 
@@ -155,6 +204,30 @@ export class InterviewsComponent implements OnInit, OnDestroy {
     this.actionError = error ?? '';
     if (error) return;
     this.scheduleForm.patchValue({ application_id: interview.application_id });
+
+    await this.applyStatus(interview, 'completed');
+  }
+
+  async markCancelled(interview: Interview): Promise<void> {
+    await this.applyStatus(interview, 'cancelled');
+  }
+
+  async reschedule(interview: Interview): Promise<void> {
+    this.errorMessage = null;
+    const result = await this.dataService.updateInterviewStatus(interview.id, 'rescheduled');
+    if (result.error) {
+      this.errorMessage = result.error;
+      return;
+    }
+ main
     this.openScheduleModal();
+  }
+
+  private async applyStatus(interview: Interview, status: InterviewStatus): Promise<void> {
+    this.errorMessage = null;
+    const result = await this.dataService.updateInterviewStatus(interview.id, status);
+    if (result.error) {
+      this.errorMessage = result.error;
+    }
   }
 }

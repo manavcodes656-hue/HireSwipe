@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
 import { Company, Profile, CompanyRole } from '../models/company.models';
 
@@ -12,7 +13,7 @@ import { Company, Profile, CompanyRole } from '../models/company.models';
   templateUrl: './onboarding.component.html',
   styleUrl: './onboarding.component.css',
 })
-export class OnboardingComponent implements OnInit {
+export class OnboardingComponent implements OnInit, OnDestroy {
   currentStep = 1;
   totalSteps = 6;
 
@@ -30,6 +31,11 @@ export class OnboardingComponent implements OnInit {
   company!: Company;
   recruiterProfile!: Profile;
   completionPercentage = 0;
+
+  isSubmitting = false;
+  errorMessage: string | null = null;
+
+  private sub = new Subscription();
 
   industries = [
     'Software & Cloud Solutions',
@@ -56,9 +62,6 @@ export class OnboardingComponent implements OnInit {
     private dataService: CompanyDataService,
     private router: Router
   ) {}
-
-  private companyId: string | null = null;
-  private profileId: string | null = null;
 
   ngOnInit(): void {
     const current = this.dataService.currentCompany;
@@ -101,6 +104,39 @@ export class OnboardingComponent implements OnInit {
 
     this.initForms();
     this.recalculateCompletion();
+
+    // Subscribe to company stream in case it was loading asynchronously
+    this.sub.add(
+      this.dataService.company$.subscribe((c) => {
+        if (c && (!this.company || !this.company.id)) {
+          this.company = c;
+          this.step1Form.patchValue({
+            name: c.name || '',
+            industry: c.industry || this.industries[0],
+            size: c.size || c.company_size || '11-50',
+            founded_year: c.founded_year || 2022,
+            website: c.website || 'https://',
+            email: c.email || '',
+            phone: c.phone || '',
+            location: c.location || '',
+            city: c.city || '',
+            state: c.state || '',
+            country: c.country || 'India',
+          });
+          if (c.description) {
+            this.step2Form.patchValue({ description: c.description });
+          }
+          if (c.logo_url) {
+            this.step3LogoUrl = c.logo_url;
+          }
+          this.recalculateCompletion();
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
   }
 
   private initForms(): void {
@@ -160,6 +196,8 @@ export class OnboardingComponent implements OnInit {
   }
 
   nextStep(): void {
+    this.errorMessage = null;
+
     if (this.currentStep === 1 && this.step1Form.invalid) {
       this.step1Form.markAllAsTouched();
       return;
@@ -180,6 +218,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   prevStep(): void {
+    this.errorMessage = null;
     if (this.currentStep > 1) {
       this.currentStep--;
     }
@@ -213,6 +252,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   async finishOnboarding(): Promise<void> {
+ feature/backend-foundation
     if (this.isSaving) return;
     if (this.step1Form.invalid || this.step2Form.invalid || this.step4Form.invalid) {
       this.onboardingError = 'Some required fields are missing. Please review the previous steps.';
@@ -263,7 +303,97 @@ export class OnboardingComponent implements OnInit {
     const { error: flagError } = await this.dataService.setOnboardingCompleted(true);
     if (flagError) return this.fail('Could not mark onboarding as complete', flagError);
 
-    this.router.navigate(['/company/dashboard']);
+    this.errorMessage = null;
+
+    if (this.step1Form.invalid || this.step2Form.invalid || this.step4Form.invalid) {
+      this.step1Form.markAllAsTouched();
+      this.step2Form.markAllAsTouched();
+      this.step4Form.markAllAsTouched();
+      this.errorMessage = 'Please complete all required fields before completing setup.';
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    try {
+      const valuesArray = this.step2Form.value.valuesInput
+        ? this.step2Form.value.valuesInput.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0)
+        : (this.company.values || []);
+
+      const currentCompany = this.dataService.currentCompany;
+      const companyExists = Boolean(currentCompany?.id && currentCompany.id.trim().length > 0);
+
+      // Base profile payload matching backend allowed schema
+      const companyPayload = {
+        name: this.step1Form.value.name,
+        industry: this.step1Form.value.industry,
+        company_size: this.step1Form.value.size,
+        founded_year: this.step1Form.value.founded_year,
+        website: this.step1Form.value.website,
+        email: this.step1Form.value.email,
+        phone: this.step1Form.value.phone,
+        location: this.step1Form.value.location,
+        city: this.step1Form.value.city,
+        state: this.step1Form.value.state,
+        country: this.step1Form.value.country,
+        description: this.step2Form.value.description,
+        culture: this.step2Form.value.culture,
+        mission: this.step2Form.value.mission,
+        values: valuesArray,
+        logo_url: this.step3LogoUrl,
+        banner_url: this.step3BannerUrl,
+      };
+
+      if (!companyExists) {
+        // Create company via POST /api/company/profile
+        const createResult = await this.dataService.createCompany(companyPayload);
+        if (createResult.error) {
+          // If already exists under this account (409 conflict), reload and proceed to update
+          if (createResult.code === 'COMPANY_EXISTS') {
+            await this.dataService.reloadCompany();
+            if (!this.dataService.currentCompany?.id) {
+              this.errorMessage = 'Company already exists under this account, but could not load profile. Please refresh the page.';
+              this.isSubmitting = false;
+              return;
+            }
+          } else {
+            this.errorMessage = createResult.error;
+            this.isSubmitting = false;
+            return;
+          }
+        }
+      }
+main
+
+      // Update company profile and mark onboarding completed via PATCH /api/company/:companyId/profile
+      const updateResult = await this.dataService.updateCompanyProfile({
+        ...companyPayload,
+        onboarding_completed: true,
+        completion_percentage: 100,
+      });
+
+      if (updateResult.error) {
+        this.errorMessage = updateResult.error;
+        this.isSubmitting = false;
+        return;
+      }
+
+      // Update recruiter profile
+      await this.dataService.updateRecruiterProfile({
+        full_name: this.step4Form.value.full_name,
+        email: this.step4Form.value.email,
+        phone: this.step4Form.value.phone,
+      });
+
+      this.dataService.setOnboardingCompleted(true);
+      this.currentStep = 6;
+      this.recalculateCompletion();
+      this.router.navigate(['/company/dashboard']);
+    } catch (err: any) {
+      this.errorMessage = err?.message || 'An unexpected error occurred while completing onboarding.';
+    } finally {
+      this.isSubmitting = false;
+    }
   }
 
   private fail(step: string, error: string): void {
@@ -280,4 +410,3 @@ export class OnboardingComponent implements OnInit {
     });
   }
 }
-

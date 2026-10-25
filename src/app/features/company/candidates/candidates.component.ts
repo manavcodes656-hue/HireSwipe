@@ -84,9 +84,16 @@ export class CandidatesComponent implements OnInit {
     this.showToast(`Not saved: ${cand.full_name} is a sample profile.`);
   }
 
-  contact(cand: Profile, event?: Event): void {
+  async contact(cand: Profile, event?: Event): Promise<void> {
     if (event) event.stopPropagation();
+feature/backend-foundation
     this.showToast('Messaging is available once a candidate matches one of your jobs (see Matches).');
+
+    // A conversation only exists once the candidate matched a published job.
+    // The lookup never creates one, it only finds the real conversation.
+    await this.dataService.startConversationWithCandidate(cand.id, this.jobs[0]?.id);
+    this.router.navigate(['/company/messages']);
+ main
   }
 
   private showToast(msg: string): void {
