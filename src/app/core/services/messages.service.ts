@@ -271,7 +271,7 @@ export class MessagesService {
   async getConversations(profileId: string): Promise<any[]> {
     const { data, error } = await this.supabase.client
       .from('conversation_members')
-      .select('conversation_id, conversations(id, match_id, updated_at, matches(job_id, jobs(title), companies(name, logo_url)))')
+      .select('conversation_id, conversations(id, match_id, updated_at, matches(job_id, job_seeker_id, jobs(title), companies(name, logo_url), job_seeker_profiles(profiles(full_name, avatar_url))))')
       .eq('profile_id', profileId)
       .order('conversation_id');
     if (error) console.error('[MessagesService] getConversations:', error.message);

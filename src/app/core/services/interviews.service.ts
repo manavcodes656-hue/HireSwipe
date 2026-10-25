@@ -278,6 +278,12 @@ export class InterviewsService {
    */
   async updateInterview(
     interviewId: string,
+feature/backend-foundation
+    updates: Partial<Omit<InterviewRow, 'id' | 'application_id' | 'created_at' | 'updated_at'>>
+  ): Promise<{ error: string | null }> {
+    const { error } = await this.supabase.client.from('interviews').update(updates).eq('id', interviewId);
+    return { error: error?.message ?? null };
+
     updates: InterviewUpdate | Record<string, any>
   ): Promise<{ error: string | null; code?: string }> {
     try {
@@ -345,6 +351,7 @@ export class InterviewsService {
   async cancelInterview(interviewId: string): Promise<{ error: string | null; code?: string }> {
     const result = await this.updateInterviewStatus(interviewId, 'cancelled');
     return { error: result.error, code: result.code };
+ main
   }
 
   // ── Job Seeker Interviews (Direct Supabase) ───────────────────────────────

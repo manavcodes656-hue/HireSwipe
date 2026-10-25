@@ -9,7 +9,8 @@
     "test": "ng test",
     "server:install": "npm --prefix server install",
     "server:start": "npm --prefix server start",
-    "server:dev": "npm --prefix server run dev"
+    "server:dev": "npm --prefix server run dev",
+    "server:test": "npm --prefix server test"
   },
   "private": true,
   "packageManager": "npm@11.16.0",

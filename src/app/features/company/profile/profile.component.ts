@@ -83,21 +83,30 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  saveProfile(): void {
+  saveError = '';
+
+  async saveProfile(): Promise<void> {
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
       return;
     }
+    this.saveError = '';
 
     const val = this.profileForm.value;
     const valuesArray = val.valuesInput
       ? val.valuesInput.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0)
       : this.company.values;
 
-    this.dataService.updateCompanyProfile({
+    // culture, mission, values and banner_url have no database columns yet and are
+    // dropped by CompanyService (see supabase/proposed/004_*.sql).
+    const { error } = await this.dataService.updateCompanyProfile({
       ...val,
       values: valuesArray,
     });
+    if (error) {
+      this.saveError = error;
+      return;
+    }
 
     this.isSavedToast = true;
     setTimeout(() => {

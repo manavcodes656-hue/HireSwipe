@@ -84,7 +84,12 @@ export class CompanyDataService {
   interviews$ = this.interviewsSubject.asObservable();
   notifications$ = this.notificationsSubject.asObservable();
 
-  // ── Pre-seeded discovery candidates (for swipe deck & discovery) ────────
+  // ── Sample discovery candidates (swipe deck & candidate discovery UI) ────
+  // These are NOT database records. The current schema does not support
+  // company-side discovery: RLS only exposes job_seeker_profiles of candidates
+  // who applied to or matched with the company, and there is no company swipe
+  // table or company-initiated match insert. UI using these must say so.
+  readonly candidatesAreSamples = true;
   candidateProfiles: Profile[] = [
     {
       id: 'cand-1',
@@ -126,7 +131,7 @@ export class CompanyDataService {
       avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
       skills: ['Node.js', 'PostgreSQL', 'AWS', 'Kubernetes', 'Redis'],
       education: 'B.E. in Information Technology, Pune University',
-      bio: 'Architect of distributed distributed event queues and real-time transaction processing pipelines handling 50k RPS.',
+      bio: 'Architect of distributed event queues and real-time transaction processing pipelines handling 50k RPS.',
       phone: '+91 97654 32109',
       created_at: '2026-03-01T00:00:00Z',
       updated_at: '2026-10-03T00:00:00Z',
@@ -148,6 +153,13 @@ export class CompanyDataService {
 
   get currentRecruiterProfile(): Profile | null {
     return this.recruiterProfileSubject.value;
+  }
+
+  /** Role of the signed-in profile within the current company (owner | admin | recruiter | hiring_manager). */
+  get currentMemberRole(): CompanyRole | null {
+    if (!this._companyId || !this._profileId) return null;
+    const member = this.teamMembersSubject.value.find((m) => m.profile_id === this._profileId);
+    return member ? (member.role as CompanyRole) : null;
   }
 
   // ── Initialization ──────────────────────────────────────────────────────
@@ -234,17 +246,30 @@ export class CompanyDataService {
 
   async loadJobs(companyId: string): Promise<void> {
     const rawJobs = await this.jobsService.getCompanyJobs(companyId);
-    this.jobsSubject.next(rawJobs.map((j) => this.mapJob(j)));
+    this.jobsSubject.next(this.withJobCounts(rawJobs.map((j) => this.mapJob(j))));
   }
 
   async loadApplications(companyId: string): Promise<void> {
     const raw = await this.applicationsService.getCompanyApplications(companyId);
     this.applicationsSubject.next(raw.map((a) => this.mapApplication(a)));
+    this.jobsSubject.next(this.withJobCounts(this.jobsSubject.value));
   }
 
   async loadMatches(companyId: string): Promise<void> {
     const raw = await this.matchingService.getCompanyMatches(companyId);
     this.matchesSubject.next(raw.map((m) => this.mapMatch(m)));
+    this.jobsSubject.next(this.withJobCounts(this.jobsSubject.value));
+  }
+
+  /** Per-job counts computed from the application and match rows actually loaded. */
+  private withJobCounts(jobs: Job[]): Job[] {
+    const apps = this.applicationsSubject.value;
+    const matches = this.matchesSubject.value;
+    return jobs.map((j) => ({
+      ...j,
+      applications_count: apps.filter((a) => a.job_id === j.id).length,
+      matches_count: matches.filter((m) => m.job_id === j.id).length,
+    }));
   }
 
   async loadInterviews(companyId: string): Promise<void> {
@@ -376,9 +401,9 @@ export class CompanyDataService {
       openings: raw.openings ?? 1,
       application_deadline: raw.application_deadline ?? null,
       status: (raw.status === 'published' ? 'active' : raw.status) as JobStatus,
-      views_count: raw.views_count ?? 124,
-      applications_count: raw.applications_count ?? 18,
-      matches_count: raw.matches_count ?? 12,
+      views_count: undefined,
+      applications_count: 0,
+      matches_count: 0,
       skills: (raw.job_skills ?? []).map((s: any) => ({
         job_id: raw.id,
         skill_id: s.skill_id,
@@ -414,12 +439,11 @@ export class CompanyDataService {
       email: profile.email ?? '',
       avatar_url: profile.avatar_url ?? null,
       phone: profile.phone ?? null,
-      headline: jsp?.headline ?? 'Software Engineer',
+      headline: jsp?.headline ?? null,
       bio: jsp?.bio ?? null,
-      location: jsp?.location ?? 'Bengaluru, India',
-      experience_years: jsp?.experience_years ?? 4,
-      skills: ['TypeScript', 'Angular', 'Node.js', 'PostgreSQL'],
-      education: 'B.Tech in Computer Science',
+      location: jsp?.location ?? null,
+      experience_years: jsp?.experience_years ?? undefined,
+      skills: [],
       created_at: profile.created_at ?? '',
       updated_at: profile.updated_at ?? '',
     } : undefined;
@@ -540,10 +564,10 @@ export class CompanyDataService {
       duration_minutes: raw.duration_minutes ?? 45,
       meeting_url: raw.meeting_url ?? null,
       meeting_link: raw.meeting_url ?? null,
-      location: raw.location ?? 'Google Meet',
+      location: raw.location ?? null,
       notes: raw.description ?? '',
       scheduled_by: raw.scheduled_by ?? null,
-      status: (raw.status === 'scheduled' ? 'upcoming' : raw.status) as InterviewStatus,
+      status: raw.status as InterviewStatus,
       created_at: raw.created_at,
       updated_at: raw.updated_at,
     } as Interview;
@@ -555,14 +579,20 @@ export class CompanyDataService {
     return this.companySubject.value?.onboarding_completed ?? false;
   }
 
-  setOnboardingCompleted(completed: boolean): void {
-    const current = this.companySubject.value;
-    if (current) {
-      this.companySubject.next({ ...current, onboarding_completed: completed });
+  async setOnboardingCompleted(completed: boolean): Promise<{ error: string | null }> {
+    if (!this._companyId) {
+      return { error: 'No company loaded' };
     }
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('hireswipe_company_onboarding_completed', String(completed));
+    const { error } = await this.companyService.updateCompany(this._companyId, {
+      onboarding_completed: completed,
+    });
+    if (!error) {
+      const current = this.companySubject.value;
+      if (current) {
+        this.companySubject.next({ ...current, onboarding_completed: completed });
+      }
     }
+    return { error };
   }
 
   calculateCompanyCompletion(company: Partial<Company>): number {
@@ -585,11 +615,37 @@ export class CompanyDataService {
     return Math.round((filled / fields.length) * 100);
   }
 
+  async ensureCompanyForOnboarding(companyFields: Partial<Company>): Promise<{ error: string | null }> {
+    const userId = this.authService.getCurrentUserId();
+    if (!userId) return { error: 'You must be signed in to complete onboarding.' };
+
+    if (this._profileId !== userId || !this._companyId) {
+      this._profileId = null;
+      await this.initialize(userId);
+    }
+    if (this._companyId) return { error: null };
+
+    const payload: Record<string, unknown> = { ...companyFields };
+    if (companyFields.size && !companyFields.company_size) payload['company_size'] = companyFields.size;
+
+    const { companyId, error } = await this.companyService.createCompany(userId, payload as any);
+    if (error || !companyId) return { error: error ?? 'Company could not be created.' };
+
+    await this.loadCompanyForProfile(userId);
+    return this._companyId ? { error: null } : { error: 'Company was created but could not be loaded.' };
+  }
+
+  async uploadCompanyLogo(file: File): Promise<{ error: string | null }> {
+    if (!this._companyId) return { error: 'No company loaded' };
+    const { publicUrl, error } = await this.companyService.uploadLogo(this._companyId, file);
+    if (error) return { error };
+    const current = this.companySubject.value;
+    if (current && publicUrl) this.companySubject.next({ ...current, logo_url: publicUrl });
+    return { error: null };
+  }
+
   // ── Mutations ────────────────────────────────────────────────────────────
 
-  /**
-   * Reload the current company data from backend.
-   */
   async reloadCompany(): Promise<void> {
     const profileId = this._profileId || this.authService.getCurrentUserId();
     if (profileId) {
@@ -597,9 +653,6 @@ export class CompanyDataService {
     }
   }
 
-  /**
-   * Create a company and initialize state via the Express backend.
-   */
   async createCompany(data: Partial<Company>): Promise<{ companyId: string | null; error: string | null; code?: string }> {
     const profileId = this._profileId || this.authService.getCurrentUserId();
     if (!profileId) {
@@ -612,7 +665,6 @@ export class CompanyDataService {
       this._companyId = result.companyId;
       await this.loadCompanyForProfile(profileId);
     } else if (result.code === 'COMPANY_EXISTS') {
-      // In case of conflict, safely load the existing company so UI can proceed
       await this.loadCompanyForProfile(profileId);
     }
     return result;
@@ -627,11 +679,25 @@ export class CompanyDataService {
     }
     if (!this._companyId) return { error: 'No company loaded', code: 'NO_COMPANY' };
 
-    const result = await this.companyService.updateCompany(this._companyId, data as any);
+    const payload: Record<string, unknown> = { ...data };
+    if (data.size && !data.company_size) {
+      payload['company_size'] = data.size;
+    }
+    delete payload['size'];
+    delete payload['culture'];
+    delete payload['mission'];
+    delete payload['values'];
+    delete payload['banner_url'];
+
+    const result = await this.companyService.updateCompany(this._companyId, payload as any);
     if (!result.error) {
       const current = this.companySubject.value;
       if (current) {
         const updated = { ...current, ...data, updated_at: new Date().toISOString() };
+        if (payload['company_size']) {
+          updated.company_size = String(payload['company_size']);
+          updated.size = updated.company_size;
+        }
         updated.completion_percentage = this.calculateCompanyCompletion(updated);
         this.companySubject.next(updated);
       }
@@ -651,6 +717,61 @@ export class CompanyDataService {
     return { error };
   }
 
+  private static readonly JOB_COLUMNS = [
+    'title', 'description', 'employment_type', 'experience_level', 'experience_min', 'experience_max',
+    'salary_min', 'salary_max', 'salary_currency', 'location', 'city', 'state', 'country',
+    'remote_type', 'openings', 'application_deadline', 'status',
+  ] as const;
+
+  private toJobRow(data: Partial<Job>): Record<string, unknown> {
+    const row: Record<string, unknown> = {};
+    for (const key of CompanyDataService.JOB_COLUMNS) {
+      const value = (data as any)[key];
+      if (value !== undefined) row[key] = value === '' ? null : value;
+    }
+    if (row['status'] === 'active') row['status'] = 'published';
+    return row;
+  }
+
+  private async saveJobChildren(jobId: string, data: Partial<Job>): Promise<{ error: string | null }> {
+    const problems: string[] = [];
+
+    if (data.requirements) {
+      const reqs = data.requirements
+        .map((r: any) => String(r.requirement ?? r.requirement_text ?? '').trim())
+        .filter(Boolean);
+      const { error } = await this.jobsService.setJobRequirements(jobId, reqs);
+      if (error) problems.push(`requirements: ${error}`);
+    }
+
+    if (data.benefits) {
+      const benefits = data.benefits
+        .map((b: any) => String(b.benefit ?? b.benefit_text ?? '').trim())
+        .filter(Boolean);
+      const { error } = await this.jobsService.setJobBenefits(jobId, benefits);
+      if (error) problems.push(`benefits: ${error}`);
+    }
+
+    if (data.skills) {
+      const names = data.skills.map((s: any) => String(s.skill_name ?? '')).filter(Boolean);
+      const lookup = await this.jobsService.findSkillsByName(names);
+      if (lookup.error) {
+        problems.push(`skills: ${lookup.error}`);
+      } else {
+        const { error } = await this.jobsService.setJobSkills(
+          jobId,
+          lookup.skills.map((s) => ({ skill_id: s.id, is_required: true }))
+        );
+        if (error) problems.push(`skills: ${error}`);
+        if (lookup.unknown.length > 0) {
+          problems.push(`skills not in the skills catalog were not saved: ${lookup.unknown.join(', ')}`);
+        }
+      }
+    }
+
+    return { error: problems.length ? `Job saved, but some details were not: ${problems.join('; ')}` : null };
+  }
+
   async createJob(jobData: Partial<Job>): Promise<{ jobId: string | null; error: string | null }> {
     if (!this._companyId || !this._profileId) {
       return { jobId: null, error: 'Company not initialized' };
@@ -658,29 +779,37 @@ export class CompanyDataService {
     const result = await this.jobsService.createJob(
       this._companyId,
       this._profileId,
-      jobData as any
+      this.toJobRow(jobData) as any
     );
-    if (!result.error && result.jobId) {
-      await this.loadJobs(this._companyId);
-    }
-    return result;
+    if (result.error || !result.jobId) return result;
+
+    const children = await this.saveJobChildren(result.jobId, jobData);
+    await this.loadJobs(this._companyId);
+    return { jobId: result.jobId, error: children.error };
   }
 
   async updateJob(jobId: string, data: Partial<Job>): Promise<{ error: string | null }> {
-    const result = await this.jobsService.updateJob(jobId, data as any);
-    if (!result.error && this._companyId) {
-      await this.loadJobs(this._companyId);
-    }
-    return result;
+    const result = await this.jobsService.updateJob(jobId, this.toJobRow(data) as any);
+    if (result.error) return result;
+
+    const children = await this.saveJobChildren(jobId, data);
+    if (this._companyId) await this.loadJobs(this._companyId);
+    return children;
   }
 
-  async updateJobStatus(jobId: string, status: JobStatus): Promise<void> {
+  async updateJobStatus(jobId: string, status: JobStatus): Promise<{ error: string | null }> {
     const dbStatus = status === 'active' ? 'published' : status;
-    await this.jobsService.updateJobStatus(jobId, dbStatus as any);
+    const { error } = await this.jobsService.updateJobStatus(jobId, dbStatus as any);
+    if (error) {
+      this.errorSubject.next(`Could not change job status: ${error}`);
+      return { error };
+    }
+    const uiStatus = (dbStatus === 'published' ? 'active' : dbStatus) as JobStatus;
     const jobs = this.jobsSubject.value.map((j) =>
-      j.id === jobId ? { ...j, status, updated_at: new Date().toISOString() } : j
+      j.id === jobId ? { ...j, status: uiStatus, updated_at: new Date().toISOString() } : j
     );
     this.jobsSubject.next(jobs);
+    return { error: null };
   }
 
   async updateApplicationStatus(
@@ -715,46 +844,20 @@ export class CompanyDataService {
       this.applicationsSubject.next(apps);
 
       if (newStatus === 'shortlisted' || newStatus === 'accepted') {
-        const targetApp = apps.find((a) => a.id === appId);
-        if (targetApp && targetApp.profile) {
-          this.ensureMatch(targetApp.job_id, targetApp.profile.id, targetApp.match_score ?? 95);
+        if (this._companyId) {
+          await this.loadMatches(this._companyId);
         }
       }
     }
     return result;
   }
 
-  ensureMatch(jobId: string, candidateId: string, score: number): void {
-    const existing = this.matchesSubject.value.find(
-      (m) => m.job_id === jobId && (m.job_seeker_id === candidateId || m.profile_id === candidateId)
-    );
-    if (!existing) {
-      const job = this.jobsSubject.value.find((j) => j.id === jobId);
-      const cand = this.candidateProfiles.find((c) => c.id === candidateId);
-      const newMatch: Match = {
-        id: `mat-${Date.now()}`,
-        job_id: jobId,
-        job: job,
-        company_id: this._companyId || '',
-        job_seeker_id: candidateId,
-        profile_id: candidateId,
-        profile: cand,
-        match_score: score,
-        status: 'active',
-        matched_at: new Date().toISOString(),
-      };
-      this.matchesSubject.next([newMatch, ...this.matchesSubject.value]);
+  ensureMatch(_jobId: string, _candidateId: string, _score: number): void {
+    if (this._companyId) {
+      void this.loadMatches(this._companyId);
     }
   }
 
-  /**
-   * Find the conversation with a candidate.
-   *
-   * A conversation is created by the database when a match exists, and a match
-   * is created when the candidate likes one of the company's published jobs.
-   * The API can therefore only look the conversation up, never create one:
-   * when there is none, null is returned and no conversation is fabricated.
-   */
   async startConversationWithCandidate(
     candidateId: string,
     jobId?: string
@@ -792,27 +895,22 @@ export class CompanyDataService {
     this.notificationsSubject.next(list);
   }
 
-  async deactivateMember(memberId: string): Promise<void> {
-    await this.companyService.deactivateMember(memberId);
+  async deactivateMember(memberId: string): Promise<{ error: string | null }> {
+    const result = await this.companyService.deactivateMember(memberId);
     if (this._companyId) await this.loadTeamMembers(this._companyId);
+    return result;
   }
 
-  async updateMemberRole(memberId: string, role: CompanyRole): Promise<void> {
-    await this.companyService.updateMemberRole(memberId, role as any);
+  async updateMemberRole(memberId: string, role: CompanyRole): Promise<{ error: string | null }> {
+    const result = await this.companyService.updateMemberRole(memberId, role as any);
     if (this._companyId) await this.loadTeamMembers(this._companyId);
+    return result;
   }
 
   getMessagesForConversation(conversationId: string): Message[] {
     return this.messagesSubject.value[conversationId] ?? [];
   }
 
-  /**
-   * Send a message to a candidate through the Express backend.
-   *
-   * The message is only shown once the database stored it, so the UI never
-   * shows a message that was not actually sent. The thread is reloaded from
-   * the server afterwards, which keeps it in sync with the stored history.
-   */
   async sendMessage(conversationId: string, text: string, attachments: any[] = []): Promise<{ error: string | null }> {
     const userId = this.authService.getCurrentUserId() ?? this._profileId;
     if (!userId) return { error: 'Not authenticated' };
@@ -829,19 +927,10 @@ export class CompanyDataService {
     return { error: null };
   }
 
-  /**
-   * Subscribe to the messages of a conversation in real time.
-   * The subscription uses the caller's Supabase session (Realtime does not
-   * travel through Express) and the database RLS policies decide which rows
-   * are delivered. The returned function removes the channel again.
-   */
   subscribeToMessages(conversationId: string, onMessage: (message: any) => void): () => void {
     return this.messagesService.subscribeToMessages(conversationId, onMessage);
   }
 
-  /**
-   * Upload an attachment to a conversation and send it as a file message.
-   */
   async sendFileMessage(conversationId: string, file: File): Promise<{ error: string | null }> {
     const userId = this.authService.getCurrentUserId() ?? this._profileId;
     if (!userId) return { error: 'Not authenticated' };
@@ -857,14 +946,6 @@ export class CompanyDataService {
     return { error: null };
   }
 
-  /**
-   * Schedule an interview through the Express backend and reload the list so
-   * the UI holds the persisted records (the API owns the id, the timestamps
-   * and the interviewer).
-   *
-   * The application is moved into the `interview` stage afterwards, using the
-   * applications endpoint of the previous phase.
-   */
   async scheduleInterview(
     data: any
   ): Promise<{ error: string | null; interview?: Interview }> {
@@ -887,29 +968,23 @@ export class CompanyDataService {
       return { error: result.error ?? 'Failed to schedule interview' };
     }
 
-    const createdId = result.data.id;
+    const savedId = result.data.id;
+    const statusResult = await this.updateApplicationStatus(
+      data.application_id,
+      'interview',
+      `Interview scheduled with ${candidateName}`
+    );
+    if (this._companyId) await this.loadInterviews(this._companyId);
+    const interview = this.interviewsSubject.value.find((i) => i.id === savedId);
 
-    // Reload from the backend: the stored record is the source of truth.
-    if (this._companyId) {
-      await this.loadInterviews(this._companyId);
-    }
-    const created = this.interviewsSubject.value.find((i) => i.id === createdId);
-
-    if (data.application_id) {
-      await this.updateApplicationStatus(
-        data.application_id,
-        'interview',
-        `Interview scheduled with ${candidateName}`
-      );
-    }
-
-    return { error: null, interview: created };
+    return {
+      error: statusResult.error
+        ? `Interview saved, but the application status was not updated: ${statusResult.error}`
+        : null,
+      interview,
+    };
   }
 
-  /**
-   * Change the status of an interview (mark completed, cancel, reschedule).
-   * The backend enforces the permitted status transitions.
-   */
   async updateInterviewStatus(
     interviewId: string,
     status: InterviewStatus
@@ -930,41 +1005,35 @@ export class CompanyDataService {
     return { error: null };
   }
 
-  // ── Team Members management ───────────────────────────────────────────────
-
-  async inviteTeamMember(email: string, role: CompanyRole, full_name?: string): Promise<void> {
-    const newMember: CompanyMember = {
-      id: `member-${Date.now()}`,
-      company_id: this._companyId || '',
-      profile_id: `prof-${Date.now()}`,
-      role,
-      is_active: true,
-      status: 'active',
-      joined_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      profile: {
-        id: `prof-${Date.now()}`,
-        email,
-        full_name: full_name || email.split('@')[0],
-        role: 'company',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    };
-    this.teamMembersSubject.next([...this.teamMembersSubject.value, newMember]);
+  async inviteTeamMember(
+    email: string,
+    role: CompanyRole,
+    _full_name?: string
+  ): Promise<{ error: string | null }> {
+    if (!this._companyId) {
+      return { error: 'No company loaded' };
+    }
+    const { error } = await this.companyService.addTeamMemberByEmail(
+      this._companyId,
+      email,
+      role as any
+    );
+    if (!error) {
+      await this.loadTeamMembers(this._companyId);
+    }
+    return { error };
   }
 
-  async toggleTeamMemberStatus(memberId: string, nextStatus: string): Promise<void> {
+  async toggleTeamMemberStatus(memberId: string, nextStatus: string): Promise<{ error: string | null }> {
     const isActive = nextStatus === 'active';
-    if (!isActive) {
-      await this.companyService.deactivateMember(memberId);
-    }
+    const { error } = await this.companyService.setMemberActive(memberId, isActive);
+    if (error) return { error };
     const current = this.teamMembersSubject.value.map((m) =>
       m.id === memberId
         ? { ...m, is_active: isActive, status: nextStatus }
         : m
     );
     this.teamMembersSubject.next(current);
+    return { error: null };
   }
 }

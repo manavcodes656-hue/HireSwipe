@@ -1,13 +1,14 @@
 <div class="candidates-page">
   <!-- Toast Notification -->
   <div class="toast-banner" *ngIf="toastMessage">
-    <span>✓ {{ toastMessage }}</span>
+    <span>{{ toastMessage }}</span>
   </div>
 
   <div class="page-header">
     <div>
       <h1 class="page-title">Candidate Discovery</h1>
       <p class="page-subtitle">Search talent pool, inspect verified skills, shortlist candidates, and initiate outreach</p>
+      <p class="sample-banner" *ngIf="isSampleData" role="note">{{ sampleNote }}</p>
     </div>
   </div>
 

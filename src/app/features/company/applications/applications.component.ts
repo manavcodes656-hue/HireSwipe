@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
 import { Application, ApplicationStatus, Job } from '../models/company.models';
@@ -27,7 +28,12 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   private subs = new Subscription();
 
-  constructor(private dataService: CompanyDataService) {}
+  statusError = '';
+
+  constructor(
+    private dataService: CompanyDataService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.subs.add(
@@ -83,12 +89,29 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
     this.isReviewDrawerOpen = false;
   }
 
-  updateStatus(newStatus: ApplicationStatus): void {
+  async updateStatus(newStatus: ApplicationStatus): Promise<void> {
     if (this.selectedApplication) {
-      this.dataService.updateApplicationStatus(this.selectedApplication.id, newStatus, this.statusNotes);
+      this.statusError = '';
+      const { error } = await this.dataService.updateApplicationStatus(
+        this.selectedApplication.id,
+        newStatus,
+        this.statusNotes
+      );
+      if (error) {
+        this.statusError = error;
+        return;
+      }
       this.statusNotes = '';
     }
   }
+
+ feature/backend-foundation
+  /** Open the interview scheduler pre-filled with this application (real date/link entered there). */
+  scheduleInterviewForApp(): void {
+    if (this.selectedApplication) {
+      this.router.navigate(['/company/interviews'], {
+        queryParams: { schedule: this.selectedApplication.id },
+      });
 
   async scheduleInterviewForApp(): Promise<void> {
     if (!this.selectedApplication) return;
@@ -109,6 +132,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
     if (result.error) {
       this.errorMessage = result.error;
+ main
     }
   }
 }

@@ -4,6 +4,7 @@
     <div>
       <h1 class="page-title">Company Job Openings</h1>
       <p class="page-subtitle">Manage active postings, review draft roles, and monitor applicant engagement</p>
+      <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>
     </div>
     <a routerLink="/company/jobs/create" class="btn-primary">
       <span>+ Post New Job</span>

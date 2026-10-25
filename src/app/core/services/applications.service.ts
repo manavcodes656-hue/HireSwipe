@@ -61,6 +61,14 @@ export class ApplicationsService {
   async getCompanyApplications(
     companyId: string,
     jobId?: string
+ feature/backend-foundation
+  ): Promise<(ApplicationRow & { job: any; job_seeker: any })[]> {
+    let query = this.supabase.client
+      .from('applications')
+      .select('*, jobs(title), job_seeker_profiles(profile_id, headline, bio, location, experience_years, profiles(id, full_name, avatar_url, email, phone)), application_status_history(id, old_status, new_status, note, changed_by, created_at)')
+      .eq('company_id', companyId)
+      .order('applied_at', { ascending: false });
+
   ): Promise<any[]> {
     try {
       const headers = await this.getAuthHeaders();
@@ -83,6 +91,7 @@ export class ApplicationsService {
       if (code === 'UNAUTHORIZED' || code === 'FORBIDDEN' || err.status === 401 || err.status === 403) {
         return [];
       }
+ main
 
       // Offline / development fallback to direct Supabase query
       console.warn('[ApplicationsService] getCompanyApplications: attempting direct Supabase query fallback.');

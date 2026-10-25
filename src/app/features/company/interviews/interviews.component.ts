@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
 import { Interview, InterviewStatus, Application, Job } from '../models/company.models';
@@ -28,16 +29,27 @@ export class InterviewsComponent implements OnInit, OnDestroy {
   scheduleForm!: FormGroup;
 
   selectedInterviewForAction: Interview | null = null;
+  scheduleError = '';
+  actionError = '';
+  isScheduling = false;
 
   private subs = new Subscription();
 
   constructor(
     private dataService: CompanyDataService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+
+    // Opened from the Applications drawer: /company/interviews?schedule=<applicationId>
+    const preselected = this.route.snapshot.queryParamMap.get('schedule');
+    if (preselected) {
+      this.scheduleForm.patchValue({ application_id: preselected });
+      this.openScheduleModal();
+    }
 
     this.subs.add(
       this.dataService.interviews$.subscribe((iList) => {
@@ -63,12 +75,18 @@ export class InterviewsComponent implements OnInit, OnDestroy {
   }
 
   private initForm(): void {
+    // Default to tomorrow (local date) rather than a fixed, possibly past, date.
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const defaultDate = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
+
     this.scheduleForm = this.fb.group({
       application_id: ['', Validators.required],
-      date: ['2026-10-10', Validators.required],
+      date: [defaultDate, Validators.required],
       time: ['14:00', Validators.required],
       duration_minutes: [45, Validators.required],
-      meeting_link: ['https://meet.google.com/hireswipe-live-round', Validators.required],
+      meeting_link: ['', Validators.required],
       location: ['Google Meet (Virtual)', Validators.required],
       notes: ['Technical live coding & system architecture discussion.'],
     });
@@ -92,7 +110,11 @@ export class InterviewsComponent implements OnInit, OnDestroy {
   }
 
   openScheduleModal(): void {
+ feature/backend-foundation
+    this.scheduleError = '';
+
     this.errorMessage = null;
+ main
     this.isScheduleModalOpen = true;
   }
 
@@ -110,6 +132,33 @@ export class InterviewsComponent implements OnInit, OnDestroy {
     const app = this.applications.find((a) => a.id === val.application_id);
 
     if (!app) {
+ feature/backend-foundation
+      this.scheduleError = 'Select an application to schedule an interview for.';
+      return;
+    }
+    {
+      this.isScheduling = true;
+      this.scheduleError = '';
+      const { error } = await this.dataService.scheduleInterview({
+        application_id: app.id,
+        job_id: app.job_id,
+        candidate_id: app.profile_id,
+        candidate_name: app.profile?.full_name || 'Candidate',
+        date: val.date,
+        time: val.time,
+        duration_minutes: val.duration_minutes,
+        meeting_link: val.meeting_link,
+        location: val.location,
+        notes: val.notes,
+      });
+      this.isScheduling = false;
+
+      if (error) {
+        this.scheduleError = error;
+        return;
+      }
+      this.closeScheduleModal();
+
       this.errorMessage = 'Select an application to schedule the interview for.';
       return;
     }
@@ -135,12 +184,27 @@ export class InterviewsComponent implements OnInit, OnDestroy {
     if (result.error) {
       this.errorMessage = result.error;
       return;
+ main
     }
 
     this.closeScheduleModal();
   }
 
   async markCompleted(interview: Interview): Promise<void> {
+ feature/backend-foundation
+    this.actionError = (await this.dataService.updateInterviewStatus(interview.id, 'completed')).error ?? '';
+  }
+
+  async markCancelled(interview: Interview): Promise<void> {
+    this.actionError = (await this.dataService.updateInterviewStatus(interview.id, 'cancelled')).error ?? '';
+  }
+
+  async reschedule(interview: Interview): Promise<void> {
+    const { error } = await this.dataService.updateInterviewStatus(interview.id, 'rescheduled');
+    this.actionError = error ?? '';
+    if (error) return;
+    this.scheduleForm.patchValue({ application_id: interview.application_id });
+
     await this.applyStatus(interview, 'completed');
   }
 
@@ -155,6 +219,7 @@ export class InterviewsComponent implements OnInit, OnDestroy {
       this.errorMessage = result.error;
       return;
     }
+ main
     this.openScheduleModal();
   }
 
