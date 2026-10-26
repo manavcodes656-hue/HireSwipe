@@ -42,8 +42,8 @@ export class JobListComponent implements OnInit, OnDestroy {
       const matchesTab = this.activeTab === 'all' || job.status === this.activeTab;
       const matchesSearch =
         !this.searchQuery ||
-        job.title.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        job.location.toLowerCase().includes(this.searchQuery.toLowerCase());
+        (job.title || '').toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        (job.location || '').toLowerCase().includes(this.searchQuery.toLowerCase());
       return matchesTab && matchesSearch;
     });
   }
@@ -53,8 +53,12 @@ export class JobListComponent implements OnInit, OnDestroy {
     return this.jobs.filter((j) => j.status === status).length;
   }
 
-  changeStatus(job: Job, newStatus: JobStatus, event: Event): void {
+  statusError = '';
+
+  async changeStatus(job: Job, newStatus: JobStatus, event: Event): Promise<void> {
     event.stopPropagation();
-    this.dataService.updateJobStatus(job.id, newStatus);
+    this.statusError = '';
+    const { error } = await this.dataService.updateJobStatus(job.id, newStatus);
+    if (error) this.statusError = error;
   }
 }

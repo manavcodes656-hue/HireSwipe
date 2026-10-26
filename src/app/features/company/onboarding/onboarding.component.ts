@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
 import { Company, Profile, CompanyRole } from '../models/company.models';
 
@@ -12,7 +13,7 @@ import { Company, Profile, CompanyRole } from '../models/company.models';
   templateUrl: './onboarding.component.html',
   styleUrl: './onboarding.component.css',
 })
-export class OnboardingComponent implements OnInit {
+export class OnboardingComponent implements OnInit, OnDestroy {
   currentStep = 1;
   totalSteps = 6;
 
@@ -20,11 +21,21 @@ export class OnboardingComponent implements OnInit {
   step2Form!: FormGroup;
   step3LogoUrl = '';
   step3BannerUrl = '';
+  /** Selected logo file; uploaded to the company-logos bucket once the company exists. */
+  private logoFile: File | null = null;
+
+  onboardingError = '';
+  isSaving = false;
   step4Form!: FormGroup;
 
   company!: Company;
   recruiterProfile!: Profile;
   completionPercentage = 0;
+
+  isSubmitting = false;
+  errorMessage: string | null = null;
+
+  private sub = new Subscription();
 
   industries = [
     'Software & Cloud Solutions',
@@ -53,46 +64,116 @@ export class OnboardingComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.company = this.dataService.currentCompany;
-    this.recruiterProfile = this.dataService.currentRecruiterProfile;
+    const current = this.dataService.currentCompany;
+    const recruiter = this.dataService.currentRecruiterProfile;
+
+    // Use current company if present, or fallback defaults
+    this.company = current ?? {
+      id: '',
+      name: '',
+      industry: 'Software & Cloud Solutions',
+      size: '11-50',
+      company_size: '11-50',
+      founded_year: 2022,
+      website: 'https://',
+      email: '',
+      phone: '',
+      location: '',
+      city: '',
+      state: '',
+      country: 'India',
+      description: '',
+      culture: '',
+      mission: '',
+      values: [],
+      logo_url: '',
+      completion_percentage: 0,
+      onboarding_completed: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    this.recruiterProfile = recruiter ?? {
+      id: '',
+      email: '',
+      full_name: '',
+      role: 'company',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
     this.initForms();
     this.recalculateCompletion();
+
+    // Subscribe to company stream in case it was loading asynchronously
+    this.sub.add(
+      this.dataService.company$.subscribe((c) => {
+        if (c && (!this.company || !this.company.id)) {
+          this.company = c;
+          this.step1Form.patchValue({
+            name: c.name || '',
+            industry: c.industry || this.industries[0],
+            size: c.size || c.company_size || '11-50',
+            founded_year: c.founded_year || 2022,
+            website: c.website || 'https://',
+            email: c.email || '',
+            phone: c.phone || '',
+            location: c.location || '',
+            city: c.city || '',
+            state: c.state || '',
+            country: c.country || 'India',
+          });
+          if (c.description) {
+            this.step2Form.patchValue({ description: c.description });
+          }
+          if (c.logo_url) {
+            this.step3LogoUrl = c.logo_url;
+          }
+          this.recalculateCompletion();
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
   }
 
   private initForms(): void {
     // Step 1: Info
     this.step1Form = this.fb.group({
-      name: [this.company.name, Validators.required],
-      industry: [this.company.industry, Validators.required],
-      size: [this.company.size, Validators.required],
-      founded_year: [this.company.founded_year, [Validators.required, Validators.min(1800), Validators.max(2026)]],
-      website: [this.company.website, [Validators.required, Validators.pattern('https?://.+')]],
-      email: [this.company.email, [Validators.required, Validators.email]],
-      phone: [this.company.phone, Validators.required],
-      location: [this.company.location, Validators.required],
-      city: [this.company.city, Validators.required],
-      state: [this.company.state, Validators.required],
-      country: [this.company.country, Validators.required],
+      name: [this.company.name || '', Validators.required],
+      industry: [this.company.industry || this.industries[0], Validators.required],
+      size: [this.company.size || this.company.company_size || '11-50', Validators.required],
+      founded_year: [this.company.founded_year || 2022, [Validators.required, Validators.min(1800), Validators.max(2026)]],
+      website: [this.company.website || 'https://', [Validators.required, Validators.pattern('https?://.+')]],
+      email: [this.company.email || '', [Validators.required, Validators.email]],
+      phone: [this.company.phone || '', Validators.required],
+      location: [this.company.location || '', Validators.required],
+      city: [this.company.city || '', Validators.required],
+      state: [this.company.state || '', Validators.required],
+      country: [this.company.country || 'India', Validators.required],
     });
 
     // Step 2: Description
+    // culture/mission/values have no columns on public.companies yet, so they are
+    // optional and labelled as not saved (see supabase/proposed/004_*.sql).
     this.step2Form = this.fb.group({
-      description: [this.company.description, [Validators.required, Validators.minLength(20)]],
-      culture: [this.company.culture, Validators.required],
-      mission: [this.company.mission, Validators.required],
-      valuesInput: [this.company.values.join(', '), Validators.required],
+      description: [this.company.description || '', [Validators.required, Validators.minLength(20)]],
+      culture: [this.company.culture || ''],
+      mission: [this.company.mission || ''],
+      valuesInput: [(this.company.values || []).join(', ')],
     });
 
     // Step 3: Branding
-    this.step3LogoUrl = this.company.logo_url;
+    this.step3LogoUrl = this.company.logo_url || '';
     this.step3BannerUrl = this.company.banner_url || '';
 
     // Step 4: Recruiter
     this.step4Form = this.fb.group({
-      full_name: [this.recruiterProfile.full_name, Validators.required],
+      full_name: [this.recruiterProfile.full_name || '', Validators.required],
       role: ['owner', Validators.required],
-      email: [this.recruiterProfile.email, [Validators.required, Validators.email]],
+      email: [this.recruiterProfile.email || '', [Validators.required, Validators.email]],
       phone: [this.recruiterProfile.phone || '', Validators.required],
     });
   }
@@ -115,6 +196,8 @@ export class OnboardingComponent implements OnInit {
   }
 
   nextStep(): void {
+    this.errorMessage = null;
+
     if (this.currentStep === 1 && this.step1Form.invalid) {
       this.step1Form.markAllAsTouched();
       return;
@@ -135,6 +218,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   prevStep(): void {
+    this.errorMessage = null;
     if (this.currentStep > 1) {
       this.currentStep--;
     }
@@ -144,8 +228,10 @@ export class OnboardingComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
+      this.logoFile = file;
       const reader = new FileReader();
       reader.onload = (e) => {
+        // Data URL is for the preview only; the file itself is uploaded on finish.
         this.step3LogoUrl = e.target?.result as string;
         this.recalculateCompletion();
       };
@@ -165,29 +251,162 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
-  finishOnboarding(): void {
-    const valuesArray = this.step2Form.value.valuesInput
-      ? this.step2Form.value.valuesInput.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0)
-      : this.company.values;
+  async finishOnboarding(): Promise<void> {
+ feature/backend-foundation
+    if (this.isSaving) return;
+    if (this.step1Form.invalid || this.step2Form.invalid || this.step4Form.invalid) {
+      this.onboardingError = 'Some required fields are missing. Please review the previous steps.';
+      return;
+    }
+    this.isSaving = true;
+    this.onboardingError = '';
+    try {
+      await this.saveOnboarding();
+    } finally {
+      this.isSaving = false;
+    }
+  }
 
-    this.dataService.updateCompanyProfile({
+  /**
+   * Persist only schema-backed company fields. culture/mission/values/banner_url
+   * have no DB columns yet and are not written. onboarding_completed is set last,
+   * only after every required save succeeded.
+   */
+  private async saveOnboarding(): Promise<void> {
+    const companyFields: Partial<Company> = {
       ...this.step1Form.value,
+      company_size: this.step1Form.value.size,
       description: this.step2Form.value.description,
-      culture: this.step2Form.value.culture,
-      mission: this.step2Form.value.mission,
-      values: valuesArray,
-      logo_url: this.step3LogoUrl,
-      banner_url: this.step3BannerUrl,
-    });
+    };
 
-    this.dataService.updateRecruiterProfile({
+    // New company users have no company yet: create it (and the owner membership).
+    const { error: ensureError } = await this.dataService.ensureCompanyForOnboarding(companyFields);
+    if (ensureError) return this.fail('Could not create your company', ensureError);
+
+    const { error: companyError } = await this.dataService.updateCompanyProfile({
+      ...companyFields,
+      completion_percentage: this.calculateCompletionFromForms(),
+    });
+    if (companyError) return this.fail('Could not save company details', companyError);
+
+    if (this.logoFile) {
+      const { error: logoError } = await this.dataService.uploadCompanyLogo(this.logoFile);
+      if (logoError) return this.fail('Could not upload the logo', logoError);
+    }
+
+    const { error: profileError } = await this.dataService.updateRecruiterProfile({
       full_name: this.step4Form.value.full_name,
-      email: this.step4Form.value.email,
       phone: this.step4Form.value.phone,
     });
+    if (profileError) return this.fail('Could not save your recruiter profile', profileError);
 
-    this.dataService.setOnboardingCompleted(true);
+    const { error: flagError } = await this.dataService.setOnboardingCompleted(true);
+    if (flagError) return this.fail('Could not mark onboarding as complete', flagError);
 
-    this.router.navigate(['/company/dashboard']);
+    this.errorMessage = null;
+
+    if (this.step1Form.invalid || this.step2Form.invalid || this.step4Form.invalid) {
+      this.step1Form.markAllAsTouched();
+      this.step2Form.markAllAsTouched();
+      this.step4Form.markAllAsTouched();
+      this.errorMessage = 'Please complete all required fields before completing setup.';
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    try {
+      const valuesArray = this.step2Form.value.valuesInput
+        ? this.step2Form.value.valuesInput.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0)
+        : (this.company.values || []);
+
+      const currentCompany = this.dataService.currentCompany;
+      const companyExists = Boolean(currentCompany?.id && currentCompany.id.trim().length > 0);
+
+      // Base profile payload matching backend allowed schema
+      const companyPayload = {
+        name: this.step1Form.value.name,
+        industry: this.step1Form.value.industry,
+        company_size: this.step1Form.value.size,
+        founded_year: this.step1Form.value.founded_year,
+        website: this.step1Form.value.website,
+        email: this.step1Form.value.email,
+        phone: this.step1Form.value.phone,
+        location: this.step1Form.value.location,
+        city: this.step1Form.value.city,
+        state: this.step1Form.value.state,
+        country: this.step1Form.value.country,
+        description: this.step2Form.value.description,
+        culture: this.step2Form.value.culture,
+        mission: this.step2Form.value.mission,
+        values: valuesArray,
+        logo_url: this.step3LogoUrl,
+        banner_url: this.step3BannerUrl,
+      };
+
+      if (!companyExists) {
+        // Create company via POST /api/company/profile
+        const createResult = await this.dataService.createCompany(companyPayload);
+        if (createResult.error) {
+          // If already exists under this account (409 conflict), reload and proceed to update
+          if (createResult.code === 'COMPANY_EXISTS') {
+            await this.dataService.reloadCompany();
+            if (!this.dataService.currentCompany?.id) {
+              this.errorMessage = 'Company already exists under this account, but could not load profile. Please refresh the page.';
+              this.isSubmitting = false;
+              return;
+            }
+          } else {
+            this.errorMessage = createResult.error;
+            this.isSubmitting = false;
+            return;
+          }
+        }
+      }
+main
+
+      // Update company profile and mark onboarding completed via PATCH /api/company/:companyId/profile
+      const updateResult = await this.dataService.updateCompanyProfile({
+        ...companyPayload,
+        onboarding_completed: true,
+        completion_percentage: 100,
+      });
+
+      if (updateResult.error) {
+        this.errorMessage = updateResult.error;
+        this.isSubmitting = false;
+        return;
+      }
+
+      // Update recruiter profile
+      await this.dataService.updateRecruiterProfile({
+        full_name: this.step4Form.value.full_name,
+        email: this.step4Form.value.email,
+        phone: this.step4Form.value.phone,
+      });
+
+      this.dataService.setOnboardingCompleted(true);
+      this.currentStep = 6;
+      this.recalculateCompletion();
+      this.router.navigate(['/company/dashboard']);
+    } catch (err: any) {
+      this.errorMessage = err?.message || 'An unexpected error occurred while completing onboarding.';
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  private fail(step: string, error: string): void {
+    console.error(`[onboarding] ${step}:`, error);
+    this.onboardingError = `${step}: ${error}`;
+  }
+
+  private calculateCompletionFromForms(): number {
+    return this.dataService.calculateCompanyCompletion({
+      ...this.step1Form.value,
+      company_size: this.step1Form.value.size,
+      description: this.step2Form.value.description,
+      logo_url: this.step3LogoUrl,
+    });
   }
 }

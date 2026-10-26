@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
 import { Company, Profile, Notification } from '../models/company.models';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-company-layout',
@@ -13,8 +14,10 @@ import { Company, Profile, Notification } from '../models/company.models';
   styleUrl: './company-layout.component.css',
 })
 export class CompanyLayoutComponent implements OnInit, OnDestroy {
-  company!: Company;
-  recruiterProfile!: Profile;
+  @ViewChild('notifWrapper') notifWrapper?: ElementRef;
+
+  company: Company | null = null;
+  recruiterProfile: Profile | null = null;
   notifications: Notification[] = [];
   unreadNotifCount = 0;
   pendingAppsCount = 0;
@@ -28,10 +31,16 @@ export class CompanyLayoutComponent implements OnInit, OnDestroy {
 
   constructor(
     private dataService: CompanyDataService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    const userId = this.authService.getCurrentUserId();
+    if (userId) {
+      this.dataService.initialize(userId);
+    }
+
     this.subs.add(
       this.dataService.company$.subscribe((c) => {
         this.company = c;
@@ -68,6 +77,17 @@ export class CompanyLayoutComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.isNotifMenuOpen) {
+      return;
+    }
+    const targetNode = event.target as Node;
+    if (this.notifWrapper && !this.notifWrapper.nativeElement.contains(targetNode)) {
+      this.isNotifMenuOpen = false;
+    }
+  }
+
   toggleProfileMenu(): void {
     this.isProfileMenuOpen = !this.isProfileMenuOpen;
     if (this.isProfileMenuOpen) this.isNotifMenuOpen = false;
@@ -95,8 +115,9 @@ export class CompanyLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
     this.isProfileMenuOpen = false;
+    await this.authService.signOut();
     this.router.navigate(['/login']);
   }
 }

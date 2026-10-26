@@ -99,7 +99,11 @@ export class JobCreateComponent implements OnInit {
   }
 
   private loadJobForEdit(id: string): void {
-    const job = this.dataService.currentCompany ? this.dataService['jobsSubject'].value.find((j) => j.id === id) : null;
+    let job: Job | undefined;
+    this.dataService.jobs$.subscribe((jobs) => {
+      job = jobs.find((j) => j.id === id);
+    }).unsubscribe();
+
     if (job) {
       this.jobForm.patchValue({
         title: job.title,
@@ -121,13 +125,13 @@ export class JobCreateComponent implements OnInit {
       });
 
       if (job.skills) {
-        this.selectedSkills = job.skills.map((s) => s.skill_name);
+        this.selectedSkills = job.skills.map((s) => s.skill_name || '').filter((name): name is string => !!name);
       }
       if (job.requirements) {
-        this.requirementsList = job.requirements.map((r) => r.requirement_text);
+        this.requirementsList = job.requirements.map((r) => r.requirement_text || r.requirement || '').filter(Boolean);
       }
       if (job.benefits) {
-        this.benefitsList = job.benefits.map((b) => b.benefit_text);
+        this.benefitsList = job.benefits.map((b) => b.benefit_text || b.benefit || '').filter(Boolean);
       }
     }
   }
@@ -176,7 +180,10 @@ export class JobCreateComponent implements OnInit {
     this.benefitsList.splice(index, 1);
   }
 
-  saveJob(status: 'active' | 'draft'): void {
+  saveError = '';
+  isSaving = false;
+
+  async saveJob(status: 'active' | 'draft'): Promise<void> {
     if (this.jobForm.invalid) {
       this.jobForm.markAllAsTouched();
       return;
@@ -190,12 +197,36 @@ export class JobCreateComponent implements OnInit {
       benefits: this.benefitsList.map((b, idx) => ({ id: `b-${idx}`, job_id: '', benefit_text: b })),
     };
 
+    this.isSaving = true;
+    this.saveError = '';
+    let error: string | null;
+    let saved: boolean;
     if (this.isEditMode && this.editingJobId) {
-      this.dataService.updateJob(this.editingJobId, payload);
+      const result = await this.dataService.updateJob(this.editingJobId, payload);
+      error = result.error;
+      // updateJob only reports child-row problems after the job row itself saved.
+      saved = !error || error.startsWith('Job saved');
     } else {
-      this.dataService.createJob(payload);
+      const result = await this.dataService.createJob(payload);
+      error = result.error;
+      saved = !!result.jobId;
+      if (result.jobId && error) {
+        // The job row exists; further saves must update it, not insert a duplicate.
+        this.isEditMode = true;
+        this.editingJobId = result.jobId;
+      }
     }
+    this.isSaving = false;
 
+    if (!saved) {
+      this.saveError = error ?? 'The job could not be saved.';
+      return;
+    }
+    if (error) {
+      // Job row persisted but some details (e.g. unknown skills) did not; stay and tell the user.
+      this.saveError = error;
+      return;
+    }
     this.router.navigate(['/company/jobs']);
   }
 }

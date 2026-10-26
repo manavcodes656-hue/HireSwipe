@@ -4,6 +4,7 @@
     <div>
       <h1 class="page-title">Company Job Openings</h1>
       <p class="page-subtitle">Manage active postings, review draft roles, and monitor applicant engagement</p>
+      <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>
     </div>
     <a routerLink="/company/jobs/create" class="btn-primary">
       <span>+ Post New Job</span>
@@ -82,7 +83,7 @@
       </div>
 
       <div class="jc-salary">
-        💰 {{ job.salary_currency }} {{ job.salary_min / 100000 | number:'1.1-1' }}–{{ job.salary_max / 100000 | number:'1.1-1' }} LPA • {{ job.experience_min }}–{{ job.experience_max }} Yrs Exp
+        💰 {{ job.salary_currency }} {{ ((job.salary_min || 0) / 100000 | number:'1.1-1') }}–{{ ((job.salary_max || 0) / 100000 | number:'1.1-1') }} LPA • {{ job.experience_min }}–{{ job.experience_max }} Yrs Exp
       </div>
 
       <div class="jc-stats">

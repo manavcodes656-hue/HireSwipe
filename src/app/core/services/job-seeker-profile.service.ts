@@ -195,10 +195,20 @@ export class JobSeekerProfileService {
     skillId: string,
     proficiencyLevel: JobSeekerSkillRow['proficiency_level'],
     yearsExperience?: number
-  ): Promise<void> {
-    await this.supabase.client
+  ): Promise<{ error: string | null }> {
+    const { error } = await this.supabase.client
       .from('job_seeker_skills')
-      .upsert({ job_seeker_id: jobSeekerId, skill_id: skillId, proficiency_level: proficiencyLevel, years_experience: yearsExperience ?? null });
+      .upsert({
+        job_seeker_id: jobSeekerId,
+        skill_id: skillId,
+        proficiency_level: proficiencyLevel,
+        years_experience: yearsExperience ?? null,
+      }, { onConflict: 'job_seeker_id,skill_id' });
+    if (error) {
+      console.error('[JobSeekerProfileService] addUserSkill error:', error.message);
+      return { error: error.message };
+    }
+    return { error: null };
   }
 
   async removeUserSkill(jobSeekerId: string, skillId: string): Promise<void> {
@@ -218,6 +228,44 @@ export class JobSeekerProfileService {
     return data ?? [];
   }
 
+  async getOrCreateSkill(skillName: string): Promise<{ id: string | null; error: string | null }> {
+    const trimmed = skillName.trim();
+    if (!trimmed) return { id: null, error: 'Skill name cannot be empty' };
+
+    // Check catalog/existing skills first
+    const { data: existing } = await this.supabase.client
+      .from('skills')
+      .select('id')
+      .ilike('name', trimmed)
+      .maybeSingle();
+
+    if (existing?.id) {
+      return { id: existing.id, error: null };
+    }
+
+    // Insert new custom skill
+    const { data: created, error } = await this.supabase.client
+      .from('skills')
+      .insert({ name: trimmed })
+      .select('id')
+      .single();
+
+    if (error) {
+      // Handle potential race condition / concurrent insert
+      const { data: retry } = await this.supabase.client
+        .from('skills')
+        .select('id')
+        .ilike('name', trimmed)
+        .maybeSingle();
+      if (retry?.id) {
+        return { id: retry.id, error: null };
+      }
+      return { id: null, error: error.message };
+    }
+
+    return { id: created?.id ?? null, error: null };
+  }
+
   // ── Preferences ──────────────────────────────────────────────────────────
 
   async getPreferences(jobSeekerId: string): Promise<JobSeekerPreferenceRow | null> {
@@ -233,9 +281,14 @@ export class JobSeekerProfileService {
   async upsertPreferences(
     jobSeekerId: string,
     prefs: Partial<Omit<JobSeekerPreferenceRow, 'id' | 'job_seeker_id' | 'created_at' | 'updated_at'>>
-  ): Promise<void> {
-    await this.supabase.client
+  ): Promise<{ error: string | null }> {
+    const { error } = await this.supabase.client
       .from('job_seeker_preferences')
       .upsert({ job_seeker_id: jobSeekerId, ...prefs }, { onConflict: 'job_seeker_id' });
+    if (error) {
+      console.error('[JobSeekerProfileService] upsertPreferences error:', error.message);
+      return { error: error.message };
+    }
+    return { error: null };
   }
 }

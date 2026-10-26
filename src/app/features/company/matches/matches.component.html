@@ -6,6 +6,8 @@
     </div>
   </div>
 
+  <p class="form-error" *ngIf="chatError" role="alert">{{ chatError }}</p>
+
   <div class="matches-grid" *ngIf="matches.length > 0">
     <div *ngFor="let m of matches" class="match-card">
       <div class="mc-banner">

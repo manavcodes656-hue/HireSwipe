@@ -133,6 +133,25 @@
 
 .att-chip { background: rgba(255, 255, 255, 0.2); padding: 0.35rem 0.6rem; border-radius: 6px; font-size: 0.75rem; margin-top: 0.5rem; }
 
+.msg-file-link { color: inherit; font-weight: 600; text-decoration: underline; word-break: break-all; }
+
+.thread-status,
+.thread-empty {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+}
+
+.composer-error {
+  margin: 0;
+  padding: 0 1.5rem 0.9rem;
+  background: var(--surface);
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .chat-composer {
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border);
@@ -141,7 +160,10 @@
   gap: 0.75rem;
 }
 
+.attachment-input { display: none; }
+
 .btn-attach { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; width: 40px; height: 40px; cursor: pointer; font-size: 1.1rem; }
+.btn-attach:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .chat-composer input {
   flex: 1;
@@ -162,6 +184,8 @@
   font-size: 0.85rem;
   cursor: pointer;
 }
+
+.btn-send:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .no-chat-selected {
   flex: 1;

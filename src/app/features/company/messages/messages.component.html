@@ -43,15 +43,26 @@
 
       <!-- Messages Thread -->
       <div class="messages-thread">
+        <p class="thread-status" *ngIf="isLoading">Loading conversation…</p>
+
         <div
           *ngFor="let msg of activeMessages"
           class="msg-bubble-wrapper"
           [class.outgoing]="msg.sender_type === 'company'"
-          [class.incoming]="msg.sender_type === 'candidate'"
+          [class.incoming]="msg.sender_type !== 'company'"
         >
           <div class="msg-bubble">
             <div class="msg-sender">{{ msg.sender_name }}</div>
-            <div class="msg-content">{{ msg.content }}</div>
+            <div class="msg-content" *ngIf="msg.message_type !== 'file'">{{ msg.content }}</div>
+            <a
+              class="msg-file-link"
+              *ngIf="msg.message_type === 'file'"
+              [href]="msg.content"
+              target="_blank"
+              rel="noopener"
+            >
+              📎 View attachment
+            </a>
 
             <!-- Attachments -->
             <div class="msg-attachments" *ngIf="msg.attachments && msg.attachments.length > 0">
@@ -66,19 +77,47 @@
             </div>
           </div>
         </div>
+
+        <p class="thread-empty" *ngIf="!isLoading && activeMessages.length === 0">
+          No messages yet. Say hello to the candidate.
+        </p>
       </div>
+
+      <p class="form-error" *ngIf="sendError" role="alert">{{ sendError }}</p>
 
       <!-- Message Composer -->
       <div class="chat-composer">
-        <button type="button" class="btn-attach" (click)="sendAttachmentSimulation()" title="Attach Document">📎</button>
+        <input
+          #attachmentInput
+          type="file"
+          class="attachment-input"
+          (change)="onAttachmentPicked($event)"
+        />
+        <button
+          type="button"
+          class="btn-attach"
+          title="Attach Document"
+          [disabled]="isSending"
+          (click)="attachmentInput.click()"
+        >
+          📎
+        </button>
         <input
           type="text"
           placeholder="Type your message to candidate..."
           [(ngModel)]="messageText"
           (keyup.enter)="sendMessage()"
         />
-        <button type="button" class="btn-send" (click)="sendMessage()">Send Message</button>
+feature/backend-foundation
+        <button type="button" class="btn-send" (click)="sendMessage()" [disabled]="isSending">Send Message</button>
+
+        <button type="button" class="btn-send" [disabled]="isSending" (click)="sendMessage()">
+          {{ isSending ? 'Sending…' : 'Send Message' }}
+        </button>
+ main
       </div>
+
+      <p class="composer-error" *ngIf="errorMessage">{{ errorMessage }}</p>
     </div>
 
     <ng-template #noChatSelected>

@@ -171,6 +171,7 @@
           <div class="action-buttons-grid">
             <button type="button" class="act-btn review" (click)="updateStatus('reviewing')">🔍 Move to
               Reviewing</button>
+            <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>
             <button type="button" class="act-btn shortlist" (click)="updateStatus('shortlisted')">⭐ Shortlist
               Candidate</button>
             <button type="button" class="act-btn interview" (click)="scheduleInterviewForApp()">📅 Schedule
@@ -180,6 +181,8 @@
             <button type="button" class="act-btn reject" (click)="updateStatus('rejected')">✕ Reject
               Application</button>
           </div>
+
+          <p class="action-error" *ngIf="errorMessage">{{ errorMessage }}</p>
         </div>
 
         <!-- Status History Timeline -->

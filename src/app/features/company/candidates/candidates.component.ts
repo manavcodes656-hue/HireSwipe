@@ -45,7 +45,7 @@ export class CandidatesComponent implements OnInit {
 
       const matchSkill =
         !this.selectedSkillFilter ||
-        (c.skills && c.skills.some((s) => s.toLowerCase().includes(this.selectedSkillFilter.toLowerCase())));
+        (c.skills && c.skills.some((s: string) => s.toLowerCase().includes(this.selectedSkillFilter.toLowerCase())));
 
       return matchSearch && matchSkill;
     });
@@ -67,23 +67,33 @@ export class CandidatesComponent implements OnInit {
     this.isResumeModalOpen = false;
   }
 
+  get isSampleData(): boolean {
+    return this.dataService.candidatesAreSamples;
+  }
+  readonly sampleNote = 'Sample profiles for preview only. Candidate discovery is not supported by the current database schema, so actions here are not saved. Real candidates appear in Applications and Matches.';
+
+  // The candidates listed here are samples (see CompanyDataService.candidateProfiles);
+  // nothing is written to the database, and the UI says so instead of claiming success.
   shortlist(cand: Profile, event?: Event): void {
     if (event) event.stopPropagation();
-    if (this.jobs.length > 0) {
-      this.dataService.ensureMatch(this.jobs[0].id, cand.id, 96);
-      this.showToast(`Shortlisted ${cand.full_name}! Added to Swipe Matches.`);
-    }
+    this.showToast(`Not saved: ${cand.full_name} is a sample profile. Shortlist real applicants from Applications.`);
   }
 
   reject(cand: Profile, event?: Event): void {
     if (event) event.stopPropagation();
-    this.showToast(`Candidate ${cand.full_name} rejected.`);
+    this.showToast(`Not saved: ${cand.full_name} is a sample profile.`);
   }
 
-  contact(cand: Profile, event?: Event): void {
+  async contact(cand: Profile, event?: Event): Promise<void> {
     if (event) event.stopPropagation();
-    const conv = this.dataService.startConversationWithCandidate(cand.id, this.jobs[0]?.id);
+feature/backend-foundation
+    this.showToast('Messaging is available once a candidate matches one of your jobs (see Matches).');
+
+    // A conversation only exists once the candidate matched a published job.
+    // The lookup never creates one, it only finds the real conversation.
+    await this.dataService.startConversationWithCandidate(cand.id, this.jobs[0]?.id);
     this.router.navigate(['/company/messages']);
+ main
   }
 
   private showToast(msg: string): void {

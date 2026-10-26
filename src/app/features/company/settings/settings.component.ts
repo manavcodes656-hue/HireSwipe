@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { CompanyDataService } from '../services/company-data.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Company, Profile } from '../models/company.models';
 
 @Component({
@@ -13,6 +14,8 @@ import { Company, Profile } from '../models/company.models';
   styleUrl: './settings.component.css',
 })
 export class SettingsComponent implements OnInit, OnDestroy {
+  private readonly authService = inject(AuthService);
+
   activeTab: 'general' | 'notifications' | 'security' | 'billing' | 'integrations' = 'general';
 
   company!: Company;
@@ -25,6 +28,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   saveSuccess = false;
   saveError = '';
 
+  /** Local UI prefs only — no notification_preferences table in schema. */
   notifPrefs = {
     new_application: true,
     new_match: true,
@@ -42,13 +46,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
   seats = 5;
   usedSeats = 3;
 
+  /** Display-only — third-party integrations are not backed by the schema. */
   integrations = [
-    { name: 'Slack', icon: '💬', connected: true, description: 'Get notifications in your Slack workspace' },
-    { name: 'Google Calendar', icon: '📅', connected: true, description: 'Sync interviews with Google Calendar' },
-    { name: 'LinkedIn', icon: '🔗', connected: false, description: 'Post jobs directly to LinkedIn' },
-    { name: 'Greenhouse', icon: '🌿', connected: false, description: 'Sync candidates with Greenhouse ATS' },
-    { name: 'Zoom', icon: '📹', connected: true, description: 'Auto-generate Zoom links for interviews' },
-    { name: 'Zapier', icon: '⚡', connected: false, description: 'Connect HireSwipe with 5000+ apps' },
+    { name: 'Slack', icon: '💬', connected: false, description: 'Not connected — integration not available yet', available: false },
+    { name: 'Google Calendar', icon: '📅', connected: false, description: 'Not connected — integration not available yet', available: false },
+    { name: 'LinkedIn', icon: '🔗', connected: false, description: 'Not connected — integration not available yet', available: false },
+    { name: 'Greenhouse', icon: '🌿', connected: false, description: 'Not connected — integration not available yet', available: false },
+    { name: 'Zoom', icon: '📹', connected: false, description: 'Not connected — integration not available yet', available: false },
+    { name: 'Zapier', icon: '⚡', connected: false, description: 'Not connected — integration not available yet', available: false },
   ];
 
   private subs = new Subscription();
@@ -61,14 +66,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subs.add(
       this.dataService.company$.subscribe((c) => {
-        this.company = c;
-        this.initForms();
+        if (c) {
+          this.company = c;
+          this.initForms();
+        }
       })
     );
 
     this.subs.add(
       this.dataService.recruiterProfile$.subscribe((p) => {
-        this.recruiterProfile = p;
+        if (p) {
+          this.recruiterProfile = p;
+        }
       })
     );
   }
@@ -81,7 +90,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.generalForm = this.fb.group({
       name: [this.company.name, Validators.required],
       industry: [this.company.industry, Validators.required],
-      size: [this.company.size, Validators.required],
+      size: [this.company.size ?? this.company.company_size, Validators.required],
       website: [this.company.website, [Validators.required, Validators.pattern('https?://.+')]],
       email: [this.company.email, [Validators.required, Validators.email]],
       phone: [this.company.phone, Validators.required],
@@ -113,44 +122,74 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.saveError = '';
   }
 
-  saveGeneral(): void {
+  async saveGeneral(): Promise<void> {
     if (this.generalForm.invalid) {
       this.generalForm.markAllAsTouched();
       return;
     }
-    this.isSaving = true;
-    setTimeout(() => {
-      this.dataService.updateCompanyProfile(this.generalForm.value);
+    // RLS (migration 004) allows company profile edits only for active owners
+    // and admins. Fail closed so a recruiter/hiring manager never sees a fake
+    // saved state when the DB updates zero rows.
+    const memberRole = this.dataService.currentMemberRole;
+    if (memberRole !== 'owner' && memberRole !== 'admin') {
       this.isSaving = false;
-      this.saveSuccess = true;
-      setTimeout(() => (this.saveSuccess = false), 3000);
-    }, 800);
+      this.saveError = 'Only company owners and admins can edit the company profile.';
+      return;
+    }
+    this.isSaving = true;
+    this.saveError = '';
+    this.saveSuccess = false;
+    const value = this.generalForm.value;
+    const { error } = await this.dataService.updateCompanyProfile({
+      ...value,
+      company_size: value.size,
+    });
+    this.isSaving = false;
+    if (error) {
+      this.saveError = error;
+      return;
+    }
+    this.saveSuccess = true;
+    setTimeout(() => (this.saveSuccess = false), 3000);
   }
 
   saveNotifications(): void {
-    this.isSaving = true;
-    setTimeout(() => {
-      this.isSaving = false;
-      this.saveSuccess = true;
-      setTimeout(() => (this.saveSuccess = false), 3000);
-    }, 600);
+    this.saveSuccess = false;
+    this.saveError =
+      'Notification preferences are not stored yet (no preferences table in the schema). Changes were not saved.';
   }
 
-  changePassword(): void {
+  async changePassword(): Promise<void> {
     if (this.securityForm.invalid) {
       this.securityForm.markAllAsTouched();
       return;
     }
+    const email = this.recruiterProfile?.email || this.authService.user()?.email;
+    if (!email) {
+      this.saveError = 'Cannot change password: no signed-in email.';
+      return;
+    }
     this.isSaving = true;
-    setTimeout(() => {
-      this.isSaving = false;
-      this.saveSuccess = true;
-      this.securityForm.reset();
-      setTimeout(() => (this.saveSuccess = false), 3000);
-    }, 800);
+    this.saveError = '';
+    this.saveSuccess = false;
+    const { currentPassword, newPassword } = this.securityForm.value;
+    const { error } = await this.authService.changePassword(email, currentPassword, newPassword);
+    this.isSaving = false;
+    if (error) {
+      this.saveError = error;
+      return;
+    }
+    this.saveSuccess = true;
+    this.securityForm.reset();
+    setTimeout(() => (this.saveSuccess = false), 3000);
   }
 
-  toggleIntegration(integration: { connected: boolean }): void {
+  toggleIntegration(integration: { connected: boolean; available?: boolean }): void {
+    if (!integration.available) {
+      this.saveError = 'Third-party integrations are not available in the current schema.';
+      this.saveSuccess = false;
+      return;
+    }
     integration.connected = !integration.connected;
   }
 
@@ -158,6 +197,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.notifPrefs[key] = !this.notifPrefs[key];
   }
 
-  get f() { return this.generalForm.controls; }
-  get sf() { return this.securityForm.controls; }
+  get f() {
+    return this.generalForm.controls;
+  }
+  get sf() {
+    return this.securityForm.controls;
+  }
 }

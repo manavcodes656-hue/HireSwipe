@@ -41,8 +41,8 @@ export class MessagesComponent implements OnInit {
     if (!q) return list;
     return list.filter(
       (c) =>
-        c.company_name.toLowerCase().includes(q) ||
-        c.job_title.toLowerCase().includes(q)
+        (c.company_name || '').toLowerCase().includes(q) ||
+        (c.job_title || '').toLowerCase().includes(q)
     );
   });
 

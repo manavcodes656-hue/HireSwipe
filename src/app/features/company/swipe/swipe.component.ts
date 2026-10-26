@@ -28,6 +28,11 @@ export class CompanySwipeComponent implements OnInit, OnDestroy {
   
   filterSkill = signal<string>('all');
   toastMessage = signal<string>('');
+
+  get isSampleData(): boolean {
+    return this.dataService.candidatesAreSamples;
+  }
+  readonly sampleNote = 'Sample profiles for preview only. Candidate discovery is not supported by the current database schema, so actions here are not saved. Real candidates appear in Applications and Matches.';
   
   private subs = new Subscription();
 
@@ -94,23 +99,10 @@ export class CompanySwipeComponent implements OnInit, OnDestroy {
       this.swipeDirection.set(null);
 
       if (direction === 'like') {
-        const jobId = this.selectedJobId() || (this.jobs[0] ? this.jobs[0].id : 'job-101');
-        const matchScore = 95;
-        this.dataService.ensureMatch(jobId, candidate.id, matchScore);
-        
-        const match: Match = {
-          id: `mat-${Date.now()}`,
-          job_id: jobId,
-          job: this.selectedJob,
-          profile_id: candidate.id,
-          profile: candidate,
-          match_score: matchScore,
-          status: 'active',
-          matched_at: new Date().toISOString(),
-        };
-
-        this.recentMatchObj.set(match);
-        this.showMatchModal.set(true);
+        // No company-side swipe/match exists in the schema (matches are created only
+        // when a job seeker likes a job), so do not show a fabricated "match".
+        this.toastMessage.set(`Not saved: ${candidate.full_name} is a sample profile.`);
+        setTimeout(() => this.toastMessage.set(''), 3000);
       }
     }, 250);
   }
@@ -127,12 +119,18 @@ export class CompanySwipeComponent implements OnInit, OnDestroy {
     this.showMatchModal.set(false);
   }
 
-  openMatchMessage(): void {
+  async openMatchMessage(): Promise<void> {
     const match = this.recentMatchObj();
     this.showMatchModal.set(false);
+ feature/backend-foundation
+    if (match) {
+      const conv = this.dataService.startConversationWithCandidate(match.job_seeker_id, match.job_id);
+      this.router.navigate(['/company/messages'], conv ? { queryParams: { conversation: conv.id } } : {});
+
     if (match && match.profile) {
-      this.dataService.startConversationWithCandidate(match.profile.id, match.job_id);
+      await this.dataService.startConversationWithCandidate(match.profile.id, match.job_id);
       this.router.navigate(['/company/messages']);
+main
     }
   }
 

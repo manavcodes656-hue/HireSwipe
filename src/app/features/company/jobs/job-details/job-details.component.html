@@ -4,6 +4,7 @@
     <div>
       <div class="breadcrumb">
         <a routerLink="/company/jobs">← Back to Jobs</a>
+        <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>
       </div>
       <div class="title-row">
         <h1 class="page-title">{{ job.title }}</h1>
@@ -14,8 +15,8 @@
 
     <div class="header-actions">
       <a [routerLink]="['/company/jobs/edit', job.id]" class="btn-secondary">Edit Role</a>
-      <button *ngIf="job.status === 'active'" class="btn-warning" (click)="changeStatus('paused')">Pause Listing</button>
-      <button *ngIf="job.status === 'paused' || job.status === 'draft'" class="btn-primary" (click)="changeStatus('active')">Publish Role</button>
+      <button *ngIf="job.status === 'active' || job.status === 'published'" class="btn-warning" (click)="changeStatus('paused')">Pause Listing</button>
+      <button *ngIf="job.status === 'paused' || job.status === 'draft'" class="btn-primary" (click)="changeStatus('published')">Publish Role</button>
       <button *ngIf="job.status !== 'closed'" class="btn-danger" (click)="changeStatus('closed')">Close Listing</button>
     </div>
   </div>
@@ -64,7 +65,7 @@
       <div class="section-card">
         <h3>Key Qualifications & Requirements</h3>
         <ul class="req-list">
-          <li *ngFor="let req of job.requirements">{{ req.requirement_text }}</li>
+          <li *ngFor="let req of job.requirements">{{ req.requirement_text || req.requirement }}</li>
         </ul>
       </div>
 
@@ -73,7 +74,7 @@
         <div class="benefits-grid">
           <div *ngFor="let ben of job.benefits" class="ben-card">
             <span class="ben-icon">✨</span>
-            <span>{{ ben.benefit_text }}</span>
+            <span>{{ ben.benefit_text || ben.benefit }}</span>
           </div>
         </div>
       </div>
@@ -94,7 +95,7 @@
           </div>
           <div class="spec-item">
             <span class="lbl">Salary Range</span>
-            <span class="val">{{ job.salary_currency }} {{ (job.salary_min / 100000) | number:'1.1-1' }}–{{ (job.salary_max / 100000) | number:'1.1-1' }} LPA</span>
+            <span class="val">{{ job.salary_currency }} {{ (((job.salary_min || 0) / 100000)) | number:'1.1-1' }}–{{ (((job.salary_max || 0) / 100000)) | number:'1.1-1' }} LPA</span>
           </div>
           <div class="spec-item">
             <span class="lbl">Deadline</span>

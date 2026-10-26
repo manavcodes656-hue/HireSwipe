@@ -12,6 +12,17 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Backend (Express API)
+
+A separate JavaScript (ES modules) Express backend lives in [`server/`](server/README.md).
+
+```bash
+npm run server:install   # install backend dependencies
+npm run server:dev       # run with auto-reload (or: npm run server:start)
+```
+
+Health check: `GET http://localhost:3000/api/health` — see [`server/README.md`](server/README.md) for configuration details.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

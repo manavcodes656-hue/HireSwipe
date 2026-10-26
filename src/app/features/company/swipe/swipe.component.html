@@ -7,6 +7,8 @@
         Candidate Discovery & Match Deck
       </h1>
       <p class="page-sub">Swipe right to Shortlist top talent, or swipe left to Pass. Instantly connect with high-match candidates!</p>
+      <p class="sample-banner" *ngIf="isSampleData" role="note">{{ sampleNote }}</p>
+      <p class="sample-banner" *ngIf="toastMessage()" role="status">{{ toastMessage() }}</p>
     </div>
 
     <!-- Filter & Job Selector Row -->
@@ -211,8 +213,8 @@
 
     <div class="match-avatars-row">
       <img
-        [src]="dataService.currentCompany.logo_url"
-        [alt]="dataService.currentCompany.name"
+        [src]="dataService.currentCompany?.logo_url"
+        [alt]="dataService.currentCompany?.name"
         class="match-avatar company"
       />
       <div class="match-vs-heart">

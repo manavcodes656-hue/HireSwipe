@@ -96,3 +96,26 @@ button {
     opacity: 0;
   }
 }
+
+/* Inline status messages used by company pages for real save failures and
+   for features that are not backed by the database yet. */
+.form-error {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
+.form-note,
+.sample-banner {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--accent-tint);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}

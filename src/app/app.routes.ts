@@ -33,6 +33,7 @@ import { ProfileComponent as CompanyProfileComponent } from './features/company/
 import { SettingsComponent as CompanySettingsComponent } from './features/company/settings/settings.component';
 
 import { CompanySwipeComponent } from './features/company/swipe/swipe.component';
+import { jobSeekerDashboardGuard, jobSeekerOnboardingGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -61,11 +62,17 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'job-seeker/onboarding',
+    component: JobSeekerOnboardingComponent,
+    canActivate: [jobSeekerOnboardingGuard],
+  },
+  {
     path: 'job-seeker',
     component: JobSeekerLayoutComponent,
+    canActivate: [jobSeekerDashboardGuard],
+    canActivateChild: [jobSeekerDashboardGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'onboarding', component: JobSeekerOnboardingComponent },
       { path: 'dashboard', component: JobSeekerDashboardComponent },
       { path: 'swipe', component: SwipeComponent },
       { path: 'matches', component: JobSeekerMatchesComponent },

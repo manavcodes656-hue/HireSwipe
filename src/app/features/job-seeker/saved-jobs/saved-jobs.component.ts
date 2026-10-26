@@ -24,9 +24,9 @@ export class SavedJobsComponent {
     if (!q) return list;
     return list.filter(
       (j) =>
-        j.job_title.toLowerCase().includes(q) ||
-        j.company_name.toLowerCase().includes(q) ||
-        j.location.toLowerCase().includes(q)
+        (j.job_title || '').toLowerCase().includes(q) ||
+        (j.company_name || '').toLowerCase().includes(q) ||
+        (j.location || '').toLowerCase().includes(q)
     );
   });
 

@@ -6,12 +6,14 @@
     </div>
     <div class="header-actions">
       <button type="button" class="btn-secondary" routerLink="/company/jobs">Cancel</button>
-      <button type="button" class="btn-outline" (click)="saveJob('draft')">Save as Draft</button>
-      <button type="button" class="btn-primary" (click)="saveJob('active')">
+      <button type="button" class="btn-outline" (click)="saveJob('draft')" [disabled]="isSaving">Save as Draft</button>
+      <button type="button" class="btn-primary" (click)="saveJob('active')" [disabled]="isSaving">
         {{ isEditMode ? 'Save & Publish Changes' : 'Publish Job Listing 🚀' }}
       </button>
     </div>
   </div>
+
+  <p class="form-error" *ngIf="saveError" role="alert">{{ saveError }}</p>
 
   <form [formGroup]="jobForm" class="create-form-layout">
     <!-- Main Form Section -->

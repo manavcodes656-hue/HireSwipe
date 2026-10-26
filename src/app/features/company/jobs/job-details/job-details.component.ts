@@ -53,9 +53,13 @@ export class JobDetailsComponent implements OnInit, OnDestroy {
     );
   }
 
-  changeStatus(status: JobStatus): void {
+  statusError = '';
+
+  async changeStatus(status: JobStatus): Promise<void> {
     if (this.job) {
-      this.dataService.updateJobStatus(this.job.id, status);
+      this.statusError = '';
+      const { error } = await this.dataService.updateJobStatus(this.job.id, status);
+      if (error) this.statusError = error;
     }
   }
 }

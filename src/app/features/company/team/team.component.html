@@ -9,6 +9,8 @@
     </button>
   </div>
 
+  <p class="form-error" *ngIf="teamError" role="alert">{{ teamError }}</p>
+
   <!-- Members Table Card -->
   <div class="table-card">
     <div class="card-title">
@@ -114,9 +116,12 @@
           </select>
         </div>
 
+        <p class="invite-error" *ngIf="inviteError" role="alert">{{ inviteError }}</p>
+        <p class="invite-hint">Adds an existing HireSwipe account by email. Email invitations are not supported yet.</p>
+
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="closeInviteModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Send Email Invitation ✉️</button>
+          <button type="submit" class="btn-primary">Add Team Member</button>
         </div>
       </form>
     </div>
