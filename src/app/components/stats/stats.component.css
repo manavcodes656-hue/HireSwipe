@@ -1,6 +1,5 @@
 .stats {
   background: var(--surface);
-  border-top: 1px solid var(--border);
   padding: 48px 0;
 }
 

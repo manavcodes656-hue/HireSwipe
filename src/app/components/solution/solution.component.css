@@ -1,8 +1,6 @@
 .solution {
   padding: 88px 0;
   background: var(--bg);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
 }
 
 .solution-container {
