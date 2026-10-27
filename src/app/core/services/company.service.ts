@@ -330,7 +330,12 @@ export class CompanyService {
         .eq('id', companyId)
         .select('*');
       if (error) return { error: error.message };
-      return { error: null, company: (data as any)?.[0] };
+      // PostgREST reports success for a zero-row update when RLS forbids the
+      // write (migration 004: only owners/admins), so surface it as a failure.
+      if (!data || data.length === 0) {
+        return { error: 'You do not have permission to update this company.', code: 'FORBIDDEN' };
+      }
+      return { error: null, company: (data as any)[0] };
     }
   }
 
