@@ -48,7 +48,7 @@ Thumbs.db
 .env.local
 .env.*.local
 
-# Backend (server/) — its own Node project; server/.env is covered by `.env` above
+# Backend (server/) — its own Node project; the server reads the root `.env`, covered above
 server/node_modules/
 
 # Supabase service-role key must NEVER be in the repo.
