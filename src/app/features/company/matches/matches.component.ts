@@ -34,20 +34,17 @@ export class MatchesComponent implements OnInit, OnDestroy {
     this.subs.unsubscribe();
   }
 
- feature/backend-foundation
-  startChat(match: Match): void {
+  async startChat(match: Match): Promise<void> {
     this.chatError = '';
-    // Conversations are created by the database when a match is created.
-    const conv = this.dataService.startConversationWithCandidate(match.job_seeker_id, match.job_id);
+    const candidateId = match.job_seeker_id || match.profile_id;
+    if (!candidateId) {
+      this.chatError = 'Candidate information is missing for this match.';
+      return;
+    }
+    const conv = await this.dataService.startConversationWithCandidate(candidateId, match.job_id);
     if (!conv) {
       this.chatError = 'No conversation was found for this match. You may not be a member of it yet.';
       return;
-
-  async startChat(match: Match): Promise<void> {
-    if (match.profile_id) {
-      await this.dataService.startConversationWithCandidate(match.profile_id, match.job_id);
-      this.router.navigate(['/company/messages']);
- main
     }
     this.router.navigate(['/company/messages'], { queryParams: { conversation: conv.id } });
   }

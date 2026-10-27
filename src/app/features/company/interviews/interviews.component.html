@@ -154,13 +154,8 @@
 
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="closeScheduleModal()">Cancel</button>
- feature/backend-foundation
           <button type="submit" class="btn-primary" [disabled]="isScheduling">
             {{ isScheduling ? 'Scheduling…' : 'Schedule Interview →' }}
-
-          <button type="submit" class="btn-primary" [disabled]="isSaving">
-            {{ isSaving ? 'Scheduling…' : 'Schedule Interview →' }}
- main
           </button>
         </div>
       </form>

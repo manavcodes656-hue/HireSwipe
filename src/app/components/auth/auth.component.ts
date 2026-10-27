@@ -3,10 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CompanyDataService } from '../../features/company/services/company-data.service';
- feature/backend-foundation
-
 import { JobSeekerService } from '../../features/job-seeker/services/job-seeker.service';
-main
 import { AuthService, UserRole } from '../../core/services/auth.service';
 
 export type AuthRole = 'jobseeker' | 'company';
@@ -57,8 +54,6 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   styleUrl: './auth.component.css',
 })
 export class AuthComponent implements OnInit, OnDestroy {
-  private authService?: AuthService | null;
-
   role: AuthRole = 'jobseeker';
   mode: AuthMode = 'login';
 
@@ -215,24 +210,9 @@ export class AuthComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private companyDataService: CompanyDataService,
- feature/backend-foundation
-    private authService: AuthService
-  ) { }
-
     private jobSeekerService: JobSeekerService,
-    authService?: AuthService
-  ) {
-    if (authService !== undefined) {
-      this.authService = authService;
-    } else {
-      try {
-        this.authService = inject(AuthService, { optional: true });
-      } catch {
-        this.authService = null;
-      }
-    }
-  }
- main
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.initForms();
@@ -365,15 +345,12 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
 
     const formVal = this.currentForm.value;
- feature/backend-foundation
     const isCompany = this.role === 'company';
 
     if (this.mode === 'login') {
       void this.authService.signIn(formVal.email, formVal.password).then(
         ({ error }) => {
           if (error) {
-            // A rejected password / unknown account / network failure must stay a
-            // failure: never fabricate a session or navigate to a dashboard.
             this.authError = error.message ?? 'Sign in failed. Please check your credentials and try again.';
             return;
           }
@@ -381,37 +358,7 @@ export class AuthComponent implements OnInit, OnDestroy {
           this.navigateAfterLogin(isCompany);
         },
         (err) => {
-          // Transport/auth-service failure: surface it instead of leaving an
-          // unhandled rejection or fabricating a session.
           this.authError = err?.message ?? 'Sign in failed. Please try again.';
-
-    const userRole: UserRole = this.role === 'jobseeker' ? 'job_seeker' : 'company';
-    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
-    const actionName = this.mode === 'login' ? 'Signed in' : 'Account created';
-
-    this.successMessage = `${actionName} successfully as ${roleName} (${formVal.email}). Redirecting...`;
-
-    if (this.authService) {
-      if (this.mode === 'signup') {
-        await this.authService.signUp(formVal.email, formVal.password, formVal.fullName || 'User', userRole);
-      } else {
-        await this.authService.signIn(formVal.email, formVal.password, userRole);
-      }
-    }
-
-    if (this.role === 'jobseeker') {
-      setTimeout(async () => {
-        if (this.mode === 'signup') {
-          this.jobSeekerService.setOnboardingCompleted(false);
-          this.router.navigate(['/job-seeker/onboarding']);
-        } else {
-          await this.jobSeekerService.ensureProfileLoaded();
-          if (this.jobSeekerService.isOnboardingCompleted()) {
-            this.router.navigate(['/job-seeker/dashboard']);
-          } else {
-            this.router.navigate(['/job-seeker/onboarding']);
-          }
- main
         }
       );
     } else {
@@ -427,6 +374,7 @@ export class AuthComponent implements OnInit, OnDestroy {
             this.companyDataService.setOnboardingCompleted(false);
             this.router.navigate(['/company/onboarding']);
           } else {
+            this.jobSeekerService.setOnboardingCompleted(false);
             this.router.navigate(['/job-seeker/onboarding']);
           }
         },
@@ -437,50 +385,24 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
   }
 
- feature/backend-foundation
-  private navigateAfterLogin(isCompany: boolean): void {
+  private async navigateAfterLogin(isCompany: boolean): Promise<void> {
     if (isCompany) {
       if (this.companyDataService.isOnboardingCompleted()) {
         this.router.navigate(['/company/dashboard']);
-
-  async onGoogleAuth(): Promise<void> {
-    const roleName = this.role === 'jobseeker' ? 'Job Seeker' : 'Company';
-    const userRole: UserRole = this.role === 'jobseeker' ? 'job_seeker' : 'company';
-    this.successMessage = `Google authentication initiated for ${roleName}. Redirecting...`;
-
-    if (this.authService) {
-      this.authService.setDemoSession(
-        userRole,
-        this.role === 'jobseeker' ? 'krish.developer@hireswipe.io' : 'company@hireswipe.io',
-        this.role === 'jobseeker' ? 'Krish Sharma' : 'Company Admin'
-      );
-    }
-
-    setTimeout(async () => {
-      if (this.role === 'jobseeker') {
-        if (this.mode === 'signup') {
-          this.jobSeekerService.setOnboardingCompleted(false);
-          this.router.navigate(['/job-seeker/onboarding']);
-        } else {
-          await this.jobSeekerService.ensureProfileLoaded();
-          if (this.jobSeekerService.isOnboardingCompleted()) {
-            this.router.navigate(['/job-seeker/dashboard']);
-          } else {
-            this.router.navigate(['/job-seeker/onboarding']);
-          }
-        }
- main
       } else {
         this.router.navigate(['/company/onboarding']);
       }
     } else {
-      this.router.navigate(['/job-seeker/dashboard']);
+      await this.jobSeekerService.ensureProfileLoaded();
+      if (this.jobSeekerService.isOnboardingCompleted()) {
+        this.router.navigate(['/job-seeker/dashboard']);
+      } else {
+        this.router.navigate(['/job-seeker/onboarding']);
+      }
     }
   }
 
   onGoogleAuth(): void {
-    // signInWithOAuth triggers a browser redirect. Do not show a fabricated
-    // success message before the OAuth flow completes.
     const isCompany = this.role === 'company';
     const authRole: UserRole = isCompany ? 'company' : 'job_seeker';
     void this.authService.signInWithGoogle(authRole);

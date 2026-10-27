@@ -86,14 +86,12 @@ export class CandidatesComponent implements OnInit {
 
   async contact(cand: Profile, event?: Event): Promise<void> {
     if (event) event.stopPropagation();
-feature/backend-foundation
-    this.showToast('Messaging is available once a candidate matches one of your jobs (see Matches).');
-
-    // A conversation only exists once the candidate matched a published job.
-    // The lookup never creates one, it only finds the real conversation.
-    await this.dataService.startConversationWithCandidate(cand.id, this.jobs[0]?.id);
-    this.router.navigate(['/company/messages']);
- main
+    const conv = await this.dataService.startConversationWithCandidate(cand.id, this.jobs[0]?.id);
+    if (conv) {
+      this.router.navigate(['/company/messages'], { queryParams: { conversation: conv.id } });
+    } else {
+      this.showToast('Messaging is available once a candidate matches one of your jobs (see Matches).');
+    }
   }
 
   private showToast(msg: string): void {

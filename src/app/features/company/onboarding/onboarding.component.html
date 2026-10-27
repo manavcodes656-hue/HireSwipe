@@ -312,16 +312,9 @@
       <p class="form-error" *ngIf="onboardingError" role="alert">{{ onboardingError }}</p>
 
       <div class="step-actions">
-feature/backend-foundation
         <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
         <button type="button" class="btn-primary" (click)="finishOnboarding()" [disabled]="isSaving">
           {{ isSaving ? 'Saving…' : 'Complete Onboarding & Save ✓' }}
-
-        <button type="button" class="btn-secondary" [disabled]="isSubmitting" (click)="prevStep()">← Back</button>
-        <button type="button" class="btn-primary" [disabled]="isSubmitting" (click)="finishOnboarding()">
-          <span *ngIf="!isSubmitting">Complete Onboarding & Save ✓</span>
-          <span *ngIf="isSubmitting">Saving Profile...</span>
-main
         </button>
       </div>
     </div>
