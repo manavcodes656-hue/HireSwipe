@@ -122,15 +122,10 @@ export class CompanySwipeComponent implements OnInit, OnDestroy {
   async openMatchMessage(): Promise<void> {
     const match = this.recentMatchObj();
     this.showMatchModal.set(false);
- feature/backend-foundation
     if (match) {
-      const conv = this.dataService.startConversationWithCandidate(match.job_seeker_id, match.job_id);
+      const candidateId = match.job_seeker_id || (match as any).profile?.id;
+      const conv = await this.dataService.startConversationWithCandidate(candidateId, match.job_id);
       this.router.navigate(['/company/messages'], conv ? { queryParams: { conversation: conv.id } } : {});
-
-    if (match && match.profile) {
-      await this.dataService.startConversationWithCandidate(match.profile.id, match.job_id);
-      this.router.navigate(['/company/messages']);
-main
     }
   }
 

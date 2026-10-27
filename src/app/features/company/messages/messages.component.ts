@@ -19,9 +19,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
   messagesMap: { [convId: string]: Message[] } = {};
   messageText = '';
   searchQuery = '';
-  sendError = '';
-  isSending = false;
-
   isLoading = false;
   isSending = false;
   errorMessage: string | null = null;
@@ -43,12 +40,8 @@ export class MessagesComponent implements OnInit, OnDestroy {
       this.dataService.conversations$.subscribe((cList) => {
         this.conversations = cList;
         if (cList.length > 0 && !this.activeConversation) {
- feature/backend-foundation
           const requested = requestedId ? cList.find((c) => c.id === requestedId) : undefined;
           this.selectConversation(requested ?? cList[0]);
-
-          this.selectConversation(cList[0]);
- main
         }
       })
     );
@@ -77,10 +70,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
 
   selectConversation(conv: Conversation): void {
     this.activeConversation = conv;
- feature/backend-foundation
-    this.sendError = '';
-    void this.dataService.loadMessages(conv.id);
-
     this.errorMessage = null;
     this.isLoading = true;
 
@@ -92,7 +81,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
     });
 
     this.openMessageSubscription(conv.id);
- main
   }
 
   get activeMessages(): Message[] {
@@ -101,18 +89,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
   }
 
   async sendMessage(): Promise<void> {
- feature/backend-foundation
     if (!this.messageText.trim() || !this.activeConversation || this.isSending) return;
-
-    this.isSending = true;
-    this.sendError = '';
-    const { error } = await this.dataService.sendMessage(this.activeConversation.id, this.messageText.trim());
-    this.isSending = false;
-    if (error) {
-      // Keep the text so the user can retry.
-      this.sendError = error;
-
-    if (!this.messageText.trim() || !this.activeConversation) return;
 
     const text = this.messageText.trim();
     this.errorMessage = null;
@@ -123,19 +100,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.isSending = false;
     if (result.error) {
       this.errorMessage = result.error;
-      // Keep the text so the recruiter can retry without retyping it.
       this.messageText = text;
- main
       return;
     }
     this.messageText = '';
   }
-
- feature/backend-foundation
-  sendAttachmentSimulation(): void {
-    if (!this.activeConversation) return;
-    // File messages need the message-attachments bucket flow; not wired up yet.
-    this.sendError = 'Attachments are not supported yet.';
 
   /**
    * Send the file the recruiter picked. The file goes to the conversation's
@@ -179,7 +148,6 @@ export class MessagesComponent implements OnInit, OnDestroy {
       conversationId,
       (message: any) => this.appendRealtimeMessage(conversationId, message),
     );
- main
   }
 
   private closeMessageSubscription(): void {

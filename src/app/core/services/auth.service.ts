@@ -50,47 +50,21 @@ export class AuthService {
   readonly isAdmin = computed(() => this.userRole() === 'admin');
 
   constructor() {
-feature/backend-foundation
+    this.restoreCachedSession();
+
     this.supabase.client.auth.getSession().then(({ data }) => {
-      this.session.set(data.session);
-      this.user.set(data.session?.user ?? null);
-      void this.refreshProfileRole(data.session?.user?.id);
+      if (data?.session) {
+        this.session.set(data.session);
+        this.user.set(data.session.user ?? null);
+        void this.refreshProfileRole(data.session.user?.id);
+      }
       this.loading.set(false);
     });
 
-    // 1. Immediately restore any cached local/demo session synchronously
-    this.restoreCachedSession();
-
-    // 2. Query Supabase for authoritative session with bounded timeout
-    const sessionPromise = this.supabase.client.auth.getSession();
-    const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
-      setTimeout(() => resolve({ data: { session: null } }), 1200)
-    );
-
-    Promise.race([sessionPromise, timeoutPromise])
-      .then((res: any) => {
-        if (res?.data?.session) {
-          this.session.set(res.data.session);
-          this.user.set(res.data.session.user);
-        }
-        this.loading.set(false);
-      })
-      .catch(() => {
-        this.loading.set(false);
-      });
- main
-
     this.supabase.client.auth.onAuthStateChange((_event, session) => {
- feature/backend-foundation
       this.session.set(session);
       this.user.set(session?.user ?? null);
       void this.refreshProfileRole(session?.user?.id);
-
-      if (session) {
-        this.session.set(session);
-        this.user.set(session.user);
-      }
- main
       this.loading.set(false);
     });
   }
@@ -290,15 +264,6 @@ feature/backend-foundation
   }
 
   async signOut(): Promise<void> {
-feature/backend-foundation
-    await this.supabase.client.auth.signOut();
-    // Clear every local auth/role signal immediately so no stale session,
-    // user, or role survives sign-out (onAuthStateChange also fires, but we
-    // must not rely on it for a clean signed-out state).
-    this.session.set(null);
-    this.user.set(null);
-    this.profileRole.set(null);
-
     try {
       localStorage.removeItem('hireswipe_auth_session');
     } catch {}
@@ -307,16 +272,14 @@ feature/backend-foundation
     } catch {}
     this.session.set(null);
     this.user.set(null);
+    this.profileRole.set(null);
     this.loading.set(false);
- main
     this.router.navigate(['/']);
   }
 
   getCurrentUserId(): string | null {
     return this.user()?.id ?? null;
   }
-
- feature/backend-foundation
 
   /**
    * Get the current user's Supabase Auth access token.
@@ -336,7 +299,6 @@ feature/backend-foundation
    * Navigate to the correct dashboard/onboarding based on role.
    * Call after successful login or signup.
    */
- main
   navigateAfterAuth(mode: 'login' | 'signup'): void {
     const role = this.userRole();
     if (role === 'job_seeker') {

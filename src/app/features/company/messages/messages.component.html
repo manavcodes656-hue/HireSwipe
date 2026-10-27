@@ -83,8 +83,6 @@
         </p>
       </div>
 
-      <p class="form-error" *ngIf="sendError" role="alert">{{ sendError }}</p>
-
       <!-- Message Composer -->
       <div class="chat-composer">
         <input
@@ -108,13 +106,9 @@
           [(ngModel)]="messageText"
           (keyup.enter)="sendMessage()"
         />
-feature/backend-foundation
-        <button type="button" class="btn-send" (click)="sendMessage()" [disabled]="isSending">Send Message</button>
-
         <button type="button" class="btn-send" [disabled]="isSending" (click)="sendMessage()">
           {{ isSending ? 'Sending…' : 'Send Message' }}
         </button>
- main
       </div>
 
       <p class="composer-error" *ngIf="errorMessage">{{ errorMessage }}</p>

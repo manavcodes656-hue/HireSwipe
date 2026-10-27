@@ -137,15 +137,6 @@ export class JobsService {
    * Calls Express backend GET /api/company/jobs.
    */
   async getCompanyJobs(companyId: string): Promise<JobRow[]> {
- feature/backend-foundation
-    const { data, error } = await this.supabase.client
-      .from('jobs')
-      .select('*, job_skills(skill_id, is_required, skills(name)), job_requirements(id, requirement, is_required), job_benefits(id, benefit)')
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false });
-    if (error) console.error('[JobsService] getCompanyJobs:', error.message);
-    return (data ?? []) as any;
-
     try {
       const headers = await this.getAuthHeaders();
       const response = await firstValueFrom(
@@ -173,7 +164,6 @@ export class JobsService {
       if (error) console.error('[JobsService] getCompanyJobs fallback error:', error.message);
       return (data ?? []) as any;
     }
-main
   }
 
   /**
