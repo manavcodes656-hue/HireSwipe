@@ -32,6 +32,9 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
       isCompany: vi.fn(),
       getCurrentUserId: vi.fn().mockReturnValue('u-user-456'),
       navigateAfterAuth: vi.fn(),
+      signIn: vi.fn().mockResolvedValue({ error: null }),
+      signUp: vi.fn().mockResolvedValue({ error: null }),
+      signInWithGoogle: vi.fn(),
     };
 
     mockJobSeekerService = {
@@ -99,7 +102,8 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         TestBed.inject(ActivatedRoute),
         mockRouter,
         mockCompanyDataService,
-        mockJobSeekerService
+        mockJobSeekerService,
+        mockAuthService
       );
 
       authComp.role = 'jobseeker';
@@ -122,7 +126,8 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         TestBed.inject(ActivatedRoute),
         mockRouter,
         mockCompanyDataService,
-        mockJobSeekerService
+        mockJobSeekerService,
+        mockAuthService
       );
 
       authComp.role = 'jobseeker';
@@ -230,7 +235,8 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         TestBed.inject(ActivatedRoute),
         mockRouter,
         mockCompanyDataService,
-        mockJobSeekerService
+        mockJobSeekerService,
+        mockAuthService
       );
 
       authComp.role = 'jobseeker';
@@ -259,7 +265,8 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         TestBed.inject(ActivatedRoute),
         mockRouter,
         mockCompanyDataService,
-        mockJobSeekerService
+        mockJobSeekerService,
+        mockAuthService
       );
 
       authComp.role = 'company';
@@ -286,7 +293,8 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         TestBed.inject(ActivatedRoute),
         mockRouter,
         mockCompanyDataService,
-        mockJobSeekerService
+        mockJobSeekerService,
+        mockAuthService
       );
 
       authComp.role = 'company';
@@ -307,7 +315,8 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         TestBed.inject(ActivatedRoute),
         mockRouter,
         mockCompanyDataService,
-        mockJobSeekerService
+        mockJobSeekerService,
+        mockAuthService
       );
 
       authComp.role = 'company';
