@@ -3,7 +3,7 @@
 import { config } from 'dotenv'
 import { fileURLToPath } from 'node:url'
 
-config({ path: fileURLToPath(new URL('.env', import.meta.url)) })
+config({ path: fileURLToPath(new URL('../.env', import.meta.url)) })
 
 /**
  * Return a required env var or throw (never log the value).

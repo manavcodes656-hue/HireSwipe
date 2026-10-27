@@ -120,7 +120,7 @@ if (isEntryPoint) {
 
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.error(`Port ${PORT} is already in use. Set PORT in server/.env to change it.`)
+      console.error(`Port ${PORT} is already in use. Set PORT in the root .env to change it.`)
     } else {
       console.error('Failed to start server:', err)
     }

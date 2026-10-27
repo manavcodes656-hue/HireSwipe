@@ -24,10 +24,10 @@ npm run server:install
 
 ## Configure
 
-Copy the placeholder file and fill in real values. **Never commit `server/.env`.**
+Copy the placeholder file from the **repo root** (the server loads the root `.env`) and fill in real values. **Never commit `.env`.**
 
 ```bash
-cp .env.example .env
+cp ../.env.example ../.env
 ```
 
 | Variable | Default | Purpose |
