@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -14,7 +14,10 @@ import { Company, Profile, CompanyRole } from '../models/company.models';
   styleUrl: './onboarding.component.css',
 })
 export class OnboardingComponent implements OnInit, OnDestroy {
-  currentStep = 1;
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _currentStep = signal<number>(1);
+  get currentStep(): number { return this._currentStep(); }
+  set currentStep(v: number) { this._currentStep.set(v); }
   totalSteps = 6;
 
   step1Form!: FormGroup;
@@ -24,16 +27,28 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   /** Selected logo file; uploaded to the company-logos bucket once the company exists. */
   private logoFile: File | null = null;
 
-  onboardingError = '';
-  isSaving = false;
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _onboardingError = signal<string>('');
+  get onboardingError(): string { return this._onboardingError(); }
+  set onboardingError(v: string) { this._onboardingError.set(v); }
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _isSaving = signal<boolean>(false);
+  get isSaving(): boolean { return this._isSaving(); }
+  set isSaving(v: boolean) { this._isSaving.set(v); }
   step4Form!: FormGroup;
 
   company!: Company;
   recruiterProfile!: Profile;
   completionPercentage = 0;
 
-  isSubmitting = false;
-  errorMessage: string | null = null;
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _isSubmitting = signal<boolean>(false);
+  get isSubmitting(): boolean { return this._isSubmitting(); }
+  set isSubmitting(v: boolean) { this._isSubmitting.set(v); }
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _errorMessage = signal<string | null>(null);
+  get errorMessage(): string | null { return this._errorMessage(); }
+  set errorMessage(v: string | null) { this._errorMessage.set(v); }
 
   private sub = new Subscription();
 

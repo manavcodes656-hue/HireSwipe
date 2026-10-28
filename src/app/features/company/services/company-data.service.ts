@@ -206,6 +206,9 @@ export class CompanyDataService {
   private async loadCompanyForProfile(profileId: string): Promise<void> {
     const company = await this.companyService.getCompanyForProfile(profileId);
     if (!company) {
+      // Never keep a previous user's company when this user has none (singleton service).
+      this._companyId = null;
+      this.companySubject.next(null);
       return;
     }
 

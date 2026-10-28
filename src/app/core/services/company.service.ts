@@ -239,7 +239,8 @@ export class CompanyService {
       const companyId = response.membership?.company_id ?? response.membership?.company?.id ?? null;
       return { companyId, error: null };
     } catch (err: any) {
-      if (err instanceof HttpErrorResponse) {
+      // status 0 = Express API unreachable: fall through to the RLS-protected RPC below.
+      if (err instanceof HttpErrorResponse && err.status !== 0) {
         const backendError = err.error?.error;
         const code = backendError?.code || `HTTP_${err.status}`;
         const message = backendError?.message || err.message || 'Failed to create company';
@@ -313,7 +314,7 @@ export class CompanyService {
 
       return { error: null, company: response.company };
     } catch (err: any) {
-      if (err instanceof HttpErrorResponse) {
+      if (err instanceof HttpErrorResponse && err.status !== 0) {
         const backendError = err.error?.error;
         const code = backendError?.code || `HTTP_${err.status}`;
         const message = backendError?.message || err.message || 'Failed to update company';
