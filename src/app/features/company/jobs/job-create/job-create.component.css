@@ -195,6 +195,13 @@
   border: 1px solid var(--border-subtle);
 }
 
+.bullet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
 .item-text {
   flex: 1;
   font-size: 0.85rem;

@@ -359,6 +359,7 @@
   border-radius: 50%;
   background: var(--accent-tint, #f0fdfa);
   color: var(--accent, #0f766e);
+  border: 1px solid rgba(15, 118, 110, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
