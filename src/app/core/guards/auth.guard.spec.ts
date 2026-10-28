@@ -51,82 +51,91 @@ describe('Security Route Guards (Phase 3)', () => {
   });
 
   describe('authGuard', () => {
-    it('should allow navigation if session is loading', () => {
+    it('waits for session restore and redirects when none exists', async () => {
       mockAuthService.loading.set(true);
-      const result = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
-      expect(result).toBe(true);
-    });
-
-    it('should redirect unauthenticated users to /login', () => {
       mockAuthService.isAuthenticated.mockReturnValue(false);
-      const result = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+      setTimeout(() => mockAuthService.loading.set(false), 50);
+      const result = await TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
       expect(result).toBe(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
     });
 
-    it('should allow navigation for authenticated users', () => {
+    it('should redirect unauthenticated users to /login', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(false);
+      const result = await TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('should allow navigation for authenticated users', async () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
-      const result = TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
+      const result = await TestBed.runInInjectionContext(() => authGuard({} as any, {} as any));
       expect(result).toBe(true);
     });
   });
 
   describe('jobSeekerGuard', () => {
-    it('should allow navigation while session is loading', () => {
+    it('waits for session restore and redirects when none exists', async () => {
       mockAuthService.loading.set(true);
-      const result = TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
-      expect(result).toBe(true);
-    });
-
-    it('should redirect unauthenticated users to /login', () => {
       mockAuthService.isAuthenticated.mockReturnValue(false);
-      const result = TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
+      setTimeout(() => mockAuthService.loading.set(false), 50);
+      const result = await TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
       expect(result).toBe(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
     });
 
-    it('should redirect non-job-seekers to company dashboard', () => {
+    it('should redirect unauthenticated users to /login', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(false);
+      const result = await TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('should redirect non-job-seekers to company dashboard', async () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.isJobSeeker.mockReturnValue(false);
-      const result = TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
+      const result = await TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
       expect(result).toBe(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/company/dashboard']);
     });
 
-    it('should allow verified job seekers to proceed', () => {
+    it('should allow verified job seekers to proceed', async () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.isJobSeeker.mockReturnValue(true);
-      const result = TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
+      const result = await TestBed.runInInjectionContext(() => jobSeekerGuard({} as any, {} as any));
       expect(result).toBe(true);
     });
   });
 
   describe('companyGuard', () => {
-    it('should allow navigation while session is loading', () => {
+    it('waits for session restore and redirects when none exists', async () => {
       mockAuthService.loading.set(true);
-      const result = TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
-      expect(result).toBe(true);
-    });
-
-    it('should redirect unauthenticated users to /login', () => {
       mockAuthService.isAuthenticated.mockReturnValue(false);
-      const result = TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
+      setTimeout(() => mockAuthService.loading.set(false), 50);
+      const result = await TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
       expect(result).toBe(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
     });
 
-    it('should redirect non-company users to job seeker dashboard', () => {
+    it('should redirect unauthenticated users to /login', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(false);
+      const result = await TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('should redirect non-company users to job seeker dashboard', async () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.isCompany.mockReturnValue(false);
-      const result = TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
+      const result = await TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
       expect(result).toBe(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/job-seeker/dashboard']);
     });
 
-    it('should allow verified company members to proceed', () => {
+    it('should allow verified company members to proceed', async () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.isCompany.mockReturnValue(true);
-      const result = TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
+      const result = await TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
       expect(result).toBe(true);
     });
   });

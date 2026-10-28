@@ -354,8 +354,10 @@ export class AuthComponent implements OnInit, OnDestroy {
             this.authError = error.message ?? 'Sign in failed. Please check your credentials and try again.';
             return;
           }
-          this.successMessage = `Signed in successfully as ${isCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
-          this.navigateAfterLogin(isCompany);
+          // Route by the real (profile) role, not the tab the user happened to pick.
+          const actuallyCompany = this.authService.isCompany();
+          this.successMessage = `Signed in successfully as ${actuallyCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
+          void this.navigateAfterLogin(actuallyCompany);
         },
         (err) => {
           this.authError = err?.message ?? 'Sign in failed. Please try again.';
@@ -364,9 +366,13 @@ export class AuthComponent implements OnInit, OnDestroy {
     } else {
       const authRole: UserRole = isCompany ? 'company' : 'job_seeker';
       void this.authService.signUp(formVal.email, formVal.password, formVal.fullName, authRole).then(
-        ({ error }) => {
+        ({ error, needsEmailVerification }) => {
           if (error) {
             this.authError = error.message ?? 'Account creation failed. Please try again.';
+            return;
+          }
+          if (needsEmailVerification) {
+            this.successMessage = `Account created. Check ${formVal.email} for a verification link, then sign in to continue.`;
             return;
           }
           this.successMessage = `Account created successfully as ${isCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;

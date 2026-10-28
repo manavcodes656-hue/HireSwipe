@@ -269,6 +269,7 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         mockAuthService
       );
 
+      mockAuthService.isCompany = vi.fn().mockReturnValue(true);
       authComp.role = 'company';
       authComp.mode = 'signup';
       authComp.ngOnInit();
@@ -297,6 +298,7 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         mockAuthService
       );
 
+      mockAuthService.isCompany = vi.fn().mockReturnValue(true);
       authComp.role = 'company';
       authComp.mode = 'login';
       authComp.ngOnInit();
@@ -319,6 +321,7 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
         mockAuthService
       );
 
+      mockAuthService.isCompany = vi.fn().mockReturnValue(true);
       authComp.role = 'company';
       authComp.mode = 'login';
       authComp.ngOnInit();

@@ -9,14 +9,12 @@ import { AuthService } from '../services/auth.service';
  * The primary security layer is PostgreSQL RLS in the database.
  * Route guards alone are NOT sufficient security.
  */
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.loading()) {
-    // Session is still loading — allow through (component handles loading state)
-    return true;
-  }
+  // Wait for session restore so a refresh never lets an unauthenticated user through.
+  await waitForAuth(authService);
 
   if (!authService.isAuthenticated()) {
     router.navigate(['/login']);
@@ -29,13 +27,11 @@ export const authGuard: CanActivateFn = () => {
 /**
  * jobSeekerGuard — ensures only job_seeker role can access job-seeker routes.
  */
-export const jobSeekerGuard: CanActivateFn = () => {
+export const jobSeekerGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.loading()) {
-    return true;
-  }
+  await waitForAuth(authService);
 
   if (!authService.isAuthenticated()) {
     router.navigate(['/login']);
@@ -54,13 +50,11 @@ export const jobSeekerGuard: CanActivateFn = () => {
 /**
  * companyGuard — ensures only company role can access company routes.
  */
-export const companyGuard: CanActivateFn = () => {
+export const companyGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.loading()) {
-    return true;
-  }
+  await waitForAuth(authService);
 
   if (!authService.isAuthenticated()) {
     router.navigate(['/login']);

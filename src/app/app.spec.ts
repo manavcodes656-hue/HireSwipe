@@ -156,6 +156,7 @@ describe('HireSwipe Application & Authentication', () => {
 
     it('should navigate a company to onboarding when onboarding is not complete', async () => {
       mockAuthService.signIn.mockResolvedValue({ error: null });
+      mockAuthService.isCompany = vi.fn().mockReturnValue(true);
       mockCompanyDataService.isOnboardingCompleted.mockReturnValue(false);
 
       const fixture = TestBed.createComponent(AuthComponent);

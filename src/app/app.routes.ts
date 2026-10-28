@@ -35,7 +35,7 @@ import { ProfileComponent as CompanyProfileComponent } from './features/company/
 import { SettingsComponent as CompanySettingsComponent } from './features/company/settings/settings.component';
 
 import { CompanySwipeComponent } from './features/company/swipe/swipe.component';
-import { jobSeekerDashboardGuard, jobSeekerOnboardingGuard } from './core/guards/auth.guard';
+import { companyGuard, jobSeekerDashboardGuard, jobSeekerOnboardingGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -45,10 +45,11 @@ export const routes: Routes = [
   { path: 'terms-of-service', component: TermsOfServiceComponent },
   { path: 'privacy', redirectTo: 'privacy-policy', pathMatch: 'full' },
   { path: 'terms', redirectTo: 'terms-of-service', pathMatch: 'full' },
-  { path: 'company/onboarding', component: CompanyOnboardingComponent },
+  { path: 'company/onboarding', component: CompanyOnboardingComponent, canActivate: [companyGuard] },
   {
     path: 'company',
     component: CompanyLayoutComponent,
+    canActivate: [companyGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: CompanyDashboardComponent },

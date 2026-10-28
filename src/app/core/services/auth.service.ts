@@ -43,78 +43,35 @@ export class AuthService {
     const fromProfile = this.profileRole();
     if (fromProfile) return fromProfile;
     const u = this.user();
-    return (u?.user_metadata?.['role'] as UserRole) ?? null;
+    const meta = u?.user_metadata?.['role'];
+    return meta === 'job_seeker' || meta === 'company' ? meta : null;
   });
   readonly isJobSeeker = computed(() => this.userRole() === 'job_seeker');
   readonly isCompany = computed(() => this.userRole() === 'company');
   readonly isAdmin = computed(() => this.userRole() === 'admin');
 
   constructor() {
-    this.restoreCachedSession();
-
-    this.supabase.client.auth.getSession().then(({ data }) => {
-      if (data?.session) {
-        this.session.set(data.session);
-        this.user.set(data.session.user ?? null);
-        void this.refreshProfileRole(data.session.user?.id);
-      }
-      this.loading.set(false);
-    });
+    this.supabase.client.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (data?.session) {
+          await this.applySession(data.session);
+        }
+      })
+      .catch(() => {})
+      .finally(() => this.loading.set(false));
 
     this.supabase.client.auth.onAuthStateChange((_event, session) => {
-      this.session.set(session);
-      this.user.set(session?.user ?? null);
-      void this.refreshProfileRole(session?.user?.id);
-      this.loading.set(false);
+      // Not awaited: Supabase forbids awaiting other auth calls inside this callback.
+      void this.applySession(session).finally(() => this.loading.set(false));
     });
   }
 
-  private restoreCachedSession(): void {
-    try {
-      const cached = localStorage.getItem('hireswipe_auth_session');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed?.user) {
-          this.session.set(parsed);
-          this.user.set(parsed.user);
-        }
-      }
-    } catch {}
-  }
-
-  /**
-   * Sets an authenticated local session for offline/demo/testing development.
-   */
-  setDemoSession(role: UserRole, email = 'krish.developer@hireswipe.io', fullName = 'Krish Sharma', userId = 'u-101'): void {
-    const user: User = {
-      id: userId,
-      app_metadata: { provider: 'email' },
-      user_metadata: {
-        role,
-        full_name: fullName,
-        first_name: fullName.split(' ')[0] ?? '',
-        last_name: fullName.split(' ').slice(1).join(' ') || '',
-      },
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-      email,
-      phone: '',
-      role: 'authenticated',
-      updated_at: new Date().toISOString(),
-    };
-    const session: AuthSession = {
-      access_token: 'demo-token-' + Date.now(),
-      token_type: 'bearer',
-      expires_in: 3600,
-      refresh_token: 'demo-refresh-token',
-      user,
-    };
-    try {
-      localStorage.setItem('hireswipe_auth_session', JSON.stringify(session));
-    } catch {}
+  /** Single place where a real Supabase session becomes app state. */
+  private async applySession(session: AuthSession | null): Promise<void> {
     this.session.set(session);
-    this.user.set(user);
-    this.loading.set(false);
+    this.user.set(session?.user ?? null);
+    await this.refreshProfileRole(session?.user?.id);
   }
 
   /**
@@ -137,96 +94,63 @@ export class AuthService {
     this.profileRole.set(data.role as UserRole);
   }
 
+  /**
+   * Registers a user. The public.profiles row is created by the
+   * on_auth_user_created DB trigger (handle_new_user), not by the client.
+   * `needsEmailVerification` is true when Supabase created the user but issued
+   * no session (email confirmation enabled); the user is NOT signed in then.
+   */
   async signUp(
     email: string,
     password: string,
     fullName: string,
-    role: UserRole
-  ): Promise<{ error: AuthError | null }> {
+    role: Exclude<UserRole, 'admin'>
+  ): Promise<{ error: AuthError | null; needsEmailVerification?: boolean }> {
     const nameParts = fullName.trim().split(' ');
     const firstName = nameParts[0] ?? '';
     const lastName = nameParts.slice(1).join(' ') || null;
 
-    try {
-      const { data, error } = await this.supabase.client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            role,
-            first_name: firstName,
-            last_name: lastName,
-            full_name: fullName,
-          },
-        },
-      });
+    const { data, error } = await this.supabase.client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { role, first_name: firstName, last_name: lastName, full_name: fullName },
+      },
+    });
+    if (error) return { error };
 
-      if (!error && data?.session) {
-        this.session.set(data.session);
-        this.user.set(data.session.user);
-        this.loading.set(false);
-        return { error: null };
-      }
-
-      // If remote backend is unreachable, DNS unresolvable, or in demo/offline environment
-      if (
-        error ||
-        email.endsWith('@hireswipe.io') ||
-        email.endsWith('@example.com')
-      ) {
-        this.setDemoSession(role, email, fullName, 'u-' + Date.now());
-        return { error: null };
-      }
-
-      if (!error && data?.user && !data.session) {
-        this.setDemoSession(role, email, fullName, data.user.id);
-        return { error: null };
-      }
-
-      return { error };
-    } catch {
-      this.setDemoSession(role, email, fullName, 'u-' + Date.now());
-      return { error: null };
+    // Supabase returns an obfuscated user with no identities for an already-registered email.
+    if (!data?.user || data.user.identities?.length === 0) {
+      return { error: { message: 'An account with this email already exists.' } as AuthError };
     }
+
+    if (!data.session) {
+      return { error: null, needsEmailVerification: true };
+    }
+
+    await this.applySession(data.session);
+    this.loading.set(false);
+    if (!this.profileRole()) {
+      // Never report success if the trigger did not provision the profile.
+      await this.clearSession();
+      return { error: { message: 'Account was created but your profile could not be set up. Please contact support.' } as AuthError };
+    }
+    return { error: null };
   }
 
-  async signIn(
-    email: string,
-    password: string,
-    role: UserRole = 'job_seeker'
-  ): Promise<{ error: AuthError | null }> {
-    try {
-      const { data, error } = await this.supabase.client.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (!error && data?.session) {
-        this.session.set(data.session);
-        this.user.set(data.session.user);
-        this.loading.set(false);
-        return { error: null };
-      }
-
-      // If remote backend is unreachable, DNS unresolvable, demo credentials, or offline
-      if (
-        error ||
-        email.endsWith('@hireswipe.io') ||
-        email.endsWith('@example.com')
-      ) {
-        const uid = email === 'krish.developer@hireswipe.io' ? 'u-101' : ('u-' + Date.now());
-        const name = email === 'krish.developer@hireswipe.io' ? 'Krish Sharma' : (email.split('@')[0] || 'User');
-        this.setDemoSession(role, email, name, uid);
-        return { error: null };
-      }
-
-      return { error };
-    } catch {
-      const uid = email === 'krish.developer@hireswipe.io' ? 'u-101' : ('u-' + Date.now());
-      const name = email === 'krish.developer@hireswipe.io' ? 'Krish Sharma' : (email.split('@')[0] || 'User');
-      this.setDemoSession(role, email, name, uid);
-      return { error: null };
+  async signIn(email: string, password: string): Promise<{ error: AuthError | null }> {
+    const { data, error } = await this.supabase.client.auth.signInWithPassword({ email, password });
+    if (error) return { error };
+    if (!data?.session) {
+      return { error: { message: 'Sign in failed. Please try again.' } as AuthError };
     }
+    await this.applySession(data.session);
+    this.loading.set(false);
+    if (!this.profileRole()) {
+      await this.clearSession();
+      return { error: { message: 'Signed in, but your profile could not be loaded. Please try again or contact support.' } as AuthError };
+    }
+    return { error: null };
   }
 
   async signInWithGoogle(_role: UserRole): Promise<{ error: AuthError | null }> {
@@ -263,10 +187,8 @@ export class AuthService {
     return { error: null };
   }
 
-  async signOut(): Promise<void> {
-    try {
-      localStorage.removeItem('hireswipe_auth_session');
-    } catch {}
+  /** Ends the Supabase session and clears app state, without navigating. */
+  private async clearSession(): Promise<void> {
     try {
       await this.supabase.client.auth.signOut();
     } catch {}
@@ -274,6 +196,10 @@ export class AuthService {
     this.user.set(null);
     this.profileRole.set(null);
     this.loading.set(false);
+  }
+
+  async signOut(): Promise<void> {
+    await this.clearSession();
     this.router.navigate(['/']);
   }
 
