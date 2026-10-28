@@ -55,6 +55,7 @@ describe('Job Seeker Onboarding Access Control & Authentication Redirection (Pha
     mockCompanyDataService = {
       isOnboardingCompleted: vi.fn(),
       setOnboardingCompleted: vi.fn(),
+      initialize: vi.fn().mockResolvedValue(undefined),
     };
 
     mockRouter = {

@@ -45,6 +45,7 @@ describe('HireSwipe Application & Authentication', () => {
     mockCompanyDataService = {
       isOnboardingCompleted: vi.fn(() => false),
       setOnboardingCompleted: vi.fn(),
+      initialize: vi.fn().mockResolvedValue(undefined),
     };
 
     await TestBed.configureTestingModule({
@@ -169,6 +170,118 @@ describe('HireSwipe Application & Authentication', () => {
 
       await fixture.whenStable();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/company/onboarding']);
+    });
+
+    it('shows the auth error and clears loading when sign-in fails', async () => {
+      mockAuthService.signIn.mockResolvedValue({ error: { message: 'Invalid login credentials' } });
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      component.loginForm.patchValue({ email: 'a@b.co', password: 'password123' });
+
+      await component.onSubmit();
+      fixture.detectChanges();
+
+      expect(component.authError).toBe('Invalid login credentials');
+      expect(component.loading).toBe(false);
+      expect(fixture.nativeElement.querySelector('.error-banner')?.textContent).toContain('Invalid login credentials');
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
+    });
+
+    it('shows an error and clears loading when sign-in throws (network failure)', async () => {
+      mockAuthService.signIn.mockRejectedValue(new TypeError('fetch failed'));
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      component.loginForm.patchValue({ email: 'a@b.co', password: 'password123' });
+
+      await component.onSubmit();
+
+      expect(component.authError).toBe('fetch failed');
+      expect(component.loading).toBe(false);
+    });
+
+    it('routes by the stored profile role, not the selected tab', async () => {
+      mockAuthService.signIn.mockResolvedValue({ error: null });
+      mockAuthService.isCompany = vi.fn().mockReturnValue(true);
+      mockAuthService.getCurrentUserId = vi.fn(() => 'u-1');
+      mockCompanyDataService.isOnboardingCompleted.mockReturnValue(true);
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      component.loginForm.patchValue({ email: 'a@b.co', password: 'password123' }); // job-seeker tab selected
+
+      await component.onSubmit();
+
+      expect(mockCompanyDataService.initialize).toHaveBeenCalledWith('u-1');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/company/dashboard']);
+    });
+
+    it.each([
+      ['jobseeker', 'job_seeker', '/job-seeker/onboarding'],
+      ['company', 'company', '/company/onboarding'],
+    ])('signup on the %s tab requests role %s and goes to onboarding', async (tab, role, route) => {
+      mockAuthService.signUp.mockResolvedValue({ error: null });
+      mockAuthService.isCompany = vi.fn().mockReturnValue(role === 'company');
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      component.setRole(tab as any);
+      component.setMode('signup');
+      component.signupForm.patchValue({ fullName: 'Al Ex', email: 'a@b.co', password: 'password123', confirmPassword: 'password123', termsAccepted: true });
+
+      await component.onSubmit();
+
+      expect(mockAuthService.signUp).toHaveBeenCalledWith('a@b.co', 'password123', 'Al Ex', role);
+      expect(mockRouter.navigate).toHaveBeenCalledWith([route]);
+    });
+
+    it('signup routes by the stored profile role even if the company tab was selected', async () => {
+      mockAuthService.signUp.mockResolvedValue({ error: null });
+      mockAuthService.isCompany = vi.fn().mockReturnValue(false);
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      component.setRole('company');
+      component.setMode('signup');
+      component.signupForm.patchValue({ fullName: 'Al Ex', email: 'a@b.co', password: 'password123', confirmPassword: 'password123', termsAccepted: true });
+
+      await component.onSubmit();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/job-seeker/onboarding']);
+    });
+
+    it('ignores a duplicate submit while a request is in flight', async () => {
+      let release!: (v: any) => void;
+      mockAuthService.signIn.mockReturnValue(new Promise((r) => (release = r)));
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      component.loginForm.patchValue({ email: 'a@b.co', password: 'password123' });
+
+      const first = component.onSubmit();
+      expect(component.loading).toBe(true);
+      await component.onSubmit();
+      expect(mockAuthService.signIn).toHaveBeenCalledTimes(1);
+
+      release({ error: { message: 'nope' } });
+      await first;
+      expect(component.loading).toBe(false);
+      expect(component.authError).toBe('nope');
+    });
+
+    it('signup with email verification pending shows a message and does not navigate', async () => {
+      mockAuthService.signUp.mockResolvedValue({ error: null, needsEmailVerification: true });
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+      component.setMode('signup');
+      component.signupForm.patchValue({ fullName: 'Al Ex', email: 'a@b.co', password: 'password123', confirmPassword: 'password123', termsAccepted: true });
+
+      await component.onSubmit();
+
+      expect(component.successMessage).toMatch(/verification link/);
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
 
     it('should validate password mismatch in signup form', () => {

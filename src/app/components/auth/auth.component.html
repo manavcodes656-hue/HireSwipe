@@ -191,7 +191,7 @@
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" class="submit-btn" id="login-submit-btn">
+          <button type="submit" class="submit-btn" id="login-submit-btn" [disabled]="loading" [attr.aria-busy]="loading">
             <span>Sign In</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -345,7 +345,7 @@
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" class="submit-btn" id="signup-submit-btn">
+          <button type="submit" class="submit-btn" id="signup-submit-btn" [disabled]="loading" [attr.aria-busy]="loading">
             <span>{{ role === 'jobseeker' ? 'Create Account' : 'Create Company Account' }}</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="5" y1="12" x2="19" y2="12"></line>

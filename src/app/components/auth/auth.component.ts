@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -61,8 +61,16 @@ export class AuthComponent implements OnInit, OnDestroy {
   signupForm!: FormGroup;
 
   submitted = false;
-  successMessage = '';
-  authError = '';
+
+  // The app is zoneless: state set after an await only re-renders if it is a signal.
+  private readonly _successMessage = signal('');
+  private readonly _authError = signal('');
+  private readonly _loading = signal(false);
+  get successMessage(): string { return this._successMessage(); }
+  set successMessage(v: string) { this._successMessage.set(v); }
+  get authError(): string { return this._authError(); }
+  set authError(v: string) { this._authError.set(v); }
+  get loading(): boolean { return this._loading(); }
 
   // Stacked Card Rotation State
   activeCompanyIndex = 0;
@@ -335,6 +343,7 @@ export class AuthComponent implements OnInit, OnDestroy {
   }
 
   async onSubmit(): Promise<void> {
+    if (this._loading()) return;
     this.submitted = true;
     this.authError = '';
     this.successMessage = '';
@@ -346,53 +355,56 @@ export class AuthComponent implements OnInit, OnDestroy {
 
     const formVal = this.currentForm.value;
     const isCompany = this.role === 'company';
+    this._loading.set(true);
 
-    if (this.mode === 'login') {
-      void this.authService.signIn(formVal.email, formVal.password).then(
-        ({ error }) => {
-          if (error) {
-            this.authError = error.message ?? 'Sign in failed. Please check your credentials and try again.';
-            return;
-          }
-          // Route by the real (profile) role, not the tab the user happened to pick.
-          const actuallyCompany = this.authService.isCompany();
-          this.successMessage = `Signed in successfully as ${actuallyCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
-          void this.navigateAfterLogin(actuallyCompany);
-        },
-        (err) => {
-          this.authError = err?.message ?? 'Sign in failed. Please try again.';
+    try {
+      if (this.mode === 'login') {
+        const { error } = await this.authService.signIn(formVal.email, formVal.password);
+        if (error) {
+          this.authError = error.message ?? 'Sign in failed. Please check your credentials and try again.';
+          return;
         }
-      );
-    } else {
-      const authRole: UserRole = isCompany ? 'company' : 'job_seeker';
-      void this.authService.signUp(formVal.email, formVal.password, formVal.fullName, authRole).then(
-        ({ error, needsEmailVerification }) => {
-          if (error) {
-            this.authError = error.message ?? 'Account creation failed. Please try again.';
-            return;
-          }
-          if (needsEmailVerification) {
-            this.successMessage = `Account created. Check ${formVal.email} for a verification link, then sign in to continue.`;
-            return;
-          }
-          this.successMessage = `Account created successfully as ${isCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
-          if (isCompany) {
-            this.companyDataService.setOnboardingCompleted(false);
-            this.router.navigate(['/company/onboarding']);
-          } else {
-            this.jobSeekerService.setOnboardingCompleted(false);
-            this.router.navigate(['/job-seeker/onboarding']);
-          }
-        },
-        (err) => {
-          this.authError = err?.message ?? 'Account creation failed. Please try again.';
+        // Route by the real (profile) role, not the tab the user happened to pick.
+        const actuallyCompany = this.authService.isCompany();
+        this.successMessage = `Signed in successfully as ${actuallyCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
+        await this.navigateAfterLogin(actuallyCompany);
+      } else {
+        const authRole: UserRole = isCompany ? 'company' : 'job_seeker';
+        const { error, needsEmailVerification } = await this.authService.signUp(
+          formVal.email, formVal.password, formVal.fullName, authRole
+        );
+        if (error) {
+          this.authError = error.message ?? 'Account creation failed. Please try again.';
+          return;
         }
-      );
+        if (needsEmailVerification) {
+          this.successMessage = `Account created. Check ${formVal.email} for a verification link, then sign in to continue.`;
+          return;
+        }
+        // Use the role stored in public.profiles, not the tab that was selected.
+        const actuallyCompany = this.authService.isCompany();
+        this.successMessage = `Account created successfully as ${actuallyCompany ? 'Company' : 'Job Seeker'} (${formVal.email}). Redirecting...`;
+        if (actuallyCompany) {
+          this.companyDataService.setOnboardingCompleted(false);
+          this.router.navigate(['/company/onboarding']);
+        } else {
+          this.jobSeekerService.setOnboardingCompleted(false);
+          this.router.navigate(['/job-seeker/onboarding']);
+        }
+      }
+    } catch (err) {
+      this.successMessage = '';
+      this.authError = (err as Error)?.message || 'Something went wrong. Please try again.';
+    } finally {
+      this._loading.set(false);
     }
   }
 
   private async navigateAfterLogin(isCompany: boolean): Promise<void> {
     if (isCompany) {
+      // Load the company first: the onboarding flag is unknown until it is loaded.
+      const userId = this.authService.getCurrentUserId();
+      if (userId) await this.companyDataService.initialize(userId);
       if (this.companyDataService.isOnboardingCompleted()) {
         this.router.navigate(['/company/dashboard']);
       } else {
