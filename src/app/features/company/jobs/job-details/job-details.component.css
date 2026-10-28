@@ -226,3 +226,18 @@
   color: var(--muted);
   margin-top: 0.5rem;
 }
+
+.meta-icon {
+  color: var(--accent);
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 4px;
+}
+
+.ben-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
