@@ -1552,18 +1552,8 @@ export class JobSeekerService {
     professional: Partial<JobSeekerProfile>;
     preferences: Partial<JobSeekerPreference>;
   }): Promise<{ success: boolean; error?: string }> {
-    const isNetworkError = (errString?: string | null): boolean => {
-      const lower = (errString || '').toLowerCase();
-      return (
-        lower.includes('fetch') ||
-        lower.includes('network') ||
-        lower.includes('timeout') ||
-        lower.includes('unreachable') ||
-        lower.includes('connection')
-      );
-    };
-
-    const withTimeout = <T>(promise: Promise<T>, timeoutMs = 2500): Promise<T> => {
+    // A timeout or network failure is a real failure: never report success for unsaved data.
+    const withTimeout = <T>(promise: Promise<T>, timeoutMs = 20000): Promise<T> => {
       return Promise.race([
         promise,
         new Promise<never>((_, reject) =>
@@ -1597,15 +1587,10 @@ export class JobSeekerService {
           avatar_url: data.personal.avatar_url !== undefined ? data.personal.avatar_url : this.profile().avatar_url,
         }));
         if (profileRes?.error) {
-          if (!isNetworkError(profileRes.error)) {
-            throw new Error(`Failed to save personal profile: ${profileRes.error}`);
-          }
+          throw new Error(`Failed to save personal profile: ${profileRes.error}`);
         }
       } catch (err: any) {
-        if (!isNetworkError(err?.message)) {
-          throw err;
-        }
-        console.warn('[JobSeekerService] Profile update offline fallback:', err?.message);
+        throw err;
       }
 
       // 2. Persist parent public.job_seeker_profiles record
@@ -1633,9 +1618,7 @@ export class JobSeekerService {
       try {
         const jspRes = await withTimeout(this.jspService.upsertJobSeekerProfile(profId, jspPayload));
         if (jspRes?.error) {
-          if (!isNetworkError(jspRes.error)) {
-            throw new Error(`Failed to save professional profile: ${jspRes.error}`);
-          }
+          throw new Error(`Failed to save professional profile: ${jspRes.error}`);
         } else if (jspRes?.data?.id) {
           jobSeekerId = jspRes.data.id;
           this.jobSeekerProfile.update((item) => ({
@@ -1646,10 +1629,11 @@ export class JobSeekerService {
           }));
         }
       } catch (err: any) {
-        if (!isNetworkError(err?.message)) {
-          throw err;
-        }
-        console.warn('[JobSeekerService] JSP upsert offline fallback:', err?.message);
+        throw err;
+      }
+
+      if (!jobSeekerId || jobSeekerId === 'jsp-101') {
+        throw new Error('Your candidate profile could not be saved. Please try again.');
       }
 
       // 3. Flush pending education records
@@ -1670,11 +1654,11 @@ export class JobSeekerService {
                 this.educationList.update((list) =>
                   list.map((e) => (e.id === edu.id ? { ...e, id: eduRes.data!.id } : e))
                 );
-              } else if (eduRes?.error && !isNetworkError(eduRes.error)) {
+              } else if (eduRes?.error) {
                 throw new Error(`Failed to save education: ${eduRes.error}`);
               }
             } catch (err: any) {
-              if (!isNetworkError(err?.message)) throw err;
+              throw err;
             }
           }
         }
@@ -1701,11 +1685,11 @@ export class JobSeekerService {
                 this.experienceList.update((list) =>
                   list.map((ex) => (ex.id === exp.id ? { ...ex, id: expRes.data!.id } : ex))
                 );
-              } else if (expRes?.error && !isNetworkError(expRes.error)) {
+              } else if (expRes?.error) {
                 throw new Error(`Failed to save experience: ${expRes.error}`);
               }
             } catch (err: any) {
-              if (!isNetworkError(err?.message)) throw err;
+              throw err;
             }
           }
         }
@@ -1725,14 +1709,14 @@ export class JobSeekerService {
                 );
               }
             } catch (err: any) {
-              if (!isNetworkError(err?.message)) throw err;
+              throw err;
             }
           }
           if (skillId && !skillId.startsWith('sk-')) {
             try {
               await withTimeout(this.jspService.addUserSkill(jobSeekerId, skillId, s.proficiency_level as any, s.years_experience ?? undefined));
             } catch (err: any) {
-              if (!isNetworkError(err?.message)) throw err;
+              throw err;
             }
           }
         }
@@ -1754,11 +1738,11 @@ export class JobSeekerService {
             preferred_industries: data.preferences.preferred_industries ?? null,
             willing_to_relocate: data.preferences.willing_to_relocate ?? false,
           }));
-          if (prefRes?.error && !isNetworkError(prefRes.error)) {
+          if (prefRes?.error) {
             throw new Error(`Failed to save job preferences: ${prefRes.error}`);
           }
         } catch (err: any) {
-          if (!isNetworkError(err?.message)) throw err;
+          throw err;
         }
       }
 
@@ -1769,11 +1753,11 @@ export class JobSeekerService {
           onboarding_completed: true,
           profile_completion_pct: finalProgress,
         } as any));
-        if (completionRes?.error && !isNetworkError(completionRes.error)) {
+        if (completionRes?.error) {
           throw new Error(`Failed to mark onboarding completed: ${completionRes.error}`);
         }
       } catch (err: any) {
-        if (!isNetworkError(err?.message)) throw err;
+        throw err;
       }
 
       // 8. Update in-memory state and cache

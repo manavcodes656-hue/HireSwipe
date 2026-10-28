@@ -23,11 +23,20 @@ export class OnboardingComponent implements OnInit {
   fb = inject(FormBuilder);
   router = inject(Router);
 
-  currentStep = 1;
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _currentStep = signal<number>(1);
+  get currentStep(): number { return this._currentStep(); }
+  set currentStep(v: number) { this._currentStep.set(v); }
   totalSteps = 6;
 
-  isSubmitting = false;
-  errorMessage: string | null = null;
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _isSubmitting = signal<boolean>(false);
+  get isSubmitting(): boolean { return this._isSubmitting(); }
+  set isSubmitting(v: boolean) { this._isSubmitting.set(v); }
+  // Zoneless app: values set after an await only re-render when they are signals.
+  private readonly _errorMessage = signal<string | null>(null);
+  get errorMessage(): string | null { return this._errorMessage(); }
+  set errorMessage(v: string | null) { this._errorMessage.set(v); }
   saveSuccessMessage = signal<string>('');
 
   // Step 1: Personal Details & Contact
