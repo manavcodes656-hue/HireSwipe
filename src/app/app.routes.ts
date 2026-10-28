@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { LandingComponent } from './components/landing/landing.component';
 import { AuthComponent } from './components/auth/auth.component';
+import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy.component';
+import { TermsOfServiceComponent } from './components/terms-of-service/terms-of-service.component';
 
 // Job Seeker Imports
 import { JobSeekerLayoutComponent } from './features/job-seeker/layout/job-seeker-layout.component';
@@ -39,6 +41,10 @@ export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: AuthComponent },
   { path: 'signup', component: AuthComponent },
+  { path: 'privacy-policy', component: PrivacyPolicyComponent },
+  { path: 'terms-of-service', component: TermsOfServiceComponent },
+  { path: 'privacy', redirectTo: 'privacy-policy', pathMatch: 'full' },
+  { path: 'terms', redirectTo: 'terms-of-service', pathMatch: 'full' },
   { path: 'company/onboarding', component: CompanyOnboardingComponent },
   {
     path: 'company',
