@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CompanyDataService } from '../../features/company/services/company-data.service';
 import { JobSeekerService } from '../../features/job-seeker/services/job-seeker.service';
 import { AuthService, UserRole } from '../../core/services/auth.service';
+import { CarouselAutoplayController } from '../../core/services/carousel-autoplay.service';
 
 export type AuthRole = 'jobseeker' | 'company';
 export type AuthMode = 'login' | 'signup';
@@ -73,13 +74,13 @@ export class AuthComponent implements OnInit, OnDestroy {
   get loading(): boolean { return this._loading(); }
 
   // Stacked Card Rotation State
-  activeCompanyIndex = 0;
-  activeCandidateIndex = 0;
+  readonly activeCompanyIndex = signal(0);
+  readonly activeCandidateIndex = signal(0);
   readonly stackIndices = [0, 1, 2, 3, 4];
-  private autoCycleTimer: any = null;
+  private autoplay: CarouselAutoplayController | null = null;
 
   get activeCardIndex(): number {
-    return this.role === 'jobseeker' ? this.activeCompanyIndex : this.activeCandidateIndex;
+    return this.role === 'jobseeker' ? this.activeCompanyIndex() : this.activeCandidateIndex();
   }
 
   companyCards: CompanyCard[] = [
@@ -219,12 +220,17 @@ export class AuthComponent implements OnInit, OnDestroy {
     private router: Router,
     private companyDataService: CompanyDataService,
     private jobSeekerService: JobSeekerService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.initForms();
-    this.startAutoCycle();
+    this.autoplay = new CarouselAutoplayController({
+      intervalMs: 5000,
+      onAdvance: (steps) => this.advanceCards(steps),
+    });
+    this.autoplay.start();
 
     this.route.url.subscribe((segments) => {
       if (segments.length > 0) {
@@ -253,47 +259,63 @@ export class AuthComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.stopAutoCycle();
+    this.autoplay?.destroy();
+  }
+
+  advanceCards(steps: number = 1): void {
+    if (this.role === 'jobseeker') {
+      this.activeCompanyIndex.update((curr) => (curr + steps) % this.companyCards.length);
+    } else {
+      this.activeCandidateIndex.update((curr) => (curr + steps) % this.candidateCards.length);
+    }
+    this.cdr.markForCheck();
   }
 
   startAutoCycle(): void {
-    this.stopAutoCycle();
-    this.autoCycleTimer = setInterval(() => {
-      if (this.role === 'jobseeker') {
-        this.nextCompanyCard();
-      } else {
-        this.nextCandidateCard();
-      }
-    }, 3800);
+    this.autoplay?.setHover(false);
   }
 
   stopAutoCycle(): void {
-    if (this.autoCycleTimer) {
-      clearInterval(this.autoCycleTimer);
-      this.autoCycleTimer = null;
+    this.autoplay?.setHover(true);
+  }
+
+  nextCompanyCard(steps: number = 1): void {
+    this.advanceCards(steps);
+  }
+
+  nextCandidateCard(steps: number = 1): void {
+    this.advanceCards(steps);
+  }
+
+  goToCard(index: number): void {
+    if (this.role === 'jobseeker') {
+      this.activeCompanyIndex.set(index % this.companyCards.length);
+    } else {
+      this.activeCandidateIndex.set(index % this.candidateCards.length);
     }
+    this.autoplay?.reset();
+    this.cdr.markForCheck();
   }
 
-  nextCompanyCard(): void {
-    this.activeCompanyIndex = (this.activeCompanyIndex + 1) % this.companyCards.length;
-  }
-
-  nextCandidateCard(): void {
-    this.activeCandidateIndex = (this.activeCandidateIndex + 1) % this.candidateCards.length;
+  onMockSwipe(): void {
+    this.advanceCards(1);
+    this.autoplay?.reset();
   }
 
   getVisibleCompanyCards(): { card: CompanyCard; pos: number }[] {
     const total = this.companyCards.length;
+    const current = this.activeCompanyIndex();
     return [0, 1, 2].map((offset) => ({
-      card: this.companyCards[(this.activeCompanyIndex + offset) % total],
+      card: this.companyCards[(current + offset) % total],
       pos: offset,
     }));
   }
 
   getVisibleCandidateCards(): { card: CandidateCard; pos: number }[] {
     const total = this.candidateCards.length;
+    const current = this.activeCandidateIndex();
     return [0, 1, 2].map((offset) => ({
-      card: this.candidateCards[(this.activeCandidateIndex + offset) % total],
+      card: this.candidateCards[(current + offset) % total],
       pos: offset,
     }));
   }
@@ -323,6 +345,8 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.submitted = false;
     this.successMessage = '';
     this.resetForms();
+    this.autoplay?.reset();
+    this.cdr.markForCheck();
   }
 
   setMode(newMode: AuthMode): void {
