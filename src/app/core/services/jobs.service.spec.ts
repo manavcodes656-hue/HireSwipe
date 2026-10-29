@@ -244,6 +244,85 @@ describe('JobsService — Backend Integration Tests', () => {
     });
   });
 
+  describe('POST /api/company/jobs error messages', () => {
+    it('names the invalid fields of a validation error', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const promise = service.createJob(companyId, 'user-uuid-123', { title: 'x' });
+      await new Promise((r) => setTimeout(r, 5));
+
+      httpMock.expectOne(`${apiUrl}/company/jobs`).flush(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            fields: { salary_max: 'cannot be less than salary_min', application_deadline: 'must be a valid date' },
+          },
+        },
+        { status: 400, statusText: 'Bad Request' }
+      );
+
+      const result = await promise;
+      expect(result.jobId).toBeNull();
+      expect(result.error).toBe(
+        'Invalid request body: salary_max cannot be less than salary_min; application_deadline must be a valid date'
+      );
+    });
+
+    it('falls back to a direct, RLS-protected Supabase insert when the API is unreachable', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const insert = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: jobId }, error: null }) }),
+      });
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({ insert });
+
+      const promise = service.createJob(companyId, 'user-uuid-123', {
+        title: 'x', status: 'active', requirements: ['a'], skills: [{ skill_name: 'Angular' }], bogus: 1,
+      });
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(`${apiUrl}/company/jobs`).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+      expect(await promise).toEqual({ jobId, error: null });
+      expect(mockSupabaseService.client.from).toHaveBeenCalledWith('jobs');
+      const inserted = insert.mock.calls[0][0];
+      expect(inserted).toMatchObject({ title: 'x', status: 'published', company_id: companyId, created_by: 'user-uuid-123' });
+      expect(inserted.requirements).toBeUndefined();
+      expect(inserted.skills).toBeUndefined();
+      expect(inserted.bogus).toBeUndefined();
+    });
+
+    it('reports the database error when the fallback insert is also refused', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: { message: 'new row violates row-level security policy' } }),
+          }),
+        }),
+      });
+
+      const promise = service.createJob(companyId, 'user-uuid-123', { title: 'x' });
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(`${apiUrl}/company/jobs`).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+      const result = await promise;
+      expect(result.jobId).toBeNull();
+      expect(result.error).toContain('row-level security');
+    });
+
+    it('passes through the membership rejection from the API', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const promise = service.createJob(companyId, 'user-uuid-123', { title: 'x' });
+      await new Promise((r) => setTimeout(r, 5));
+
+      httpMock.expectOne(`${apiUrl}/company/jobs`).flush(
+        { error: { code: 'FORBIDDEN', message: 'Must be an active company member to post jobs' } },
+        { status: 403, statusText: 'Forbidden' }
+      );
+
+      expect((await promise).error).toBe('Must be an active company member to post jobs');
+    });
+  });
+
   describe('PATCH /api/company/jobs/:jobId', () => {
     it('updates a job with sanitized fields and sends the Bearer token', async () => {
       const updates = {

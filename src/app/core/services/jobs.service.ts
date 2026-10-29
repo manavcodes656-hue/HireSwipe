@@ -78,6 +78,20 @@ export class JobsService {
     return headers;
   }
 
+  /**
+   * User-facing text for a failed backend call: the API message plus the offending
+   * fields of a validation error (e.g. "Invalid request body: salary_max cannot be less than salary_min").
+   */
+  private backendErrorMessage(err: any, fallback: string): string {
+    const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
+    const fields =
+      backendError?.fields && typeof backendError.fields === 'object'
+        ? Object.entries(backendError.fields).map(([name, problem]) => `${name} ${problem}`).join('; ')
+        : '';
+    if (backendError?.message) return fields ? `${backendError.message}: ${fields}` : backendError.message;
+    return err?.message || fallback;
+  }
+
   private sanitizeJobPayload(jobData: any): Record<string, any> {
     if (!jobData || typeof jobData !== 'object') return {};
     const payload: Record<string, any> = {};
@@ -208,7 +222,8 @@ export class JobsService {
         this.http.post<CompanyJobResponse>(`${this.apiUrl}/company/jobs`, payload, { headers })
       );
       return { jobId: response.job?.id ?? null, error: null };
-    } catch (err: any) {      if (err instanceof HttpErrorResponse && err.status === 0) {
+    } catch (err: any) {
+      if (err instanceof HttpErrorResponse && err.status === 0) {
         console.warn('[JobsService] createJob: backend unreachable, falling back to direct Supabase insert.');
         const insertPayload: Record<string, any> = {
           ...this.sanitizeJobPayload(jobData),
@@ -232,9 +247,7 @@ export class JobsService {
         return { jobId: data.id, error: null };
       }
 
-
-      const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
-      const message = backendError?.message || err.message || 'Failed to create job';
+      const message = this.backendErrorMessage(err, 'Failed to create job');
       console.error('[JobsService] createJob error:', message);
       return { jobId: null, error: message };
     }
@@ -254,7 +267,8 @@ export class JobsService {
         this.http.patch<CompanyJobResponse>(`${this.apiUrl}/company/jobs/${jobId}`, payload, { headers })
       );
       return { error: null };
-    } catch (err: any) {      if (err instanceof HttpErrorResponse && err.status === 0) {
+    } catch (err: any) {
+      if (err instanceof HttpErrorResponse && err.status === 0) {
         console.warn('[JobsService] updateJob: backend unreachable, falling back to direct Supabase update.');
         const updatePayload: Record<string, any> = { ...this.sanitizeJobPayload(updates) };
         delete updatePayload['requirements'];
@@ -273,9 +287,7 @@ export class JobsService {
         return { error: null };
       }
 
-
-      const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
-      const message = backendError?.message || err.message || 'Failed to update job';
+      const message = this.backendErrorMessage(err, 'Failed to update job');
       console.error('[JobsService] updateJob error:', message);
       return { error: message };
     }
@@ -428,4 +440,3 @@ export class JobsService {
     return { error: null };
   }
 }
-
