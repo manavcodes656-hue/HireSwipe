@@ -15,12 +15,13 @@
         *ngFor="let s of [1, 2, 3, 4, 5, 6]"
         class="step-item"
         [class.active]="currentStep === s"
-        [class.completed]="currentStep > s"
+        [class.completed]="isStepCompleted(s)"
+        [class.disabled]="!canNavigateToStep(s)"
         (click)="goToStep(s)"
       >
         <div class="step-num">
-          <span *ngIf="currentStep <= s">{{ s }}</span>
-          <svg *ngIf="currentStep > s" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span *ngIf="!isStepCompleted(s)">{{ s }}</span>
+          <svg *ngIf="isStepCompleted(s)" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <span class="step-title">
           {{ s === 1 ? 'Info' : s === 2 ? 'Culture' : s === 3 ? 'Branding' : s === 4 ? 'Recruiter' : s === 5 ? 'Review' : 'Complete' }}
@@ -54,6 +55,7 @@
             <option value="" disabled>Select Industry</option>
             <option *ngFor="let ind of industries" [value]="ind">{{ ind }}</option>
           </select>
+          <span class="err-text" *ngIf="step1Form.get('industry')?.touched && step1Form.get('industry')?.invalid">Industry is required.</span>
         </div>
 
         <div class="form-group">
@@ -62,52 +64,61 @@
             <option value="" disabled>Select Size</option>
             <option *ngFor="let sz of companySizes" [value]="sz">{{ sz }} employees</option>
           </select>
+          <span class="err-text" *ngIf="step1Form.get('size')?.touched && step1Form.get('size')?.invalid">Company size is required.</span>
         </div>
 
         <div class="form-group">
           <label>Founded Year *</label>
           <input type="number" formControlName="founded_year" placeholder="e.g. 2019" />
+          <span class="err-text" *ngIf="step1Form.get('founded_year')?.touched && step1Form.get('founded_year')?.invalid">Valid founded year (1800–2026) is required.</span>
         </div>
 
         <div class="form-group">
           <label>Website URL *</label>
           <input type="url" formControlName="website" placeholder="https://company.com" />
+          <span class="err-text" *ngIf="step1Form.get('website')?.touched && step1Form.get('website')?.invalid">Valid website URL (http:// or https://) is required.</span>
         </div>
 
         <div class="form-group">
           <label>Work Email *</label>
           <input type="email" formControlName="email" placeholder="recruiting@company.com" />
+          <span class="err-text" *ngIf="step1Form.get('email')?.touched && step1Form.get('email')?.invalid">Valid work email is required.</span>
         </div>
 
         <div class="form-group">
           <label>Phone Number *</label>
           <input type="tel" formControlName="phone" placeholder="+91 98765 43210" />
+          <span class="err-text" *ngIf="step1Form.get('phone')?.touched && step1Form.get('phone')?.invalid">Phone number is required.</span>
         </div>
 
         <div class="form-group">
           <label>City *</label>
           <input type="text" formControlName="city" placeholder="Bengaluru" />
+          <span class="err-text" *ngIf="step1Form.get('city')?.touched && step1Form.get('city')?.invalid">City is required.</span>
         </div>
 
         <div class="form-group">
           <label>State *</label>
           <input type="text" formControlName="state" placeholder="Karnataka" />
+          <span class="err-text" *ngIf="step1Form.get('state')?.touched && step1Form.get('state')?.invalid">State is required.</span>
         </div>
 
         <div class="form-group">
           <label>Country *</label>
           <input type="text" formControlName="country" placeholder="India" />
+          <span class="err-text" *ngIf="step1Form.get('country')?.touched && step1Form.get('country')?.invalid">Country is required.</span>
         </div>
 
         <div class="form-group col-span-2">
           <label>Primary Location Display *</label>
           <input type="text" formControlName="location" placeholder="Bengaluru, India" />
+          <span class="err-text" *ngIf="step1Form.get('location')?.touched && step1Form.get('location')?.invalid">Location display is required.</span>
         </div>
       </div>
 
       <div class="step-actions">
-        <button type="button" class="btn-secondary" routerLink="/company/dashboard">Cancel</button>
-        <button type="submit" class="btn-primary">Continue to Step 2 →</button>
+        <button type="button" class="btn-secondary" routerLink="/">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="isSaving">{{ isSaving ? 'Saving…' : 'Continue to Step 2 →' }}</button>
       </div>
     </form>
 
@@ -122,6 +133,7 @@
         <div class="form-group">
           <label>About Company (Overview) *</label>
           <textarea rows="4" formControlName="description" placeholder="Describe what your company builds, products, and core technology stack..."></textarea>
+          <span class="err-text" *ngIf="step2Form.get('description')?.touched && step2Form.get('description')?.invalid">Company description is required (minimum 20 characters).</span>
         </div>
 
         <p class="form-note" role="note">Culture, mission and values are not stored yet (no database fields). They are optional for now.</p>
@@ -144,7 +156,7 @@
 
       <div class="step-actions">
         <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
-        <button type="submit" class="btn-primary">Continue to Branding →</button>
+        <button type="submit" class="btn-primary" [disabled]="isSaving">{{ isSaving ? 'Saving…' : 'Continue to Branding →' }}</button>
       </div>
     </form>
 
@@ -214,7 +226,7 @@
 
       <div class="step-actions">
         <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
-        <button type="button" class="btn-primary" (click)="nextStep()">Continue to Recruiter Info →</button>
+        <button type="button" class="btn-primary" (click)="nextStep()" [disabled]="isSaving">{{ isSaving ? 'Saving…' : 'Continue to Recruiter Info →' }}</button>
       </div>
     </div>
 
@@ -229,16 +241,19 @@
         <div class="form-group col-span-2">
           <label>Full Name *</label>
           <input type="text" formControlName="full_name" placeholder="Kshitij Sharma" />
+          <span class="err-text" *ngIf="step4Form.get('full_name')?.touched && step4Form.get('full_name')?.invalid">Full name is required.</span>
         </div>
 
         <div class="form-group">
           <label>Work Email *</label>
           <input type="email" formControlName="email" placeholder="kshitij@company.com" />
+          <span class="err-text" *ngIf="step4Form.get('email')?.touched && step4Form.get('email')?.invalid">Valid work email is required.</span>
         </div>
 
         <div class="form-group">
           <label>Phone Number *</label>
           <input type="tel" formControlName="phone" placeholder="+91 98765 43210" />
+          <span class="err-text" *ngIf="step4Form.get('phone')?.touched && step4Form.get('phone')?.invalid">Phone number is required.</span>
         </div>
       </div>
 
@@ -253,11 +268,12 @@
             </div>
           </label>
         </div>
+        <span class="err-text" *ngIf="step4Form.get('role')?.touched && step4Form.get('role')?.invalid">Recruiter role is required.</span>
       </div>
 
       <div class="step-actions">
         <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
-        <button type="submit" class="btn-primary">Review All Details →</button>
+        <button type="submit" class="btn-primary" [disabled]="isSaving">{{ isSaving ? 'Saving…' : 'Review All Details →' }}</button>
       </div>
     </form>
 
@@ -313,14 +329,14 @@
 
       <div class="step-actions">
         <button type="button" class="btn-secondary" (click)="prevStep()">← Back</button>
-        <button type="button" class="btn-primary" (click)="finishOnboarding()" [disabled]="isSaving">
-          {{ isSaving ? 'Saving…' : 'Complete Onboarding & Save ✓' }}
+        <button type="button" class="btn-primary" (click)="nextStep()" [disabled]="isSaving">
+          {{ isSaving ? 'Saving…' : 'Proceed to Completion →' }}
         </button>
       </div>
     </div>
 
     <!-- STEP 6: Completion -->
-    <div *ngIf="currentStep === 6 || completionPercentage === 100" class="step-content text-center">
+    <div *ngIf="currentStep === 6" class="step-content text-center">
       <div class="completion-box">
         <div class="success-ring">✓</div>
         <h3>Company Profile Complete!</h3>
@@ -357,7 +373,7 @@
               <h5>Invite Team</h5>
               <p>Add hiring managers and recruiters to your dashboard.</p>
             </a>
-            <a routerLink="/company/dashboard" class="ns-card">
+            <a (click)="finishAndGoToDashboard()" class="ns-card" style="cursor: pointer;">
               <span class="ns-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="7" height="7"/>
@@ -374,7 +390,9 @@
       </div>
 
       <div class="step-actions center">
-        <button type="button" class="btn-primary lg" routerLink="/company/dashboard">Go to Company Dashboard →</button>
+        <button type="button" class="btn-primary lg" (click)="finishAndGoToDashboard()" [disabled]="isSaving">
+          {{ isSaving ? 'Finalizing…' : 'Go to Company Dashboard →' }}
+        </button>
       </div>
     </div>
   </div>

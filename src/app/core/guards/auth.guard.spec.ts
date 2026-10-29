@@ -5,17 +5,21 @@ import {
   authGuard,
   jobSeekerGuard,
   companyGuard,
+  companyDashboardGuard,
+  companyOnboardingGuard,
   guestGuard,
   jobSeekerDashboardGuard,
   jobSeekerOnboardingGuard,
 } from './auth.guard';
 import { AuthService } from '../services/auth.service';
 import { JobSeekerService } from '../../features/job-seeker/services/job-seeker.service';
+import { CompanyDataService } from '../../features/company/services/company-data.service';
 import { signal } from '@angular/core';
 
 describe('Security Route Guards (Phase 3)', () => {
   let mockAuthService: any;
   let mockJobSeekerService: any;
+  let mockCompanyDataService: any;
   let mockRouter: any;
 
   beforeEach(() => {
@@ -37,6 +41,12 @@ describe('Security Route Guards (Phase 3)', () => {
       resetState: vi.fn(),
     };
 
+    mockCompanyDataService = {
+      loading: vi.fn().mockReturnValue(false),
+      isOnboardingCompleted: vi.fn(),
+      ensureCompanyLoaded: vi.fn().mockResolvedValue(true),
+    };
+
     mockRouter = {
       navigate: vi.fn(),
     };
@@ -45,6 +55,7 @@ describe('Security Route Guards (Phase 3)', () => {
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: JobSeekerService, useValue: mockJobSeekerService },
+        { provide: CompanyDataService, useValue: mockCompanyDataService },
         { provide: Router, useValue: mockRouter },
       ],
     });
@@ -136,6 +147,102 @@ describe('Security Route Guards (Phase 3)', () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.isCompany.mockReturnValue(true);
       const result = await TestBed.runInInjectionContext(() => companyGuard({} as any, {} as any));
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('companyDashboardGuard', () => {
+    it('should redirect unauthenticated users to /login', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(false);
+      const result = await TestBed.runInInjectionContext(() => companyDashboardGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('should redirect job seeker users to /job-seeker/dashboard', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(false);
+      mockAuthService.isJobSeeker.mockReturnValue(true);
+      const result = await TestBed.runInInjectionContext(() => companyDashboardGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/job-seeker/dashboard']);
+    });
+
+    it('should redirect incomplete company users to /company/onboarding', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(true);
+      mockCompanyDataService.isOnboardingCompleted.mockReturnValue(false);
+
+      const result = await TestBed.runInInjectionContext(() => companyDashboardGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockCompanyDataService.ensureCompanyLoaded).toHaveBeenCalledWith('u-test-123');
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/company/onboarding']);
+    });
+
+    it('should allow completed company users to access dashboard', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(true);
+      mockCompanyDataService.isOnboardingCompleted.mockReturnValue(true);
+
+      const result = await TestBed.runInInjectionContext(() => companyDashboardGuard({} as any, {} as any));
+      expect(result).toBe(true);
+      expect(mockCompanyDataService.ensureCompanyLoaded).toHaveBeenCalledWith('u-test-123');
+    });
+
+    it('should redirect to /company/onboarding if company load encounters an error and onboarding is incomplete', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(true);
+      mockCompanyDataService.ensureCompanyLoaded.mockRejectedValue(new Error('Network error'));
+      mockCompanyDataService.isOnboardingCompleted.mockReturnValue(false);
+
+      const result = await TestBed.runInInjectionContext(() => companyDashboardGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/company/onboarding']);
+    });
+  });
+
+  describe('companyOnboardingGuard', () => {
+    it('should redirect unauthenticated users to /login', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(false);
+      const result = await TestBed.runInInjectionContext(() => companyOnboardingGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('should redirect job seeker users to /job-seeker/onboarding', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(false);
+      mockAuthService.isJobSeeker.mockReturnValue(true);
+      const result = await TestBed.runInInjectionContext(() => companyOnboardingGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/job-seeker/onboarding']);
+    });
+
+    it('should redirect completed company users to /company/dashboard', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(true);
+      mockCompanyDataService.isOnboardingCompleted.mockReturnValue(true);
+
+      const result = await TestBed.runInInjectionContext(() => companyOnboardingGuard({} as any, {} as any));
+      expect(result).toBe(false);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/company/dashboard']);
+    });
+
+    it('should allow incomplete company users to access /company/onboarding', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(true);
+      mockCompanyDataService.isOnboardingCompleted.mockReturnValue(false);
+
+      const result = await TestBed.runInInjectionContext(() => companyOnboardingGuard({} as any, {} as any));
+      expect(result).toBe(true);
+    });
+
+    it('should allow access to onboarding form if company loading encounters an error so user can retry', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.isCompany.mockReturnValue(true);
+      mockCompanyDataService.ensureCompanyLoaded.mockRejectedValue(new Error('Connection error'));
+
+      const result = await TestBed.runInInjectionContext(() => companyOnboardingGuard({} as any, {} as any));
       expect(result).toBe(true);
     });
   });

@@ -60,6 +60,37 @@ export class CompanyDataService {
   loading$ = this.loadingSubject.asObservable();
   error$ = this.errorSubject.asObservable();
 
+  loading(): boolean {
+    return this.loadingSubject.value;
+  }
+
+  /**
+   * Ensures company data is loaded for the target or currently authenticated user.
+   */
+  async ensureCompanyLoaded(profileId?: string): Promise<boolean> {
+    const targetId = profileId || this.authService.getCurrentUserId();
+    if (!targetId) {
+      return false;
+    }
+
+    if (this._profileId === targetId && !this.loadingSubject.value && this.companySubject.value !== undefined) {
+      return !this.errorSubject.value;
+    }
+
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Company loading timed out')), 2500)
+      );
+      await Promise.race([this.initialize(targetId), timeoutPromise]);
+    } catch (err: any) {
+      console.warn('[CompanyDataService] ensureCompanyLoaded timeout or error:', err?.message || err);
+      this.loadingSubject.next(false);
+      return false;
+    }
+
+    return !this.errorSubject.value;
+  }
+
   // ── Subjects ────────────────────────────────────────────────────────────
   private companySubject = new BehaviorSubject<Company | null>(null);
   private recruiterProfileSubject = new BehaviorSubject<Profile | null>(null);
