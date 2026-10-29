@@ -1170,7 +1170,8 @@ export class JobSeekerService {
     return null;
   }
 
-  async updatePersonalProfile(data: Partial<Profile> & Partial<JobSeekerProfile>) {
+  /** persist = false only updates in-memory state (used by submitCompleteOnboarding, which saves each section itself, in order). */
+  async updatePersonalProfile(data: Partial<Profile> & Partial<JobSeekerProfile>, persist = true) {
     const prof = this.profile();
     const jsp = this.jobSeekerProfile();
 
@@ -1193,6 +1194,8 @@ export class JobSeekerService {
     }));
 
     this.recalculateProfileCompletion();
+
+    if (!persist) return;
 
     // Persist to Supabase if authenticated
     const targetUserId = prof.id || this.authService.getCurrentUserId();
@@ -1222,7 +1225,7 @@ export class JobSeekerService {
     }
   }
 
-  async updateProfessionalProfile(data: Partial<JobSeekerProfile>) {
+  async updateProfessionalProfile(data: Partial<JobSeekerProfile>, persist = true) {
     const jsp = this.jobSeekerProfile();
     const experienceYears = data.experience_years ?? data.years_of_experience ?? jsp.experience_years;
 
@@ -1235,6 +1238,8 @@ export class JobSeekerService {
     }));
 
     this.recalculateProfileCompletion();
+
+    if (!persist) return;
 
     const targetUserId = jsp.profile_id || this.profile().id || this.authService.getCurrentUserId();
     if (targetUserId && !targetUserId.startsWith('p-')) {
@@ -1522,7 +1527,7 @@ export class JobSeekerService {
 
   // ── Preferences Action Methods ───────────────────────────────────────────
 
-  async updatePreferences(prefData: Partial<JobSeekerPreference>) {
+  async updatePreferences(prefData: Partial<JobSeekerPreference>, persist = true) {
     const minSalary = prefData.minimum_salary ?? prefData.min_salary;
     const maxSalary = prefData.maximum_salary ?? prefData.max_salary;
 
@@ -1535,6 +1540,7 @@ export class JobSeekerService {
       max_salary: maxSalary ?? p.max_salary,
     }));
     this.recalculateProfileCompletion();
+    if (!persist) return;
 
     const jobSeekerId = await this.ensureJobSeekerProfileId();
     if (jobSeekerId && jobSeekerId !== 'jsp-101') {
@@ -1599,10 +1605,11 @@ export class JobSeekerService {
         throw new Error('User session not found. Please log in again.');
       }
 
-      // Always update in-memory state and local cache immediately with entered values
-      this.updatePersonalProfile(data.personal);
-      this.updateProfessionalProfile(data.professional);
-      this.updatePreferences(data.preferences);
+      // Update in-memory state immediately with the entered values. Persisting is done below, section by section and awaited,
+      // so a failed save is reported and onboarding_completed is only written after every required write succeeded.
+      void this.updatePersonalProfile(data.personal, false);
+      void this.updateProfessionalProfile(data.professional, false);
+      void this.updatePreferences(data.preferences, false);
 
       // If demo session or mock ID without live Supabase credentials, complete locally
       if (profId.startsWith('p-') || profId === 'u-101' || (profId.startsWith('u-') && !profId.startsWith('user-uuid'))) {

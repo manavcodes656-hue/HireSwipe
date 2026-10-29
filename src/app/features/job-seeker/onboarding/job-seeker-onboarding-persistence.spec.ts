@@ -121,10 +121,12 @@ describe('Job Seeker Onboarding Data Integrity, Persistence & Recovery (Phase 4)
 
     mockApplicationsService = {
       getJobSeekerApplications: vi.fn().mockResolvedValue([]),
+      getAppliedJobIds: vi.fn().mockResolvedValue([]),
     };
 
     mockMatchingService = {
       getSwipedJobIds: vi.fn().mockResolvedValue([]),
+      getLikedJobIds: vi.fn().mockResolvedValue([]),
       getJobSeekerMatches: vi.fn().mockResolvedValue([]),
       swipe: vi.fn().mockResolvedValue({ data: null, error: null }),
     };
