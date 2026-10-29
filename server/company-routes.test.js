@@ -652,6 +652,39 @@ describe('Company Jobs API', () => {
       expect(body.error.fields.title).toBe('is required')
     })
 
+    it('persists the job under the caller\'s company, as published, created by the caller', async () => {
+      const userDb = signIn('company', 'u-7')
+      const insertQ = query({ data: { id: JOB_ID, company_id: COMPANY_ID }, error: null })
+      userDb.from
+        .mockReturnValueOnce(query({ data: { id: 'm-1', role: 'recruiter', company_id: COMPANY_ID }, error: null }))
+        .mockReturnValueOnce(insertQ)
+        .mockReturnValueOnce(query({ data: [], error: null })) // job_requirements
+        .mockReturnValueOnce(query({ data: [], error: null })) // job_benefits
+        .mockReturnValueOnce(query({ data: { id: JOB_ID, company_id: COMPANY_ID }, error: null })) // reload
+
+      const res = await call('POST', '/api/company/jobs', {
+        body: { ...VALID_JOB_CREATE, status: 'active', application_deadline: '2026-12-31' },
+      })
+
+      expect(res.status).toBe(201)
+      expect(userDb.from).toHaveBeenNthCalledWith(2, 'jobs')
+      const inserted = insertQ.calls.find(([method]) => method === 'insert')[1]
+      expect(inserted).toMatchObject({
+        company_id: COMPANY_ID,
+        created_by: 'u-7',
+        status: 'published',
+        title: VALID_JOB_CREATE.title,
+      })
+      expect(inserted.application_deadline).toBe('2026-12-31T00:00:00.000Z')
+    })
+
+    it('ignores a company id sent by the client', async () => {
+      signIn('company')
+      const res = await call('POST', '/api/company/jobs', { body: { ...VALID_JOB_CREATE, company_id: OTHER_COMPANY_ID } })
+      expect(res.status).toBe(400)
+      expect((await res.json()).error.fields.company_id).toMatch(/managed by the server/)
+    })
+
     it('creates job and returns 201 on success', async () => {
       const userDb = signIn('company')
       userDb.from
