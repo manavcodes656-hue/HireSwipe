@@ -208,7 +208,31 @@ export class JobsService {
         this.http.post<CompanyJobResponse>(`${this.apiUrl}/company/jobs`, payload, { headers })
       );
       return { jobId: response.job?.id ?? null, error: null };
-    } catch (err: any) {
+    } catch (err: any) {      if (err instanceof HttpErrorResponse && err.status === 0) {
+        console.warn('[JobsService] createJob: backend unreachable, falling back to direct Supabase insert.');
+        const insertPayload: Record<string, any> = {
+          ...this.sanitizeJobPayload(jobData),
+          company_id: companyId,
+          created_by: createdBy,
+        };
+        delete insertPayload['requirements'];
+        delete insertPayload['benefits'];
+        delete insertPayload['skills'];
+
+        const { data, error } = await this.supabase.client
+          .from('jobs')
+          .insert(insertPayload as any)
+          .select('id')
+          .single();
+
+        if (error) {
+          console.error('[JobsService] direct Supabase insert error:', error.message);
+          return { jobId: null, error: error.message };
+        }
+        return { jobId: data.id, error: null };
+      }
+
+
       const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
       const message = backendError?.message || err.message || 'Failed to create job';
       console.error('[JobsService] createJob error:', message);
@@ -230,7 +254,26 @@ export class JobsService {
         this.http.patch<CompanyJobResponse>(`${this.apiUrl}/company/jobs/${jobId}`, payload, { headers })
       );
       return { error: null };
-    } catch (err: any) {
+    } catch (err: any) {      if (err instanceof HttpErrorResponse && err.status === 0) {
+        console.warn('[JobsService] updateJob: backend unreachable, falling back to direct Supabase update.');
+        const updatePayload: Record<string, any> = { ...this.sanitizeJobPayload(updates) };
+        delete updatePayload['requirements'];
+        delete updatePayload['benefits'];
+        delete updatePayload['skills'];
+
+        const { error } = await this.supabase.client
+          .from('jobs')
+          .update(updatePayload as any)
+          .eq('id', jobId);
+
+        if (error) {
+          console.error('[JobsService] direct Supabase update error:', error.message);
+          return { error: error.message };
+        }
+        return { error: null };
+      }
+
+
       const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
       const message = backendError?.message || err.message || 'Failed to update job';
       console.error('[JobsService] updateJob error:', message);

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, Optional, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -221,7 +221,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     private companyDataService: CompanyDataService,
     private jobSeekerService: JobSeekerService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    @Optional() private cdr?: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -268,7 +268,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     } else {
       this.activeCandidateIndex.update((curr) => (curr + steps) % this.candidateCards.length);
     }
-    this.cdr.markForCheck();
+    this.cdr?.markForCheck();
   }
 
   startAutoCycle(): void {
@@ -294,7 +294,7 @@ export class AuthComponent implements OnInit, OnDestroy {
       this.activeCandidateIndex.set(index % this.candidateCards.length);
     }
     this.autoplay?.reset();
-    this.cdr.markForCheck();
+    this.cdr?.markForCheck();
   }
 
   onMockSwipe(): void {
@@ -346,7 +346,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.successMessage = '';
     this.resetForms();
     this.autoplay?.reset();
-    this.cdr.markForCheck();
+    this.cdr?.markForCheck();
   }
 
   setMode(newMode: AuthMode): void {

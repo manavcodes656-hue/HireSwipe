@@ -808,7 +808,13 @@ export class CompanyDataService {
 
   async createJob(jobData: Partial<Job>): Promise<{ jobId: string | null; error: string | null }> {
     if (!this._companyId || !this._profileId) {
-      return { jobId: null, error: 'Company not initialized' };
+      const profileId = this._profileId || this.authService.getCurrentUserId();
+      if (profileId) {
+        await this.loadCompanyForProfile(profileId);
+      }
+    }
+    if (!this._companyId || !this._profileId) {
+      return { jobId: null, error: 'Company not initialized. Please ensure your company profile is set up.' };
     }
     const result = await this.jobsService.createJob(
       this._companyId,
@@ -823,6 +829,12 @@ export class CompanyDataService {
   }
 
   async updateJob(jobId: string, data: Partial<Job>): Promise<{ error: string | null }> {
+    if (!this._companyId) {
+      const profileId = this._profileId || this.authService.getCurrentUserId();
+      if (profileId) {
+        await this.loadCompanyForProfile(profileId);
+      }
+    }
     const result = await this.jobsService.updateJob(jobId, this.toJobRow(data) as any);
     if (result.error) return result;
 
