@@ -15,12 +15,13 @@
         *ngFor="let s of [1, 2, 3, 4, 5, 6]"
         class="step-item"
         [class.active]="currentStep === s"
-        [class.completed]="currentStep > s"
+        [class.completed]="isStepCompleted(s)"
+        [class.disabled]="!canNavigateToStep(s)"
         (click)="goToStep(s)"
       >
         <div class="step-num">
-          <span *ngIf="currentStep <= s">{{ s }}</span>
-          <svg *ngIf="currentStep > s" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span *ngIf="!isStepCompleted(s)">{{ s }}</span>
+          <svg *ngIf="isStepCompleted(s)" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <span class="step-title">
           {{ s === 1 ? 'Personal' : s === 2 ? 'Profile' : s === 3 ? 'Experience' : s === 4 ? 'Preferences' : s === 5 ? 'Review' : 'Complete' }}

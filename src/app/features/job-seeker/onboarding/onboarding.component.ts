@@ -1,8 +1,45 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+  FormsModule,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { JobSeekerService } from '../services/job-seeker.service';
+
+/**
+ * Rejects required fields that are empty or whitespace-only.
+ * Angular's Validators.required treats "   " as valid; this validator does not.
+ */
+export function trimmedRequiredValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val = control.value;
+    if (val === null || val === undefined) return { required: true };
+    if (typeof val === 'string' && val.trim().length === 0) return { required: true };
+    return null;
+  };
+}
+
+/**
+ * Enforces a minimum length on the trimmed value, so padded whitespace
+ * cannot satisfy a minimum-length requirement.
+ */
+export function trimmedMinLengthValidator(min: number): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const val = control.value;
+    if (val === null || val === undefined || val === '') return null;
+    if (typeof val === 'string' && val.trim().length < min) {
+      return { minlength: { requiredLength: min, actualLength: val.trim().length } };
+    }
+    return null;
+  };
+}
 import {
   Education,
   Experience,
@@ -28,6 +65,10 @@ export class OnboardingComponent implements OnInit {
   get currentStep(): number { return this._currentStep(); }
   set currentStep(v: number) { this._currentStep.set(v); }
   totalSteps = 6;
+
+  // Tracks which steps have been genuinely completed (validated + persisted).
+  private readonly _completedSteps = signal<Set<number>>(new Set<number>());
+  get completedSteps(): Set<number> { return this._completedSteps(); }
 
   // Zoneless app: values set after an await only re-render when they are signals.
   private readonly _isSubmitting = signal<boolean>(false);
@@ -123,26 +164,27 @@ export class OnboardingComponent implements OnInit {
   ngOnInit(): void {
     this.initForms();
     this.loadExistingData();
+    this.syncCompletedStepsFromData();
   }
 
   private initForms(): void {
     // Step 1: Personal Details
     this.step1Form = this.fb.group({
-      full_name: ['', [Validators.required, Validators.minLength(2)]],
-      phone: ['', [Validators.required, Validators.pattern(/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/)]],
-      city: ['', Validators.required],
-      state: ['', Validators.required],
-      country: ['India', Validators.required],
-      location: ['', Validators.required],
+      full_name: ['', [Validators.required, trimmedRequiredValidator(), trimmedMinLengthValidator(2)]],
+      phone: ['', [Validators.required, trimmedRequiredValidator(), Validators.pattern(/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/)]],
+      city: ['', [Validators.required, trimmedRequiredValidator()]],
+      state: ['', [Validators.required, trimmedRequiredValidator()]],
+      country: ['India', [Validators.required, trimmedRequiredValidator()]],
+      location: ['', [Validators.required, trimmedRequiredValidator()]],
       avatar_url: [''],
     });
 
     // Step 2: Professional Details
     this.step2Form = this.fb.group({
-      headline: ['', [Validators.required, Validators.minLength(5)]],
-      bio: ['', [Validators.required, Validators.minLength(10)]],
-      current_job_title: ['', Validators.required],
-      current_company: ['', Validators.required],
+      headline: ['', [Validators.required, trimmedRequiredValidator(), trimmedMinLengthValidator(5)]],
+      bio: ['', [Validators.required, trimmedRequiredValidator(), trimmedMinLengthValidator(10)]],
+      current_job_title: ['', [Validators.required, trimmedRequiredValidator()]],
+      current_company: ['', [Validators.required, trimmedRequiredValidator()]],
       years_of_experience: [5, [Validators.required, Validators.min(0)]],
       availability: ['15 Days', Validators.required],
       linkedin_url: ['', [Validators.pattern(/^https?:\/\/.*/)]],
@@ -152,31 +194,31 @@ export class OnboardingComponent implements OnInit {
 
     // Step 3: Education Modal Form
     this.educationForm = this.fb.group({
-      institution: ['', Validators.required],
-      degree: ['', Validators.required],
-      field_of_study: ['', Validators.required],
-      start_date: ['', Validators.required],
-      end_date: ['', Validators.required],
+      institution: ['', [Validators.required, trimmedRequiredValidator()]],
+      degree: ['', [Validators.required, trimmedRequiredValidator()]],
+      field_of_study: ['', [Validators.required, trimmedRequiredValidator()]],
+      start_date: ['', [Validators.required, trimmedRequiredValidator()]],
+      end_date: ['', [Validators.required, trimmedRequiredValidator()]],
       grade: [''],
       description: [''],
     });
 
     // Step 3: Experience Modal Form
     this.experienceForm = this.fb.group({
-      company: ['', Validators.required],
-      job_title: ['', Validators.required],
+      company: ['', [Validators.required, trimmedRequiredValidator()]],
+      job_title: ['', [Validators.required, trimmedRequiredValidator()]],
       employment_type: ['Full-time', Validators.required],
-      location: ['', Validators.required],
-      start_date: ['', Validators.required],
+      location: ['', [Validators.required, trimmedRequiredValidator()]],
+      start_date: ['', [Validators.required, trimmedRequiredValidator()]],
       end_date: [''],
       currently_working: [true],
-      description: ['', Validators.required],
+      description: ['', [Validators.required, trimmedRequiredValidator()]],
     });
 
     // Step 4: Job Preferences Form
     this.preferencesForm = this.fb.group({
-      preferred_job_title: ['', Validators.required],
-      preferred_location: ['', Validators.required],
+      preferred_job_title: ['', [Validators.required, trimmedRequiredValidator()]],
+      preferred_location: ['', [Validators.required, trimmedRequiredValidator()]],
       remote_preference: ['hybrid', Validators.required],
       employment_type: ['full_time', Validators.required],
       min_salary: [2800000, [Validators.required, Validators.min(0)]],
@@ -280,49 +322,189 @@ export class OnboardingComponent implements OnInit {
     this.step1Form.patchValue({ avatar_url: '' });
   }
 
-  // Stepper Navigation
-  goToStep(step: number): void {
-    if (step >= 1 && step <= this.totalSteps) {
-      this.saveStepState();
-      this.currentStep = step;
-      this.errorMessage = null;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  // ── Validation Helpers ──────────────────────────────────────────────
+
+  isStep1Valid(): boolean {
+    if (!this.step1Form || this.step1Form.invalid) return false;
+    const v = this.step1Form.value;
+    return Boolean(
+      v.full_name?.trim() &&
+        v.phone?.trim() &&
+        v.city?.trim() &&
+        v.state?.trim() &&
+        v.country?.trim() &&
+        v.location?.trim()
+    );
+  }
+
+  isStep2Valid(): boolean {
+    if (!this.step2Form || this.step2Form.invalid) return false;
+    const v = this.step2Form.value;
+    return Boolean(
+      v.headline?.trim() &&
+        v.bio?.trim() &&
+        v.current_job_title?.trim() &&
+        v.current_company?.trim()
+    );
+  }
+
+  // Step 3 (Education & Experience) has no mandatory step-level fields;
+  // records are optional and managed through their own modals.
+  isStep3Valid(): boolean {
+    return true;
+  }
+
+  isStep4Valid(): boolean {
+    if (!this.preferencesForm || this.preferencesForm.invalid) return false;
+    if (this.jobSeekerService.userSkills().length === 0) return false;
+    const v = this.preferencesForm.value;
+    return Boolean(v.preferred_job_title?.trim() && v.preferred_location?.trim());
+  }
+
+  isStep5Valid(): boolean {
+    return this.isStep1Valid() && this.isStep2Valid() && this.isStep4Valid();
+  }
+
+  isStep6Valid(): boolean {
+    return this.isStep5Valid() && this.completedSteps.has(5);
+  }
+
+  isStepCompleted(step: number): boolean {
+    switch (step) {
+      case 1:
+        return this.completedSteps.has(1) && this.isStep1Valid();
+      case 2:
+        return this.isStepCompleted(1) && this.completedSteps.has(2) && this.isStep2Valid();
+      case 3:
+        return this.isStepCompleted(2) && this.completedSteps.has(3);
+      case 4:
+        return this.isStepCompleted(3) && this.completedSteps.has(4) && this.isStep4Valid();
+      case 5:
+        return this.isStepCompleted(4) && this.completedSteps.has(5) && this.isStep5Valid();
+      case 6:
+        return this.isStepCompleted(5) && this.completedSteps.has(6);
+      default:
+        return false;
     }
   }
 
-  nextStep(): void {
+  markStepCompleted(step: number): void {
+    const updated = new Set(this.completedSteps);
+    updated.add(step);
+    this._completedSteps.set(updated);
+  }
+
+  /**
+   * Reconstructs completed steps from persisted data so a refresh or
+   * session restore lands the user on the first incomplete step.
+   */
+  private syncCompletedStepsFromData(): void {
+    const completed = new Set<number>();
+
+    if (this.isStep1Valid()) {
+      completed.add(1);
+    }
+    if (completed.has(1) && this.isStep2Valid()) {
+      completed.add(2);
+      completed.add(3); // Step 3 is always valid once step 2 is done
+    }
+    if (completed.has(3) && this.isStep4Valid()) {
+      completed.add(4);
+    }
+    if (completed.has(4) && this.isStep5Valid()) {
+      completed.add(5);
+    }
+
+    this._completedSteps.set(completed);
+
+    // Direct user to the first incomplete onboarding step
+    if (!completed.has(1)) {
+      this.currentStep = 1;
+    } else if (!completed.has(2)) {
+      this.currentStep = 2;
+    } else if (!completed.has(3)) {
+      this.currentStep = 3;
+    } else if (!completed.has(4)) {
+      this.currentStep = 4;
+    } else {
+      this.currentStep = 5;
+    }
+  }
+
+  // ── Step Navigation & Protection ───────────────────────────────────
+
+  canNavigateToStep(targetStep: number): boolean {
+    if (targetStep < 1 || targetStep > this.totalSteps) return false;
+    if (targetStep === this.currentStep) return true;
+
+    // Backward navigation: allow reviewing previously completed steps
+    if (targetStep < this.currentStep) {
+      return this.isStepCompleted(targetStep) || targetStep === 1;
+    }
+
+    // Forward navigation: every preceding step must be genuinely completed
+    for (let k = 1; k < targetStep; k++) {
+      if (!this.isStepCompleted(k)) {
+        return false;
+      }
+    }
+
+    // Cannot skip ahead past the next step unless already completed
+    return this.completedSteps.has(targetStep) || targetStep === this.currentStep + 1;
+  }
+
+  goToStep(step: number): void {
+    this.errorMessage = null;
+
+    if (!this.canNavigateToStep(step)) {
+      return;
+    }
+
+    this.currentStep = step;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async nextStep(): Promise<void> {
     this.errorMessage = null;
 
     if (this.currentStep === 1) {
-      if (this.step1Form.invalid) {
+      if (!this.isStep1Valid()) {
         this.step1Form.markAllAsTouched();
         this.errorMessage = 'Please complete all required personal details.';
         return;
       }
+      this.saveStepState();
+      this.markStepCompleted(1);
+      this.currentStep = 2;
     } else if (this.currentStep === 2) {
-      if (this.step2Form.invalid) {
+      if (!this.isStep2Valid()) {
         this.step2Form.markAllAsTouched();
         this.errorMessage = 'Please complete all required professional information.';
         return;
       }
+      this.saveStepState();
+      this.markStepCompleted(2);
+      this.currentStep = 3;
+    } else if (this.currentStep === 3) {
+      this.saveStepState();
+      this.markStepCompleted(3);
+      this.currentStep = 4;
     } else if (this.currentStep === 4) {
-      if (this.preferencesForm.invalid) {
+      if (!this.isStep4Valid()) {
         this.preferencesForm.markAllAsTouched();
-        this.errorMessage = 'Please complete all required job preferences.';
+        this.errorMessage =
+          'Please complete all required job preferences and add at least one technical skill.';
         return;
       }
-      if (this.jobSeekerService.userSkills().length === 0) {
-        this.errorMessage = 'Please add at least one technical skill to your profile.';
-        return;
-      }
+      this.saveStepState();
+      this.markStepCompleted(4);
+      this.currentStep = 5;
+    } else if (this.currentStep === 5) {
+      // Step 5 (Review) is finished via finishOnboarding(), not here.
+      return;
     }
 
-    this.saveStepState();
-
-    if (this.currentStep < this.totalSteps) {
-      this.currentStep++;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   prevStep(): void {
@@ -518,22 +700,18 @@ export class OnboardingComponent implements OnInit {
       return;
     }
 
-    if (this.step1Form.invalid) {
-      this.step1Form.markAllAsTouched();
-      this.errorMessage = 'Please complete all required personal details.';
-      this.currentStep = 1;
-      return;
-    }
-    if (this.step2Form.invalid) {
-      this.step2Form.markAllAsTouched();
-      this.errorMessage = 'Please complete all required professional information.';
-      this.currentStep = 2;
-      return;
-    }
-    if (this.preferencesForm.invalid) {
-      this.preferencesForm.markAllAsTouched();
-      this.errorMessage = 'Please complete all required job preferences.';
-      this.currentStep = 4;
+    if (!this.isStep1Valid() || !this.isStep2Valid() || !this.isStep4Valid()) {
+      if (!this.isStep1Valid()) {
+        this.step1Form.markAllAsTouched();
+        this.currentStep = 1;
+      } else if (!this.isStep2Valid()) {
+        this.step2Form.markAllAsTouched();
+        this.currentStep = 2;
+      } else {
+        this.preferencesForm.markAllAsTouched();
+        this.currentStep = 4;
+      }
+      this.errorMessage = 'Please complete all required fields before finishing onboarding.';
       return;
     }
     if (this.jobSeekerService.userSkills().length === 0) {
@@ -551,12 +729,17 @@ export class OnboardingComponent implements OnInit {
         preferences: this.preferencesForm.value,
       });
 
-      if (res && res.error) {
-        this.errorMessage = res.error;
+      // submitCompleteOnboarding persists every section and only marks
+      // onboarding_completed = true after all writes succeed. A failed save
+      // must not unlock step 6 or the dashboard.
+      if (!res || !res.success) {
+        this.errorMessage = res?.error || 'Failed to complete onboarding. Please try again.';
         return;
       }
 
-      // Advance to celebration step only after all saves succeed
+      // Mark steps 5 and 6 complete only after successful, atomic persistence.
+      this.markStepCompleted(5);
+      this.markStepCompleted(6);
       this.currentStep = 6;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: any) {
@@ -566,11 +749,19 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
-  // Step 6: Direct navigation to Job Seeker Dashboard
+  // Step 6: Navigation to Job Seeker Dashboard
+  // Gated on the authoritative completion state; never marks onboarding
+  // complete itself — that is done only by submitCompleteOnboarding.
   async goToDashboard(): Promise<void> {
     this.errorMessage = null;
+
+    if (!this.jobSeekerService.isOnboardingCompleted()) {
+      this.errorMessage =
+        'Please complete all onboarding steps before opening the dashboard.';
+      return;
+    }
+
     try {
-      this.jobSeekerService.setOnboardingCompleted(true);
       const navSuccess = await this.router.navigate(['/job-seeker/dashboard']);
       if (!navSuccess) {
         console.warn('Navigation to /job-seeker/dashboard returned false; falling back to /job-seeker');
