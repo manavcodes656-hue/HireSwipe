@@ -686,3 +686,13 @@
   margin-top: 0.5rem;
 }
 
+
+.swipe-error-banner {
+  margin: 0 auto 1rem;
+  max-width: 560px;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.9rem;
+}

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { MessagesComponent } from './messages.component';
 import { CompanyDataService } from '../services/company-data.service';
@@ -42,7 +43,8 @@ describe('Company MessagesComponent — Company Messaging Flow Tests', () => {
 
     TestBed.configureTestingModule({
       imports: [MessagesComponent],
-      providers: [{ provide: CompanyDataService, useValue: mockDataService }],
+      // MessagesComponent reads ?conversation=<id> from ActivatedRoute, so the spec needs a router.
+      providers: [provideRouter([]), { provide: CompanyDataService, useValue: mockDataService }],
     });
 
     const fixture = TestBed.createComponent(MessagesComponent);

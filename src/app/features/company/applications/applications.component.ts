@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -30,9 +30,15 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
 
   statusError = '';
 
+  /** Applications this company has expressed interest in, and the state of the Like request. */
+  interestedIds: ReadonlySet<string> = new Set();
+  interestPending = false;
+  interestError = '';
+
   constructor(
     private dataService: CompanyDataService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -45,6 +51,11 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    this.subs.add(this.dataService.interestedApplicationIds$.subscribe((ids) => {
+        this.interestedIds = ids;
+        this.cdr.markForCheck();
+      }));
 
     this.subs.add(
       this.dataService.jobs$.subscribe((jList) => {
@@ -82,6 +93,7 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
   openReviewDrawer(app: Application): void {
     this.selectedApplication = app;
     this.statusNotes = '';
+    this.interestError = '';
     this.isReviewDrawerOpen = true;
   }
 
@@ -102,6 +114,28 @@ export class ApplicationsComponent implements OnInit, OnDestroy {
         return;
       }
       this.statusNotes = '';
+    }
+  }
+
+  get isSelectedInterested(): boolean {
+    return !!this.selectedApplication && this.interestedIds.has(this.selectedApplication.id);
+  }
+
+  /** Company Like: records interest for the real application; ignored while pending or already recorded. */
+  async expressInterest(): Promise<void> {
+    const app = this.selectedApplication;
+    if (!app || this.interestPending || this.interestedIds.has(app.id)) return;
+
+    this.interestPending = true;
+    this.interestError = '';
+    this.cdr.markForCheck();
+    try {
+      const { error } = await this.dataService.expressInterest(app.id);
+      if (error) this.interestError = error;
+    } finally {
+      this.interestPending = false;
+      // The app runs without zone.js: re-render after the awaited request.
+      this.cdr.markForCheck();
     }
   }
 

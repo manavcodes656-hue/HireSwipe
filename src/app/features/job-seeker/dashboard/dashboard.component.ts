@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { JobSeekerService } from '../services/job-seeker.service';
@@ -25,11 +25,12 @@ export class DashboardComponent {
   jobSeekerService = inject(JobSeekerService);
   router = inject(Router);
 
-  quickLikeJob(job: Job) {
-    const res = this.jobSeekerService.swipeJob(job, 'like');
-    if (res.isMatch) {
-      this.router.navigate(['/job-seeker/matches']);
-    }
+  swipeError = signal<string | null>(null);
+
+  async quickLikeJob(job: Job) {
+    this.swipeError.set(null);
+    const res = await this.jobSeekerService.swipeJob(job, 'like');
+    if (!res.ok) this.swipeError.set(res.error ?? 'Could not save your swipe. Please try again.');
   }
 
   saveJob(job: Job) {

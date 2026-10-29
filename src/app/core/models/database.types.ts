@@ -267,6 +267,42 @@ export type Database = {
         }
         Relationships: []
       }
+      company_interest: {
+        Row: {
+          application_id: string
+          created_at: string
+          expressed_by: string | null
+          id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          expressed_by?: string | null
+          id?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          expressed_by?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_interest_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_interest_expressed_by_fkey"
+            columns: ["expressed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_members: {
         Row: {
           company_id: string

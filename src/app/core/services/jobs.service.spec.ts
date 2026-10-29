@@ -244,6 +244,85 @@ describe('JobsService — Backend Integration Tests', () => {
     });
   });
 
+  describe('POST /api/company/jobs error messages', () => {
+    it('names the invalid fields of a validation error', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const promise = service.createJob(companyId, 'user-uuid-123', { title: 'x' });
+      await new Promise((r) => setTimeout(r, 5));
+
+      httpMock.expectOne(`${apiUrl}/company/jobs`).flush(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request body',
+            fields: { salary_max: 'cannot be less than salary_min', application_deadline: 'must be a valid date' },
+          },
+        },
+        { status: 400, statusText: 'Bad Request' }
+      );
+
+      const result = await promise;
+      expect(result.jobId).toBeNull();
+      expect(result.error).toBe(
+        'Invalid request body: salary_max cannot be less than salary_min; application_deadline must be a valid date'
+      );
+    });
+
+    it('falls back to a direct, RLS-protected Supabase insert when the API is unreachable', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const insert = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: jobId }, error: null }) }),
+      });
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({ insert });
+
+      const promise = service.createJob(companyId, 'user-uuid-123', {
+        title: 'x', status: 'active', requirements: ['a'], skills: [{ skill_name: 'Angular' }], bogus: 1,
+      });
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(`${apiUrl}/company/jobs`).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+      expect(await promise).toEqual({ jobId, error: null });
+      expect(mockSupabaseService.client.from).toHaveBeenCalledWith('jobs');
+      const inserted = insert.mock.calls[0][0];
+      expect(inserted).toMatchObject({ title: 'x', status: 'published', company_id: companyId, created_by: 'user-uuid-123' });
+      expect(inserted.requirements).toBeUndefined();
+      expect(inserted.skills).toBeUndefined();
+      expect(inserted.bogus).toBeUndefined();
+    });
+
+    it('reports the database error when the fallback insert is also refused', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: null, error: { message: 'new row violates row-level security policy' } }),
+          }),
+        }),
+      });
+
+      const promise = service.createJob(companyId, 'user-uuid-123', { title: 'x' });
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(`${apiUrl}/company/jobs`).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+      const result = await promise;
+      expect(result.jobId).toBeNull();
+      expect(result.error).toContain('row-level security');
+    });
+
+    it('passes through the membership rejection from the API', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const promise = service.createJob(companyId, 'user-uuid-123', { title: 'x' });
+      await new Promise((r) => setTimeout(r, 5));
+
+      httpMock.expectOne(`${apiUrl}/company/jobs`).flush(
+        { error: { code: 'FORBIDDEN', message: 'Must be an active company member to post jobs' } },
+        { status: 403, statusText: 'Forbidden' }
+      );
+
+      expect((await promise).error).toBe('Must be an active company member to post jobs');
+    });
+  });
+
   describe('PATCH /api/company/jobs/:jobId', () => {
     it('updates a job with sanitized fields and sends the Bearer token', async () => {
       const updates = {
@@ -329,6 +408,46 @@ describe('JobsService — Backend Integration Tests', () => {
       expect(result).toHaveLength(1);
     });
 
+    describe('getPublishedJobs feed query', () => {
+      const makeChain = (result: any) => {
+        const range = vi.fn().mockResolvedValue(result);
+        const chain: any = {};
+        chain.select = vi.fn().mockReturnValue(chain);
+        chain.eq = vi.fn().mockReturnValue(chain);
+        chain.not = vi.fn().mockReturnValue(chain);
+        chain.order = vi.fn().mockReturnValue({ range });
+        mockSupabaseService.client.from = vi.fn().mockReturnValue(chain);
+        return chain;
+      };
+
+      it('only requests published jobs with company, skills and requirements embedded', async () => {
+        const chain = makeChain({ data: [dummyJob], error: null });
+        await service.getPublishedJobs(10, 0);
+        expect(chain.eq).toHaveBeenCalledWith('status', 'published');
+        const columns = chain.select.mock.calls[0][0];
+        expect(columns).toContain('companies(');
+        expect(columns).toContain('job_skills(');
+        expect(columns).toContain('job_requirements(');
+        expect(chain.not).not.toHaveBeenCalled();
+      });
+
+      it('excludes swiped job ids inside the query', async () => {
+        const chain = makeChain({ data: [], error: null });
+        await service.getPublishedJobs(10, 0, ['a', 'b']);
+        expect(chain.not).toHaveBeenCalledWith('id', 'in', '(a,b)');
+      });
+
+      it('returns an empty array when there are no jobs', async () => {
+        makeChain({ data: [], error: null });
+        expect(await service.getPublishedJobs()).toEqual([]);
+      });
+
+      it('throws on database errors', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        makeChain({ data: null, error: { message: 'permission denied' } });
+        await expect(service.getPublishedJobs()).rejects.toThrow('permission denied');
+      });
+    });
     it('preserves saveJob and unsaveJob operations', async () => {
       const saveRes = await service.saveJob('seeker-1', jobId);
       expect(mockSupabaseService.client.from).toHaveBeenCalledWith('saved_jobs');

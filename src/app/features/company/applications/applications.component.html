@@ -169,6 +169,12 @@
           </div>
 
           <div class="action-buttons-grid">
+            <button type="button" class="act-btn shortlist"
+              [disabled]="interestPending || isSelectedInterested || selectedApplication.status === 'withdrawn'"
+              (click)="expressInterest()">
+              {{ isSelectedInterested ? '✓ Interest sent' : interestPending ? 'Sending…' : '👍 Like candidate' }}
+            </button>
+            <p class="form-error" *ngIf="interestError" role="alert">{{ interestError }}</p>
             <button type="button" class="act-btn review" (click)="updateStatus('reviewing')">🔍 Move to
               Reviewing</button>
             <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>

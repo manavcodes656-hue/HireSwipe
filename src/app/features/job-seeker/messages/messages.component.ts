@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -12,7 +12,7 @@ import { Conversation, Message } from '../models/job-seeker.models';
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.css',
 })
-export class MessagesComponent implements OnInit {
+export class MessagesComponent implements OnInit, OnDestroy {
   jobSeekerService = inject(JobSeekerService);
   route = inject(ActivatedRoute);
 
@@ -20,19 +20,28 @@ export class MessagesComponent implements OnInit {
   messageText = signal<string>('');
   searchQuery = signal<string>('');
   attachedFile = signal<{ name: string; size: string; type: string } | null>(null);
+  sendPending = signal(false);
+  sendError = signal<string | null>(null);
 
   ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
-      const matchId = params['matchId'];
-      if (matchId) {
-        const conv = this.jobSeekerService.conversations().find((c) => c.match_id === matchId);
-        if (conv) {
-          this.selectConversation(conv.id);
+    // Real conversations (one per real match) replace the seeded demo ones before anything is selected.
+    void this.jobSeekerService.loadConversations().then(() => {
+      this.route.queryParams.subscribe((params) => {
+        const matchId = params['matchId'];
+        if (matchId) {
+          const conv = this.jobSeekerService.conversations().find((c) => c.match_id === matchId);
+          if (conv) {
+            this.selectConversation(conv.id);
+          }
+        } else if (this.jobSeekerService.conversations().length > 0) {
+          this.selectConversation(this.jobSeekerService.conversations()[0].id);
         }
-      } else if (this.jobSeekerService.conversations().length > 0) {
-        this.selectConversation(this.jobSeekerService.conversations()[0].id);
-      }
+      });
     });
+  }
+
+  ngOnDestroy() {
+    this.jobSeekerService.closeConversation();
   }
 
   filteredConversations = computed(() => {
@@ -60,7 +69,9 @@ export class MessagesComponent implements OnInit {
 
   selectConversation(convId: string) {
     this.selectedConversationId.set(convId);
+    this.sendError.set(null);
     this.jobSeekerService.markConversationRead(convId);
+    void this.jobSeekerService.openConversation(convId);
   }
 
   onFileAttachment(event: Event) {
@@ -79,12 +90,12 @@ export class MessagesComponent implements OnInit {
     this.attachedFile.set(null);
   }
 
-  sendMessage() {
+  async sendMessage() {
     const id = this.selectedConversationId();
     const text = this.messageText().trim();
     const att = this.attachedFile();
 
-    if (!id || (!text && !att)) return;
+    if (!id || (!text && !att) || this.sendPending()) return;
 
     const attachments = att
       ? [
@@ -97,8 +108,19 @@ export class MessagesComponent implements OnInit {
         ]
       : undefined;
 
-    this.jobSeekerService.sendMessage(id, text, attachments);
-    this.messageText.set('');
-    this.attachedFile.set(null);
+    this.sendPending.set(true);
+    this.sendError.set(null);
+    try {
+      const res = await this.jobSeekerService.sendMessage(id, text, attachments);
+      if (res.ok) {
+        this.messageText.set('');
+        this.attachedFile.set(null);
+      } else {
+        // Keep what the user typed so they can retry.
+        this.sendError.set(res.error ?? 'Could not send your message.');
+      }
+    } finally {
+      this.sendPending.set(false);
+    }
   }
 }

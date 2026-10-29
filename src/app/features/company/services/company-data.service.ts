@@ -102,6 +102,7 @@ export class CompanyDataService {
   private messagesSubject = new BehaviorSubject<{ [convId: string]: Message[] }>({});
   private interviewsSubject = new BehaviorSubject<Interview[]>([]);
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
+  private interestSubject = new BehaviorSubject<ReadonlySet<string>>(new Set());
 
   // ── Observables (public API for components) ─────────────────────────────
   company$ = this.companySubject.asObservable();
@@ -114,6 +115,8 @@ export class CompanyDataService {
   messages$ = this.messagesSubject.asObservable();
   interviews$ = this.interviewsSubject.asObservable();
   notifications$ = this.notificationsSubject.asObservable();
+  /** Application ids this company has expressed interest in (from company_interest). */
+  interestedApplicationIds$ = this.interestSubject.asObservable();
 
   // ── Sample discovery candidates (swipe deck & candidate discovery UI) ────
   // These are NOT database records. The current schema does not support
@@ -270,6 +273,7 @@ export class CompanyDataService {
     await Promise.all([
       this.loadJobs(company.id),
       this.loadApplications(company.id),
+      this.loadInterest(),
       this.loadMatches(company.id),
       this.loadInterviews(company.id),
       this.loadTeamMembers(company.id),
@@ -287,6 +291,21 @@ export class CompanyDataService {
     const raw = await this.applicationsService.getCompanyApplications(companyId);
     this.applicationsSubject.next(raw.map((a) => this.mapApplication(a)));
     this.jobsSubject.next(this.withJobCounts(this.jobsSubject.value));
+  }
+
+  async loadInterest(): Promise<void> {
+    this.interestSubject.next(new Set(await this.applicationsService.getInterestedApplicationIds()));
+  }
+
+  /**
+   * Company "Like": records interest through the backend. Only a confirmed
+   * response marks the application as interested; this creates no match itself.
+   */
+  async expressInterest(applicationId: string): Promise<{ error: string | null }> {
+    const res = await this.applicationsService.expressCompanyInterest(applicationId);
+    if (res.error) return { error: res.error };
+    this.interestSubject.next(new Set(this.interestSubject.value).add(applicationId));
+    return { error: null };
   }
 
   async loadMatches(companyId: string): Promise<void> {

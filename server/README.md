@@ -98,6 +98,7 @@ Errors use one shape: `{ "error": { "code": "...", "message": "..." } }`
 | `GET /api/company/applications` | `company`, `admin` | The caller's company applications; optional `?jobId=` and `?status=` filters |
 | `GET /api/company/applications/:applicationId` | `company`, `admin` | One application with candidate, job, resume and status history |
 | `PATCH /api/company/applications/:applicationId/status` | `company`, `admin` | Update the application status and its review note |
+| `POST /api/company/applications/:applicationId/interest` | `company` | Record company interest in an application (idempotent). Returns 503 `COMPANY_INTEREST_UNAVAILABLE` unless `COMPANY_INTEREST_ENABLED=true`; requires the `public.company_interest` table (migration 006). Creates no match or conversation. |
 | `GET /api/company/interviews` | `company`, `admin` | The caller's company interviews; optional `?applicationId=`, `?jobId=` and `?status=` filters |
 | `GET /api/company/interviews/:interviewId` | `company`, `admin` | One interview with its application, candidate and job |
 | `POST /api/company/interviews` | `company`, `admin` | Schedule an interview on one of the caller's company applications |
@@ -246,7 +247,9 @@ from Supabase.
 npm test        # from server/, or `npm run server:test` from the repository root
 ```
 
-Tests mock Supabase; they do not contact a database.
+Most tests mock Supabase and contact no database. `db-matching.test.js` runs migrations 001-007 on an in-process PostgreSQL (PGlite, a dev dependency; no Docker, no network) and checks the application -> match -> conversation -> message flow, duplicates and authorization at database level. It does not exercise a real Supabase project, Realtime or concurrent transactions.
+
+`db-concurrency.test.js` covers concurrent transactions (Like vs interest, withdrawal or job pause while a match is decided, deadlock) on a real PostgreSQL server. It is skipped unless `HIRESWIPE_REAL_PG=1` and the optional packages are installed (`npm install --no-save embedded-postgres pg`). PostgreSQL will not start from an administrator account, so run it from a normal shell; or point it at a server you already run with `HIRESWIPE_PG_PORT` (it creates and drops a throwaway database).
 
 ## Notes
 

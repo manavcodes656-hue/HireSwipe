@@ -1,9 +1,9 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { JobSeekerService } from '../services/job-seeker.service';
-import { Job, Match } from '../models/job-seeker.models';
+import { Job } from '../models/job-seeker.models';
 
 @Component({
   selector: 'app-swipe',
@@ -14,18 +14,15 @@ import { Job, Match } from '../models/job-seeker.models';
 })
 export class SwipeComponent {
   jobSeekerService = inject(JobSeekerService);
-  router = inject(Router);
 
   // Deck state
   currentJobIndex = signal(0);
   selectedJobForModal = signal<Job | null>(null);
 
-  // Match celebration modal state
-  recentMatchObj = signal<Match | null>(null);
-  showMatchModal = signal(false);
-
-  // Swipe animation states
+  // Swipe animation / request states
   swipeDirection = signal<'like' | 'pass' | null>(null);
+  swipePending = signal(false);
+  swipeError = signal<string | null>(null);
 
   // Filters
   filterRemote = signal<'all' | 'remote' | 'hybrid' | 'on_site'>('all');
@@ -50,21 +47,20 @@ export class SwipeComponent {
     this.filterRemote.set(val);
   }
 
-  handleSwipe(direction: 'like' | 'pass') {
+  async handleSwipe(direction: 'like' | 'pass') {
     const job = this.currentJob();
-    if (!job) return;
+    if (!job || this.swipePending()) return;
 
+    this.swipePending.set(true);
+    this.swipeError.set(null);
     this.swipeDirection.set(direction);
-
-    setTimeout(() => {
-      const res = this.jobSeekerService.swipeJob(job, direction);
+    try {
+      const res = await this.jobSeekerService.swipeJob(job, direction);
+      if (!res.ok) this.swipeError.set(res.error ?? 'Could not save your swipe. Please try again.');
+    } finally {
       this.swipeDirection.set(null);
-
-      if (res.isMatch && res.matchObj) {
-        this.recentMatchObj.set(res.matchObj);
-        this.showMatchModal.set(true);
-      }
-    }, 250);
+      this.swipePending.set(false);
+    }
   }
 
   saveJob(job: Job, event: Event) {
@@ -80,20 +76,8 @@ export class SwipeComponent {
     this.selectedJobForModal.set(null);
   }
 
-  closeMatchModal() {
-    this.showMatchModal.set(false);
-  }
-
-  openMatchMessage() {
-    const match = this.recentMatchObj();
-    this.showMatchModal.set(false);
-    if (match) {
-      this.router.navigate(['/job-seeker/messages'], { queryParams: { matchId: match.id } });
-    }
-  }
-
-  resetDeck() {
-    this.jobSeekerService.swipedJobIds.set(new Set());
+  reloadFeed() {
     this.currentJobIndex.set(0);
+    return this.jobSeekerService.loadJobFeed();
   }
 }

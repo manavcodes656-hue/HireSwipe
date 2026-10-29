@@ -16,6 +16,7 @@
 //   GET   /api/company/applications                 caller's company applications
 //   GET   /api/company/applications/:applicationId  application details
 //   PATCH /api/company/applications/:applicationId/status  update application status
+//   POST  /api/company/applications/:applicationId/interest  record company interest (needs migration 006)
 //
 // Interviews:
 //   GET   /api/company/interviews                 caller's company interviews
@@ -1058,8 +1059,136 @@ companyRouter.patch('/applications/:applicationId/status', authorizeRoles('compa
   res.status(200).json({ status: 'ok', application: fullApp })
 })
 
-// ── Company Interviews Routes ───────────────────────────────────────────────
+// ── Company Interest Route ──────────────────────────────────────────────────
 
+/**
+ * Company interest needs public.company_interest, which is proposed in migration
+ * 006 and does not exist in the checked-out supabase/migrations. The route stays
+ * off (503, before any database access) until COMPANY_INTEREST_ENABLED=true is set
+ * after 006 has been reviewed and applied.
+ */
+function requireCompanyInterestEnabled(req, res, next) {
+  if (process.env.COMPANY_INTEREST_ENABLED !== 'true') {
+    return res.status(503).json({
+      error: { code: 'COMPANY_INTEREST_UNAVAILABLE', message: 'Company interest is not available yet.' },
+    })
+  }
+  next()
+}
+
+/**
+ * Load the application through the caller's scoped client (RLS hides other
+ * companies' applications -> 404) and expose its own company_id as req.companyId,
+ * so requireCompanyMember checks membership of exactly that company.
+ */
+async function loadApplicationForInterest(req, res, next) {
+  const { data, error } = await req.supabase
+    .from('applications')
+    .select('id, company_id, job_id, job_seeker_id, status, jobs(id, company_id, status)')
+    .eq('id', req.params.applicationId)
+    .maybeSingle()
+
+  if (error) return sendDbError(res, error, 'POST /api/company/applications/:applicationId/interest (find)')
+  if (!data) {
+    return res.status(404).json({ error: { code: 'APPLICATION_NOT_FOUND', message: 'Application not found' } })
+  }
+  req.application = data
+  req.companyId = data.company_id
+  next()
+}
+
+const INTEREST_COLUMNS = 'id, application_id, expressed_by, created_at'
+// PostgREST schema-cache miss / undefined_table: migration 006 is not applied.
+const INTEREST_TABLE_MISSING = new Set(['PGRST205', '42P01'])
+
+function sendInterestError(res, error, context) {
+  if (INTEREST_TABLE_MISSING.has(error?.code)) {
+    console.error(`[db] ${context}: company_interest table is missing (migration 006 not applied)`)
+    return res.status(503).json({
+      error: { code: 'COMPANY_INTEREST_UNAVAILABLE', message: 'Company interest is not available yet.' },
+    })
+  }
+  return sendDbError(res, error, context)
+}
+
+function findInterest(req) {
+  return req.supabase
+    .from('company_interest')
+    .select(INTEREST_COLUMNS)
+    .eq('application_id', req.params.applicationId)
+    .maybeSingle()
+}
+
+/**
+ * Record that a member of the application's company is interested in the
+ * candidate. Idempotent per application. Creates no match, conversation,
+ * notification or application, and never changes the application status.
+ */
+companyRouter.post(
+  '/applications/:applicationId/interest',
+  authorizeRoles('company'),
+  requireApplicationIdParam,
+  requireCompanyInterestEnabled,
+  loadApplicationForInterest,
+  requireCompanyMember(),
+  async (req, res) => {
+    const context = 'POST /api/company/applications/:applicationId/interest'
+    const application = req.application
+
+    // Ids in the body are never trusted; a disagreeing one is a client bug.
+    const body = req.body && typeof req.body === 'object' ? req.body : {}
+    for (const [field, actual] of [['companyId', application.company_id], ['jobId', application.job_id], ['jobSeekerId', application.job_seeker_id]]) {
+      if (body[field] !== undefined && body[field] !== actual) {
+        return res.status(400).json({
+          error: { code: 'VALIDATION_ERROR', message: `${field} does not match the application` },
+        })
+      }
+    }
+
+    if (application.status === 'withdrawn') {
+      return res.status(409).json({
+        error: { code: 'APPLICATION_WITHDRAWN', message: 'The candidate withdrew this application' },
+      })
+    }
+    if (!application.jobs || application.jobs.company_id !== application.company_id) {
+      return res.status(409).json({
+        error: { code: 'APPLICATION_INCONSISTENT', message: 'The application and its job do not belong to the same company' },
+      })
+    }
+    if (application.jobs.status !== 'published') {
+      return res.status(409).json({
+        error: { code: 'JOB_NOT_PUBLISHED', message: 'This job is not published' },
+      })
+    }
+
+    const existing = await findInterest(req)
+    if (existing.error) return sendInterestError(res, existing.error, `${context} (lookup)`)
+    if (existing.data) {
+      return res.status(200).json({ status: 'ok', alreadyRecorded: true, interest: existing.data })
+    }
+
+    const { data, error } = await req.supabase
+      .from('company_interest')
+      .insert({ application_id: application.id, expressed_by: req.user.id })
+      .select(INTEREST_COLUMNS)
+      .single()
+
+    if (error) {
+      // A concurrent identical request won the unique index: confirm and report it.
+      if (error.code === '23505') {
+        const again = await findInterest(req)
+        if (!again.error && again.data) {
+          return res.status(200).json({ status: 'ok', alreadyRecorded: true, interest: again.data })
+        }
+      }
+      return sendInterestError(res, error, context)
+    }
+
+    res.status(201).json({ status: 'ok', alreadyRecorded: false, interest: data })
+  },
+)
+
+// ── Company Interviews Routes ───────────────────────────────────────────────
 /**
  * public.interviews has no company column: an interview belongs to an
  * application, and the application carries the company. Every interview query

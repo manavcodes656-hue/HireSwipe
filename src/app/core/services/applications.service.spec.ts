@@ -207,6 +207,80 @@ describe('ApplicationsService — Backend Integration Tests', () => {
     });
   });
 
+  describe('POST /api/company/applications/:applicationId/interest', () => {
+    const url = `${apiUrl}/company/applications/${applicationId}/interest`;
+    const interest = { id: 'i-1', application_id: applicationId, expressed_by: 'u-1', created_at: '2026-01-01T00:00:00Z' };
+
+    beforeEach(() => vi.spyOn(console, 'error').mockImplementation(() => {}));
+
+    it('posts to the real application id with the Bearer token and no body ids', async () => {
+      const promise = service.expressCompanyInterest(applicationId);
+      await new Promise((r) => setTimeout(r, 5));
+
+      const req = httpMock.expectOne(url);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer mock-access-token-xyz');
+      expect(req.request.body).toEqual({});
+      req.flush({ status: 'ok', alreadyRecorded: false, interest }, { status: 201, statusText: 'Created' });
+
+      expect(await promise).toEqual({ interest, alreadyRecorded: false, error: null });
+    });
+
+    it('reports a repeated request as already recorded, not as an error', async () => {
+      const promise = service.expressCompanyInterest(applicationId);
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(url).flush({ status: 'ok', alreadyRecorded: true, interest });
+
+      expect(await promise).toEqual({ interest, alreadyRecorded: true, error: null });
+    });
+
+    it('returns the backend message for rejections and never reports success', async () => {
+      const cases: [number, string, string][] = [
+        [403, 'FORBIDDEN', 'Not an active member of this company'],
+        [404, 'APPLICATION_NOT_FOUND', 'Application not found'],
+        [409, 'APPLICATION_WITHDRAWN', 'The candidate withdrew this application'],
+        [409, 'JOB_NOT_PUBLISHED', 'This job is not published'],
+        [503, 'COMPANY_INTEREST_UNAVAILABLE', 'Company interest is not available yet.'],
+      ];
+      for (const [status, code, message] of cases) {
+        const promise = service.expressCompanyInterest(applicationId);
+        await new Promise((r) => setTimeout(r, 5));
+        httpMock.expectOne(url).flush({ error: { code, message } }, { status, statusText: code });
+
+        const result = await promise;
+        expect(result.error).toBe(message);
+        expect(result.interest).toBeNull();
+      }
+    });
+
+    it('gives a readable message when the server cannot be reached', async () => {
+      const promise = service.expressCompanyInterest(applicationId);
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(url).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+      const result = await promise;
+      expect(result.error).toMatch(/Could not reach the server/);
+      expect(result.interest).toBeNull();
+    });
+
+    it('lists the application ids the company has expressed interest in', async () => {
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: [{ application_id: 'a1' }, { application_id: 'a2' }], error: null }),
+      });
+
+      expect(await service.getInterestedApplicationIds()).toEqual(['a1', 'a2']);
+      expect(mockSupabaseService.client.from).toHaveBeenCalledWith('company_interest');
+    });
+
+    it('returns an empty list when the interest read fails', async () => {
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: null, error: { message: 'permission denied' } }),
+      });
+
+      expect(await service.getInterestedApplicationIds()).toEqual([]);
+    });
+  });
+
   describe('Direct Supabase Job Seeker Operations', () => {
     it('preserves getJobSeekerApplications direct query for candidate dashboard', async () => {
       const result = await service.getJobSeekerApplications('seeker-1');
@@ -219,6 +293,64 @@ describe('ApplicationsService — Backend Integration Tests', () => {
       expect(mockSupabaseService.client.from).toHaveBeenCalledWith('applications');
       expect(result.error).toBeNull();
       expect(result.data).toEqual(dummyApp);
+    });
+
+    it('applyToJob returns the database error code so callers can react to duplicates and eligibility', async () => {
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: 'Application not allowed: Missing mandatory profile fields: headline', code: '23514' },
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.applyToJob(jobId, 'seeker-1', companyId);
+
+      expect(result.data).toBeNull();
+      expect(result.code).toBe('23514');
+      expect(result.error).toContain('Missing mandatory profile fields');
+    });
+
+    describe('getApplicationForJob / getAppliedJobIds', () => {
+      const chain = (terminal: any) => {
+        const q: any = {};
+        q.select = vi.fn().mockReturnValue(q);
+        q.eq = vi.fn().mockReturnValue(q);
+        q.maybeSingle = vi.fn().mockResolvedValue(terminal);
+        q.then = (resolve: any) => resolve(terminal); // awaited without maybeSingle (list query)
+        mockSupabaseService.client.from = vi.fn().mockReturnValue(q);
+        return q;
+      };
+
+      it('looks the application up by job and candidate', async () => {
+        const q = chain({ data: dummyApp, error: null });
+
+        const result = await service.getApplicationForJob(jobId, 'seeker-1');
+
+        expect(q.eq).toHaveBeenCalledWith('job_id', jobId);
+        expect(q.eq).toHaveBeenCalledWith('job_seeker_id', 'seeker-1');
+        expect(result).toEqual({ data: dummyApp, error: null });
+      });
+
+      it('returns null data when there is no application, and the message on error', async () => {
+        chain({ data: null, error: null });
+        expect((await service.getApplicationForJob(jobId, 's')).data).toBeNull();
+
+        chain({ data: null, error: { message: 'rls' } });
+        expect(await service.getApplicationForJob(jobId, 's')).toEqual({ data: null, error: 'rls' });
+      });
+
+      it('lists applied job ids and throws on errors', async () => {
+        chain({ data: [{ job_id: 'a' }, { job_id: 'b' }], error: null });
+        expect(await service.getAppliedJobIds('s')).toEqual(['a', 'b']);
+
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        chain({ data: null, error: { message: 'boom' } });
+        await expect(service.getAppliedJobIds('s')).rejects.toThrow('boom');
+      });
     });
 
     it('preserves withdrawApplication direct query', async () => {

@@ -186,10 +186,54 @@ export class JobCreateComponent implements OnInit {
     this.benefitsList.splice(index, 1);
   }
 
+  private static readonly FIELD_LABELS: Record<string, string> = {
+    title: 'Job Title',
+    description: 'Job Description (at least 30 characters)',
+    employment_type: 'Employment Type',
+    experience_level: 'Experience Level',
+    experience_min: 'Minimum Experience',
+    experience_max: 'Maximum Experience',
+    salary_min: 'Minimum Salary',
+    salary_max: 'Maximum Salary',
+    salary_currency: 'Currency',
+    location: 'Location',
+    city: 'City',
+    state: 'State',
+    country: 'Country',
+    remote_type: 'Work Mode',
+    openings: 'Openings (at least 1)',
+    application_deadline: 'Application Deadline',
+  };
+
+  private invalidFieldLabels(): string[] {
+    return Object.entries(this.jobForm.controls)
+      .filter(([, control]) => control.invalid)
+      .map(([name]) => JobCreateComponent.FIELD_LABELS[name] ?? name);
+  }
+
+  /** Cross-field rules the API also enforces (company-routes.js validateJobPayload). */
+  private rangeProblem(): string | null {
+    const v = this.jobForm.value;
+    if (Number(v.salary_max) < Number(v.salary_min)) return 'Maximum salary cannot be less than minimum salary.';
+    if (Number(v.experience_max) < Number(v.experience_min)) return 'Maximum experience cannot be less than minimum experience.';
+    return null;
+  }
+
   async saveJob(status: 'active' | 'draft'): Promise<void> {
+    // Ignore repeat calls (double click, or the second Publish button) while a save is in flight.
+    if (this.isSaving()) return;
+
     if (this.jobForm.invalid) {
       this.jobForm.markAllAsTouched();
-      this.saveError.set('Please fill out all required fields marked with * before publishing.');
+      this.saveError.set(
+        `Please fill out all required fields marked with * before publishing: ${this.invalidFieldLabels().join(', ')}.`
+      );
+      this.cdr.markForCheck();
+      return;
+    }
+    const rangeProblem = this.rangeProblem();
+    if (rangeProblem) {
+      this.saveError.set(rangeProblem);
       this.cdr.markForCheck();
       return;
     }

@@ -78,6 +78,20 @@ export class JobsService {
     return headers;
   }
 
+  /**
+   * User-facing text for a failed backend call: the API message plus the offending
+   * fields of a validation error (e.g. "Invalid request body: salary_max cannot be less than salary_min").
+   */
+  private backendErrorMessage(err: any, fallback: string): string {
+    const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
+    const fields =
+      backendError?.fields && typeof backendError.fields === 'object'
+        ? Object.entries(backendError.fields).map(([name, problem]) => `${name} ${problem}`).join('; ')
+        : '';
+    if (backendError?.message) return fields ? `${backendError.message}: ${fields}` : backendError.message;
+    return err?.message || fallback;
+  }
+
   private sanitizeJobPayload(jobData: any): Record<string, any> {
     if (!jobData || typeof jobData !== 'object') return {};
     const payload: Record<string, any> = {};
@@ -119,16 +133,26 @@ export class JobsService {
   // ── Jobs ─────────────────────────────────────────────────────────────────
 
   /**
-   * Get all published jobs for the swipe deck (job seekers).
+   * Get published jobs for the swipe deck (job seekers), newest first, with
+   * company, skills and requirements embedded. excludeIds (e.g. already
+   * swiped jobs) are filtered in the query so they never use up the page.
+   * Throws on database errors so callers can show them.
    */
-  async getPublishedJobs(limit = 20, offset = 0): Promise<JobRow[]> {
-    const { data, error } = await this.supabase.client
+  async getPublishedJobs(limit = 20, offset = 0, excludeIds: string[] = []): Promise<JobRow[]> {
+    let query = this.supabase.client
       .from('jobs')
-      .select('*, companies(name, logo_url)')
-      .eq('status', 'published')
+      .select('*, companies(name, logo_url, industry), job_skills(is_required, skills(name)), job_requirements(requirement)')
+      .eq('status', 'published');
+    if (excludeIds.length > 0) {
+      query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+    }
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
-    if (error) console.error('[JobsService] getPublishedJobs:', error.message);
+    if (error) {
+      console.error('[JobsService] getPublishedJobs:', error.message);
+      throw new Error(error.message);
+    }
     return (data ?? []) as any;
   }
 
@@ -208,7 +232,8 @@ export class JobsService {
         this.http.post<CompanyJobResponse>(`${this.apiUrl}/company/jobs`, payload, { headers })
       );
       return { jobId: response.job?.id ?? null, error: null };
-    } catch (err: any) {      if (err instanceof HttpErrorResponse && err.status === 0) {
+    } catch (err: any) {
+      if (err instanceof HttpErrorResponse && err.status === 0) {
         console.warn('[JobsService] createJob: backend unreachable, falling back to direct Supabase insert.');
         const insertPayload: Record<string, any> = {
           ...this.sanitizeJobPayload(jobData),
@@ -232,9 +257,7 @@ export class JobsService {
         return { jobId: data.id, error: null };
       }
 
-
-      const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
-      const message = backendError?.message || err.message || 'Failed to create job';
+      const message = this.backendErrorMessage(err, 'Failed to create job');
       console.error('[JobsService] createJob error:', message);
       return { jobId: null, error: message };
     }
@@ -254,7 +277,8 @@ export class JobsService {
         this.http.patch<CompanyJobResponse>(`${this.apiUrl}/company/jobs/${jobId}`, payload, { headers })
       );
       return { error: null };
-    } catch (err: any) {      if (err instanceof HttpErrorResponse && err.status === 0) {
+    } catch (err: any) {
+      if (err instanceof HttpErrorResponse && err.status === 0) {
         console.warn('[JobsService] updateJob: backend unreachable, falling back to direct Supabase update.');
         const updatePayload: Record<string, any> = { ...this.sanitizeJobPayload(updates) };
         delete updatePayload['requirements'];
@@ -273,9 +297,7 @@ export class JobsService {
         return { error: null };
       }
 
-
-      const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
-      const message = backendError?.message || err.message || 'Failed to update job';
+      const message = this.backendErrorMessage(err, 'Failed to update job');
       console.error('[JobsService] updateJob error:', message);
       return { error: message };
     }
@@ -428,4 +450,3 @@ export class JobsService {
     return { error: null };
   }
 }
-

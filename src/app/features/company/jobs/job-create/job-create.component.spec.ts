@@ -84,7 +84,9 @@ describe('JobCreateComponent — Post Job Button Bug Regression Tests', () => {
 
     expect(component.jobForm.get('title')?.touched).toBe(true);
     expect(component.jobForm.get('description')?.touched).toBe(true);
-    expect(component.saveError()).toBe('Please fill out all required fields marked with * before publishing.');
+    expect(component.saveError()).toContain('Please fill out all required fields marked with * before publishing');
+    expect(component.saveError()).toContain('Job Title');
+    expect(component.saveError()).toContain('Job Description');
   });
 
   it('should call createJob and navigate to /company/jobs on successful submission', async () => {
@@ -165,6 +167,41 @@ describe('JobCreateComponent — Post Job Button Bug Regression Tests', () => {
     expect(mockDataService.updateJob).toHaveBeenCalledWith('existing-job-id', expect.any(Object));
     expect(mockDataService.createJob).not.toHaveBeenCalled();
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/company/jobs']);
+  });
+
+  it('should ignore a second save while one is already in flight (duplicate submission)', async () => {
+    fillValidForm();
+    let resolvePromise: (value: any) => void;
+    mockDataService.createJob.mockReturnValue(new Promise((resolve) => { resolvePromise = resolve; }));
+
+    const first = component.saveJob('active');
+    void component.saveJob('active');
+    void component.saveJob('draft');
+
+    expect(mockDataService.createJob).toHaveBeenCalledTimes(1);
+    resolvePromise!({ jobId: 'new-job-id', error: null });
+    await first;
+    expect(mockDataService.createJob).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject a salary range the API would refuse, without calling the API', async () => {
+    fillValidForm();
+    component.jobForm.patchValue({ salary_min: 5000000, salary_max: 1000000 });
+
+    await component.saveJob('active');
+
+    expect(component.saveError()).toBe('Maximum salary cannot be less than minimum salary.');
+    expect(mockDataService.createJob).not.toHaveBeenCalled();
+  });
+
+  it('should reject an experience range the API would refuse, without calling the API', async () => {
+    fillValidForm();
+    component.jobForm.patchValue({ experience_min: 9, experience_max: 2 });
+
+    await component.saveJob('active');
+
+    expect(component.saveError()).toBe('Maximum experience cannot be less than minimum experience.');
+    expect(mockDataService.createJob).not.toHaveBeenCalled();
   });
 
   it('should use signals for isSaving and saveError for zoneless change detection', () => {
