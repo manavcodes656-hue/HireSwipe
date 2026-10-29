@@ -9,10 +9,12 @@ import { AuthComponent } from './components/auth/auth.component';
 import { LandingComponent } from './components/landing/landing.component';
 import { AuthService } from './core/services/auth.service';
 import { CompanyDataService } from './features/company/services/company-data.service';
+import { JobSeekerService } from './features/job-seeker/services/job-seeker.service';
 
 describe('HireSwipe Application & Authentication', () => {
   let mockAuthService: any;
   let mockCompanyDataService: any;
+  let mockJobSeekerService: any;
   let mockRouter: Router;
 
   beforeEach(async () => {
@@ -48,12 +50,19 @@ describe('HireSwipe Application & Authentication', () => {
       initialize: vi.fn().mockResolvedValue(undefined),
     };
 
+    mockJobSeekerService = {
+      ensureProfileLoaded: vi.fn().mockResolvedValue(true),
+      isOnboardingCompleted: vi.fn(() => false),
+      setOnboardingCompleted: vi.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [App, AuthComponent, LandingComponent],
       providers: [
         provideRouter(routes),
         { provide: AuthService, useValue: mockAuthService },
         { provide: CompanyDataService, useValue: mockCompanyDataService },
+        { provide: JobSeekerService, useValue: mockJobSeekerService },
       ],
     }).compileComponents();
 
@@ -139,8 +148,9 @@ describe('HireSwipe Application & Authentication', () => {
       expect(component.successMessage).toBe('');
     });
 
-    it('should navigate to the job-seeker dashboard on a successful sign-in', async () => {
+    it('should navigate to the job-seeker dashboard on a successful sign-in when onboarding is complete', async () => {
       mockAuthService.signIn.mockResolvedValue({ error: null });
+      mockJobSeekerService.isOnboardingCompleted.mockReturnValue(true);
 
       const fixture = TestBed.createComponent(AuthComponent);
       const component = fixture.componentInstance;
@@ -152,7 +162,24 @@ describe('HireSwipe Application & Authentication', () => {
       expect(mockAuthService.signIn).toHaveBeenCalledWith('alex@example.com', 'password123');
       await fixture.whenStable();
       expect(component.successMessage).toContain('Signed in successfully as Job Seeker');
+      expect(mockJobSeekerService.ensureProfileLoaded).toHaveBeenCalled();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/job-seeker/dashboard']);
+    });
+
+    it('should redirect an incomplete job seeker to onboarding on sign-in', async () => {
+      mockAuthService.signIn.mockResolvedValue({ error: null });
+      mockJobSeekerService.isOnboardingCompleted.mockReturnValue(false);
+
+      const fixture = TestBed.createComponent(AuthComponent);
+      const component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.loginForm.patchValue({ email: 'alex@example.com', password: 'password123' });
+      component.onSubmit();
+
+      await fixture.whenStable();
+      expect(mockJobSeekerService.ensureProfileLoaded).toHaveBeenCalled();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/job-seeker/onboarding']);
     });
 
     it('should navigate a company to onboarding when onboarding is not complete', async () => {

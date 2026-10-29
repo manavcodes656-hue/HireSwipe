@@ -110,7 +110,7 @@ export class JobSeekerService {
     github_url: 'https://github.com/krish-sharma-dev',
     portfolio_url: 'https://krishsharma.dev',
     salary_currency: 'INR',
-    onboarding_completed: true,
+    onboarding_completed: false,
     profile_completion_pct: 0,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
