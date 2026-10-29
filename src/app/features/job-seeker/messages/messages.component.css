@@ -369,3 +369,12 @@
     max-height: 250px;
   }
 }
+
+.send-error {
+  margin: 0 1rem 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.85rem;
+}

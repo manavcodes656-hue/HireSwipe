@@ -136,6 +136,46 @@ function mapApplicationRow(a: any): Application {
   };
 }
 
+const formatChatTime = (iso: string | null | undefined): string =>
+  iso ? new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+/** Maps a conversation_members row (with its conversation, match, job and company) to the candidate Conversation model. */
+export function mapConversationRow(row: any): Conversation | null {
+  const conv = row?.conversations;
+  if (!conv?.id) return null;
+  const match = conv.matches;
+  return {
+    id: conv.id,
+    match_id: conv.match_id,
+    created_at: conv.updated_at,
+    updated_at: conv.updated_at,
+    company_name: match?.companies?.name,
+    company_logo: match?.companies?.logo_url ?? null,
+    job_title: match?.jobs?.title,
+    last_message_snippet: '',
+    last_message_at: '',
+    unread_count: 0,
+  };
+}
+
+/** Maps a messages row (optionally with its sender profile) to the candidate Message model. */
+export function mapMessageRow(row: any, currentUserId: string | null): Message {
+  return {
+    id: row.id,
+    conversation_id: row.conversation_id,
+    sender_id: row.sender_id,
+    sender_name: row.profiles?.full_name ?? undefined,
+    sender_avatar: row.profiles?.avatar_url ?? null,
+    is_job_seeker: row.sender_id === currentUserId,
+    message: row.message,
+    text: row.message,
+    message_type: row.message_type,
+    is_read: true,
+    read_state: true,
+    created_at: formatChatTime(row.created_at),
+  };
+}
+
 /** User-facing text for a failed application insert (codes from the 004 insert trigger). */
 function applicationErrorMessage(code?: string | null, message?: string | null): string {
   const reason = (message ?? '').replace(/^Application not allowed:\s*/i, '');
@@ -1895,10 +1935,111 @@ export class JobSeekerService {
 
   // ── Messaging Action Methods ─────────────────────────────────────────────
 
-  async sendMessage(conversationId: string, text: string, attachments?: any[]) {
-    if (!text.trim() && (!attachments || attachments.length === 0)) return;
-    const userId = this.authService.getCurrentUserId() ?? this.profile().user_id;
+  /**
+   * Loads the candidate's real conversations. A conversation exists only for a real
+   * match and RLS limits rows to its members, so nothing here can reach another
+   * user's chat. The seeded demo conversations stay only while there are none.
+   */
+  async loadConversations(): Promise<void> {
+    const profileId = this.authService.getCurrentUserId();
+    if (!profileId) return;
+    try {
+      const rows = await this.messagesService.getConversations(profileId);
+      const real = rows.map(mapConversationRow).filter((c): c is Conversation => !!c);
+      if (real.length > 0) this.conversations.set(real);
+    } catch (err) {
+      console.error('[JobSeekerService] loadConversations failed:', err);
+    }
+  }
 
+  /** Loads the stored messages of a real conversation (seeded demo conversations are skipped). */
+  async loadMessages(conversationId: string): Promise<void> {
+    if (!UUID_RE.test(conversationId)) return;
+    const userId = this.authService.getCurrentUserId();
+    const rows = await this.messagesService.getMessages(conversationId);
+    const mapped = rows.map((row) => mapMessageRow(row, userId));
+    this.messages.update((dict) => ({ ...dict, [conversationId]: mapped }));
+    this.touchConversation(conversationId, mapped[mapped.length - 1]);
+  }
+
+  private conversationWatch: { stop: () => void } | null = null;
+
+  /**
+   * Opens a real conversation: loads it and keeps it fresh. Realtime delivers new
+   * messages when it is enabled for the table; a short poll covers the case where
+   * it is not. Messages are de-duplicated by id.
+   */
+  async openConversation(conversationId: string): Promise<void> {
+    this.closeConversation();
+    if (!UUID_RE.test(conversationId)) return;
+    await this.loadMessages(conversationId);
+    const unsubscribe = this.messagesService.subscribeToMessages(conversationId, (row) =>
+      this.appendMessage(mapMessageRow(row, this.authService.getCurrentUserId()))
+    );
+    const timer = setInterval(() => void this.loadMessages(conversationId), 5000);
+    this.conversationWatch = {
+      stop: () => {
+        unsubscribe();
+        clearInterval(timer);
+      },
+    };
+  }
+
+  closeConversation(): void {
+    this.conversationWatch?.stop();
+    this.conversationWatch = null;
+  }
+
+  private appendMessage(message: Message): void {
+    this.messages.update((dict) => {
+      const current = dict[message.conversation_id] || [];
+      return current.some((m) => m.id === message.id)
+        ? dict
+        : { ...dict, [message.conversation_id]: [...current, message] };
+    });
+    this.touchConversation(message.conversation_id, message);
+  }
+
+  private touchConversation(conversationId: string, last?: Message): void {
+    if (!last) return;
+    this.conversations.update((list) =>
+      list.map((c) =>
+        c.id === conversationId
+          ? { ...c, last_message_snippet: last.message.slice(0, 80), last_message_at: last.created_at }
+          : c
+      )
+    );
+  }
+
+  /**
+   * Sends a message. In a real conversation the database stores it first (RLS: members
+   * only) and it is shown only once stored; a failure is reported and nothing is shown.
+   * Seeded demo conversations (non-UUID ids) stay local-only, as before.
+   */
+  async sendMessage(
+    conversationId: string,
+    text: string,
+    attachments?: any[]
+  ): Promise<{ ok: boolean; error?: string }> {
+    const body = text.trim();
+    if (!body && (!attachments || attachments.length === 0)) return { ok: false };
+    const sessionUserId = this.authService.getCurrentUserId();
+
+    if (UUID_RE.test(conversationId)) {
+      if (!sessionUserId) return { ok: false, error: 'Please sign in again to send messages.' };
+      if (attachments && attachments.length > 0) {
+        return { ok: false, error: 'File attachments are not available yet. Remove the file and send a text message.' };
+      }
+      const res = await this.messagesService.sendMessage(conversationId, sessionUserId, body);
+      if (res.error || !res.data) {
+        console.error('[JobSeekerService] sendMessage failed:', res.error);
+        return { ok: false, error: 'Could not send your message. Check your connection and try again.' };
+      }
+      this.appendMessage(mapMessageRow({ ...res.data, profiles: { full_name: this.profile().full_name } }, sessionUserId));
+      return { ok: true };
+    }
+
+    const userId = sessionUserId ?? this.profile().user_id;
     const newMsg: Message = {
       id: 'msg-' + Date.now(),
       conversation_id: conversationId,
@@ -1933,12 +2074,8 @@ export class JobSeekerService {
           : c
       )
     );
-
-    if (userId && !conversationId.startsWith('conv-')) {
-      await this.messagesService.sendMessage(conversationId, userId, text);
-    }
+    return { ok: true };
   }
-
   markConversationRead(conversationId: string) {
     this.conversations.update((list) =>
       list.map((c) => (c.id === conversationId ? { ...c, unread_count: 0 } : c))
