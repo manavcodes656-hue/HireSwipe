@@ -408,6 +408,46 @@ describe('JobsService — Backend Integration Tests', () => {
       expect(result).toHaveLength(1);
     });
 
+    describe('getPublishedJobs feed query', () => {
+      const makeChain = (result: any) => {
+        const range = vi.fn().mockResolvedValue(result);
+        const chain: any = {};
+        chain.select = vi.fn().mockReturnValue(chain);
+        chain.eq = vi.fn().mockReturnValue(chain);
+        chain.not = vi.fn().mockReturnValue(chain);
+        chain.order = vi.fn().mockReturnValue({ range });
+        mockSupabaseService.client.from = vi.fn().mockReturnValue(chain);
+        return chain;
+      };
+
+      it('only requests published jobs with company, skills and requirements embedded', async () => {
+        const chain = makeChain({ data: [dummyJob], error: null });
+        await service.getPublishedJobs(10, 0);
+        expect(chain.eq).toHaveBeenCalledWith('status', 'published');
+        const columns = chain.select.mock.calls[0][0];
+        expect(columns).toContain('companies(');
+        expect(columns).toContain('job_skills(');
+        expect(columns).toContain('job_requirements(');
+        expect(chain.not).not.toHaveBeenCalled();
+      });
+
+      it('excludes swiped job ids inside the query', async () => {
+        const chain = makeChain({ data: [], error: null });
+        await service.getPublishedJobs(10, 0, ['a', 'b']);
+        expect(chain.not).toHaveBeenCalledWith('id', 'in', '(a,b)');
+      });
+
+      it('returns an empty array when there are no jobs', async () => {
+        makeChain({ data: [], error: null });
+        expect(await service.getPublishedJobs()).toEqual([]);
+      });
+
+      it('throws on database errors', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        makeChain({ data: null, error: { message: 'permission denied' } });
+        await expect(service.getPublishedJobs()).rejects.toThrow('permission denied');
+      });
+    });
     it('preserves saveJob and unsaveJob operations', async () => {
       const saveRes = await service.saveJob('seeker-1', jobId);
       expect(mockSupabaseService.client.from).toHaveBeenCalledWith('saved_jobs');

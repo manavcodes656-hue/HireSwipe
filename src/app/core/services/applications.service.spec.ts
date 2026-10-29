@@ -221,6 +221,64 @@ describe('ApplicationsService — Backend Integration Tests', () => {
       expect(result.data).toEqual(dummyApp);
     });
 
+    it('applyToJob returns the database error code so callers can react to duplicates and eligibility', async () => {
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: 'Application not allowed: Missing mandatory profile fields: headline', code: '23514' },
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.applyToJob(jobId, 'seeker-1', companyId);
+
+      expect(result.data).toBeNull();
+      expect(result.code).toBe('23514');
+      expect(result.error).toContain('Missing mandatory profile fields');
+    });
+
+    describe('getApplicationForJob / getAppliedJobIds', () => {
+      const chain = (terminal: any) => {
+        const q: any = {};
+        q.select = vi.fn().mockReturnValue(q);
+        q.eq = vi.fn().mockReturnValue(q);
+        q.maybeSingle = vi.fn().mockResolvedValue(terminal);
+        q.then = (resolve: any) => resolve(terminal); // awaited without maybeSingle (list query)
+        mockSupabaseService.client.from = vi.fn().mockReturnValue(q);
+        return q;
+      };
+
+      it('looks the application up by job and candidate', async () => {
+        const q = chain({ data: dummyApp, error: null });
+
+        const result = await service.getApplicationForJob(jobId, 'seeker-1');
+
+        expect(q.eq).toHaveBeenCalledWith('job_id', jobId);
+        expect(q.eq).toHaveBeenCalledWith('job_seeker_id', 'seeker-1');
+        expect(result).toEqual({ data: dummyApp, error: null });
+      });
+
+      it('returns null data when there is no application, and the message on error', async () => {
+        chain({ data: null, error: null });
+        expect((await service.getApplicationForJob(jobId, 's')).data).toBeNull();
+
+        chain({ data: null, error: { message: 'rls' } });
+        expect(await service.getApplicationForJob(jobId, 's')).toEqual({ data: null, error: 'rls' });
+      });
+
+      it('lists applied job ids and throws on errors', async () => {
+        chain({ data: [{ job_id: 'a' }, { job_id: 'b' }], error: null });
+        expect(await service.getAppliedJobIds('s')).toEqual(['a', 'b']);
+
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        chain({ data: null, error: { message: 'boom' } });
+        await expect(service.getAppliedJobIds('s')).rejects.toThrow('boom');
+      });
+    });
+
     it('preserves withdrawApplication direct query', async () => {
       await service.withdrawApplication(applicationId);
       expect(mockSupabaseService.client.from).toHaveBeenCalledWith('applications');

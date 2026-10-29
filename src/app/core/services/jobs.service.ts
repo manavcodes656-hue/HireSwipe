@@ -133,16 +133,26 @@ export class JobsService {
   // ── Jobs ─────────────────────────────────────────────────────────────────
 
   /**
-   * Get all published jobs for the swipe deck (job seekers).
+   * Get published jobs for the swipe deck (job seekers), newest first, with
+   * company, skills and requirements embedded. excludeIds (e.g. already
+   * swiped jobs) are filtered in the query so they never use up the page.
+   * Throws on database errors so callers can show them.
    */
-  async getPublishedJobs(limit = 20, offset = 0): Promise<JobRow[]> {
-    const { data, error } = await this.supabase.client
+  async getPublishedJobs(limit = 20, offset = 0, excludeIds: string[] = []): Promise<JobRow[]> {
+    let query = this.supabase.client
       .from('jobs')
-      .select('*, companies(name, logo_url)')
-      .eq('status', 'published')
+      .select('*, companies(name, logo_url, industry), job_skills(is_required, skills(name)), job_requirements(requirement)')
+      .eq('status', 'published');
+    if (excludeIds.length > 0) {
+      query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+    }
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
-    if (error) console.error('[JobsService] getPublishedJobs:', error.message);
+    if (error) {
+      console.error('[JobsService] getPublishedJobs:', error.message);
+      throw new Error(error.message);
+    }
     return (data ?? []) as any;
   }
 

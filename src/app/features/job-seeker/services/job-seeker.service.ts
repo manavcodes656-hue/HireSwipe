@@ -59,6 +59,95 @@ function mapEmploymentTypeToDb(type?: string | null): 'full_time' | 'part_time' 
   return 'full_time';
 }
 
+function formatSalary(min?: number | null, max?: number | null, currency?: string | null): string {
+  if (min == null && max == null) return 'Not disclosed';
+  const fmt = (n: number) => new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+  const range = min != null && max != null ? `${fmt(min)}–${fmt(max)}` : fmt((min ?? max) as number);
+  return `${currency ?? ''} ${range}`.trim();
+}
+
+/** Maps a published jobs row (with embedded relations) to the swipe-card Job model. No invented fields. */
+export function mapPublishedJob(j: any): Job {
+  return {
+    id: j.id,
+    title: j.title,
+    company_id: j.company_id,
+    company_name: j.companies?.name,
+    company_logo: j.companies?.logo_url ?? null,
+    company_type: j.companies?.industry ?? undefined,
+    location: j.location,
+    employment_type: String(j.employment_type ?? '').replace(/_/g, ' '),
+    salary_min: j.salary_min,
+    salary_max: j.salary_max,
+    salary_currency: j.salary_currency,
+    salary_display: formatSalary(j.salary_min, j.salary_max, j.salary_currency),
+    experience_level: j.experience_level,
+    remote_type: j.remote_type,
+    remote_option: j.remote_type,
+    description: j.description,
+    requirements: (j.job_requirements ?? []).map((r: any) => r.requirement),
+    skills: (j.job_skills ?? []).map((s: any) => s.skills?.name).filter(Boolean),
+    posted_at: j.created_at,
+    status: j.status,
+    created_at: j.created_at,
+    updated_at: j.updated_at,
+  };
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export interface SwipeOutcome {
+  ok: boolean;
+  error?: string;
+}
+
+function swipeErrorMessage(err: any): string {
+  switch (err?.code) {
+    case 'SWIPE_CONFLICT':
+      return 'You already responded to this job differently.';
+    case '42501':
+      return 'You do not have permission to swipe on this job.';
+    case '23503':
+      return 'This job is no longer available.';
+    default:
+      return 'Could not save your swipe. Check your connection and try again.';
+  }
+}
+
+/** Maps an `applications` row (with embedded job and company) to the candidate Application model. */
+function mapApplicationRow(a: any): Application {
+  return {
+    id: a.id,
+    job_seeker_id: a.job_seeker_id,
+    job_id: a.job_id,
+    company_id: a.company_id,
+    company_name: a.companies?.name,
+    company_logo: a.companies?.logo_url,
+    job_title: a.jobs?.title,
+    job_location: a.jobs?.location,
+    salary_range: a.jobs?.salary_min ? `₹${a.jobs.salary_min / 100000}–${a.jobs.salary_max / 100000} LPA` : undefined,
+    employment_type: a.jobs?.employment_type,
+    status: a.status,
+    applied_at: a.applied_at,
+    updated_at: a.updated_at,
+    cover_letter: a.cover_letter,
+    resume_id: a.resume_id,
+    match_score: a.match_score,
+  };
+}
+
+/** User-facing text for a failed application insert (codes from the 004 insert trigger). */
+function applicationErrorMessage(code?: string | null, message?: string | null): string {
+  const reason = (message ?? '').replace(/^Application not allowed:\s*/i, '');
+  if (/Missing mandatory profile fields/i.test(reason)) {
+    return `Complete your profile before applying. ${reason.replace(/^Missing mandatory profile fields:\s*/i, 'Missing: ')}.`;
+  }
+  if (/deadline/i.test(reason)) return 'The application deadline for this job has passed.';
+  if (/not currently accepting/i.test(reason)) return 'This job is no longer accepting applications.';
+  if (code === '23503' || /Job not found/i.test(reason)) return 'This job is no longer available.';
+  if (code === '42501') return 'You do not have permission to apply to this job.';
+  return 'Could not create your application. Check your connection and try again.';
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -73,6 +162,8 @@ export class JobSeekerService {
   private readonly interviewsService = inject(InterviewsService);
   private readonly notificationsService = inject(NotificationsService);
   private readonly messagesService = inject(MessagesService);
+
+  private readonly swipesInFlight = new Map<string, Promise<SwipeOutcome>>();
 
   // ── Loading and Error Signals ───────────────────────────────────────────
   readonly loading = signal<boolean>(false);
@@ -252,95 +343,12 @@ export class JobSeekerService {
   });
 
   // ── 7. Discovery / Swipe Deck State ──────────────────────────────────────
-  readonly jobs = signal<Job[]>([
-    {
-      id: 'job-1',
-      title: 'Senior Full Stack Engineer (Angular & Node)',
-      company_id: 'comp-101',
-      company_name: 'Google India',
-      company_logo: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg',
-      company_type: 'Tier 1 Tech Product Company',
-      location: 'Bengaluru (Hybrid)',
-      employment_type: 'Full-time',
-      salary_min: 3200000,
-      salary_max: 4800000,
-      salary_currency: 'INR',
-      salary_display: '₹32–48 LPA',
-      experience_level: 'Senior (4-7 yrs)',
-      remote_type: 'hybrid',
-      remote_option: 'Hybrid',
-      description: 'Google Cloud Platform team is looking for a Senior Full Stack Engineer to lead front-end platform modularity and API integrations.',
-      requirements: [
-        '5+ years of software development experience using TypeScript/JavaScript',
-        'Deep mastery of Angular or modern reactive frontend frameworks',
-        'Proven track record with high-scale distributed systems and Node.js microservices',
-      ],
-      skills: ['Angular', 'TypeScript', 'Node.js', 'System Design', 'GCP'],
-      match_score: '96%',
-      posted_at: '2 days ago',
-      status: 'published',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: 'job-2',
-      title: 'Lead Frontend Systems Architect',
-      company_id: 'comp-102',
-      company_name: 'Microsoft',
-      company_logo: 'https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg',
-      company_type: 'Global Enterprise Cloud Leader',
-      location: 'Hyderabad (Hybrid)',
-      employment_type: 'Full-time',
-      salary_min: 3500000,
-      salary_max: 5200000,
-      salary_currency: 'INR',
-      salary_display: '₹35–52 LPA',
-      experience_level: 'Lead / Staff',
-      remote_type: 'hybrid',
-      remote_option: 'Hybrid',
-      description: 'Join Azure Web Tools org to drive core client architecture, rendering performance, and micro-frontend orchestrations across cloud portals.',
-      requirements: [
-        '6+ years of UI platform engineering experience',
-        'Expertise in Web Performance tuning, Bundle Optimization, and TypeScript',
-      ],
-      skills: ['TypeScript', 'Angular', 'RxJS', 'Web Performance', 'Azure'],
-      match_score: '98%',
-      posted_at: '1 day ago',
-      status: 'published',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: 'job-3',
-      title: 'Staff UI Platform Engineer',
-      company_id: 'comp-103',
-      company_name: 'Stripe India',
-      company_logo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg',
-      company_type: 'Global Payments Infrastructure',
-      location: 'Remote / Bengaluru',
-      employment_type: 'Full-time',
-      salary_min: 3800000,
-      salary_max: 5800000,
-      salary_currency: 'INR',
-      salary_display: '₹38–58 LPA',
-      experience_level: 'Senior / Staff',
-      remote_type: 'remote',
-      remote_option: 'Remote',
-      description: 'Building frictionless checkout interfaces used by millions of merchants worldwide. High standard for design accuracy and reliability.',
-      requirements: [
-        '5+ years building fintech UI components and state machines',
-        'Obsession over pixel perfection, accessibility (a11y), and zero-downtime releases',
-      ],
-      skills: ['TypeScript', 'Angular', 'System Design', 'REST APIs', 'PostgreSQL'],
-      match_score: '95%',
-      posted_at: '3 days ago',
-      status: 'published',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ]);
+  // Populated only from Supabase by loadJobFeed(); never seeded with fake jobs.
+  readonly jobs = signal<Job[]>([]);
+  readonly feedLoading = signal<boolean>(false);
+  readonly feedError = signal<string | null>(null);
 
-  readonly swipedJobIds = signal<Set<string>>(new Set(['job-0']));
+  readonly swipedJobIds = signal<Set<string>>(new Set());
 
   // ── 8. Matches State ─────────────────────────────────────────────────────
   readonly matches = signal<Match[]>([
@@ -698,6 +706,10 @@ export class JobSeekerService {
     this.experienceList.set([]);
     this.resumes.set([]);
     this.userSkills.set([]);
+    this.jobs.set([]);
+    this.swipedJobIds.set(new Set());
+    this.feedLoading.set(false);
+    this.feedError.set(null);
     this.jobSeekerProfile.set({
       id: '',
       profile_id: '',
@@ -790,26 +802,22 @@ export class JobSeekerService {
           experience,
           userSkills,
           prefs,
-          swipedIds,
           matches,
           apps,
           saved,
           interviews,
           catalog,
-          publishedJobs,
         ] = await Promise.all([
           this.jspService.getResumes(jsp.id),
           this.jspService.getEducation(jsp.id),
           this.jspService.getExperience(jsp.id),
           this.jspService.getUserSkills(jsp.id),
           this.jspService.getPreferences(jsp.id),
-          this.matchingService.getSwipedJobIds(jsp.id),
           this.matchingService.getJobSeekerMatches(jsp.id),
           this.applicationsService.getJobSeekerApplications(jsp.id),
           this.jobsService.getSavedJobs(jsp.id),
           this.interviewsService.getJobSeekerInterviews(jsp.id),
           this.jspService.getSkillsCatalog(),
-          this.jobsService.getPublishedJobs(30),
         ]);
 
         if (resumes.length > 0) {
@@ -905,10 +913,6 @@ export class JobSeekerService {
           });
         }
 
-        if (swipedIds.length > 0) {
-          this.swipedJobIds.set(new Set(swipedIds));
-        }
-
         if (matches.length > 0) {
           this.matches.set(
             matches.map((m: any) => ({
@@ -929,26 +933,7 @@ export class JobSeekerService {
         }
 
         if (apps.length > 0) {
-          this.applications.set(
-            apps.map((a: any) => ({
-              id: a.id,
-              job_seeker_id: a.job_seeker_id,
-              job_id: a.job_id,
-              company_id: a.company_id,
-              company_name: a.companies?.name,
-              company_logo: a.companies?.logo_url,
-              job_title: a.jobs?.title,
-              job_location: a.jobs?.location,
-              salary_range: a.jobs?.salary_min ? `₹${a.jobs.salary_min / 100000}–${a.jobs.salary_max / 100000} LPA` : undefined,
-              employment_type: a.jobs?.employment_type,
-              status: a.status,
-              applied_at: a.applied_at,
-              updated_at: a.updated_at,
-              cover_letter: a.cover_letter,
-              resume_id: a.resume_id,
-              match_score: a.match_score,
-            }))
-          );
+          this.applications.set(apps.map(mapApplicationRow));
         }
 
         if (saved.length > 0) {
@@ -999,35 +984,8 @@ export class JobSeekerService {
           this.catalogSkills.set(catalog);
         }
 
-        if (publishedJobs.length > 0) {
-          this.jobs.set(
-            publishedJobs.map((j: any) => ({
-              id: j.id,
-              title: j.title,
-              company_id: j.company_id,
-              company_name: j.companies?.name,
-              company_logo: j.companies?.logo_url,
-              company_type: 'Hiring Company',
-              location: j.location,
-              employment_type: j.employment_type,
-              salary_min: j.salary_min,
-              salary_max: j.salary_max,
-              salary_currency: j.salary_currency,
-              salary_display: j.salary_min ? `₹${j.salary_min / 100000}–${j.salary_max / 100000} LPA` : undefined,
-              experience_level: j.experience_level,
-              remote_type: j.remote_type,
-              remote_option: j.remote_type,
-              description: j.description,
-              requirements: [],
-              skills: [],
-              match_score: '92%',
-              posted_at: 'Recently',
-              status: j.status,
-              created_at: j.created_at,
-              updated_at: j.updated_at,
-            }))
-          );
-        }
+        // Feed has its own loading/error state and must not block profile init.
+        void this.loadJobFeed(jsp.id);
       } else {
         // Missing job_seeker_profiles record -> check if already completed in cache
         const uid = profileId || this.authService.getCurrentUserId();
@@ -1070,6 +1028,39 @@ export class JobSeekerService {
     }
   }
 
+  // ── Job Feed ─────────────────────────────────────────────────────────────
+
+  /**
+   * Loads published jobs the candidate has not finished with. Excluded ids are read
+   * first so the exclusion happens in the query, not inside a fixed-size window.
+   * A Like without an application (swipe saved, application failed) stays in the
+   * deck so the Like can be retried. Errors are surfaced via feedError; the deck is
+   * never filled with fake data.
+   */
+  async loadJobFeed(jobSeekerId: string = this.jobSeekerProfile().id): Promise<void> {
+    if (!jobSeekerId) return;
+    this.feedLoading.set(true);
+    this.feedError.set(null);
+    try {
+      const [swiped, liked, applied] = await Promise.all([
+        this.matchingService.getSwipedJobIds(jobSeekerId),
+        this.matchingService.getLikedJobIds(jobSeekerId),
+        this.applicationsService.getAppliedJobIds(jobSeekerId),
+      ]);
+      const appliedSet = new Set(applied);
+      const unfinished = new Set(liked.filter((id) => !appliedSet.has(id)));
+      const excluded = swiped.filter((id) => !unfinished.has(id));
+      const rows = await this.jobsService.getPublishedJobs(30, 0, excluded);
+      this.swipedJobIds.set(new Set(excluded));
+      this.jobs.set(rows.map(mapPublishedJob));
+    } catch (err: any) {
+      console.error('[JobSeekerService] loadJobFeed failed:', err);
+      this.jobs.set([]);
+      this.feedError.set(err?.message || 'Failed to load jobs');
+    } finally {
+      this.feedLoading.set(false);
+    }
+  }
   // ── Profile Action Methods ───────────────────────────────────────────────
 
   /**
@@ -1771,83 +1762,100 @@ export class JobSeekerService {
 
   // ── Swipe & Matching Action Methods ──────────────────────────────────────
 
-  swipeJob(job: Job, direction: 'like' | 'pass'): { isMatch: boolean; matchObj?: Match } {
-    this.swipedJobIds.update((set) => new Set(set).add(job.id));
-
-    const jsp = this.jobSeekerProfile();
-
-    // Call Supabase swipe API in background
-    if (jsp.id && !jsp.id.startsWith('jsp-')) {
-      this.matchingService.swipe(jsp.id, job.id, direction).catch((err) => {
-        console.error('[JobSeekerService] swipe error:', err);
-      });
-    }
-
-    if (direction === 'like') {
-      const newMatch: Match = {
-        id: 'match-' + Date.now(),
-        job_seeker_id: jsp.id,
-        job_seeker_profile_id: jsp.id,
-        job_id: job.id,
-        company_id: job.company_id,
-        matched_at: new Date().toISOString(),
-        match_date: new Date().toISOString(),
-        status: 'active',
-        company_name: job.company_name,
-        company_logo: job.company_logo,
-        job_title: job.title,
-        job_location: job.location,
-        match_score: job.match_score ?? '95%',
-      };
-
-      this.matches.update((list) => [newMatch, ...list]);
-
-      const newApp: Application = {
-        id: 'app-' + Date.now(),
-        job_seeker_id: jsp.id,
-        job_seeker_profile_id: jsp.id,
-        job_id: job.id,
-        company_id: job.company_id,
-        company_name: job.company_name,
-        company_logo: job.company_logo,
-        job_title: job.title,
-        job_location: job.location,
-        salary_range: job.salary_display,
-        status: 'pending',
-        applied_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        status_history: [
-          {
-            id: 'ash-' + Date.now(),
-            application_id: 'app-' + Date.now(),
-            status: 'pending',
-            comment: 'Applied via HireSwipe instant match',
-            changed_at: new Date().toISOString(),
-          },
-        ],
-      };
-      this.applications.update((list) => [newApp, ...list]);
-
-      const newNotif: Notification = {
-        id: 'notif-' + Date.now(),
-        user_id: this.profile().user_id,
-        title: "It's a Match!",
-        message: `You matched with ${job.company_name} for ${job.title}.`,
-        type: 'new_match',
-        is_read: false,
-        read: false,
-        created_at: 'Just now',
-        link: '/job-seeker/matches',
-        link_route: '/job-seeker/matches',
-      };
-      this.notifications.update((list) => [newNotif, ...list]);
-
-      return { isMatch: true, matchObj: newMatch };
-    }
-
-    return { isMatch: false };
+  /**
+   * Persists a Like/Pass and resolves once the database confirms it. A Like also
+   * creates (or confirms) the real application and succeeds only when that exists.
+   * A Pass never touches applications. The job leaves the deck only on success; on
+   * failure it stays and `error` explains why, and retrying a Like finishes whichever
+   * step is missing. Concurrent calls for the same job share one request.
+   * Creates no local match, application or notification.
+   */
+  swipeJob(job: Job, direction: 'like' | 'pass'): Promise<SwipeOutcome> {
+    const pending = this.swipesInFlight.get(job.id);
+    if (pending) return pending;
+    const run = this.persistSwipe(job, direction).finally(() => this.swipesInFlight.delete(job.id));
+    this.swipesInFlight.set(job.id, run);
+    return run;
   }
 
+  /** Like & apply for a job by id (Saved Jobs); loads the published job if it is not in the feed. */
+  async applyToJobById(jobId: string): Promise<SwipeOutcome> {
+    let job: Job | undefined = this.jobs().find((j) => j.id === jobId);
+    if (!job) {
+      try {
+        const row: any = await this.jobsService.getJob(jobId);
+        if (row?.status === 'published') job = mapPublishedJob(row);
+      } catch (err) {
+        console.error('[JobSeekerService] applyToJobById load failed:', err);
+      }
+    }
+    if (!job) return { ok: false, error: 'This job is no longer available.' };
+    return this.swipeJob(job, 'like');
+  }
+
+  private async persistSwipe(job: Job, direction: 'like' | 'pass'): Promise<SwipeOutcome> {
+    const jobSeekerId = this.jobSeekerProfile().id;
+    if (!UUID_RE.test(jobSeekerId) || !UUID_RE.test(job.id) || (direction === 'like' && !UUID_RE.test(job.company_id))) {
+      return { ok: false, error: 'This job cannot be swiped right now. Please refresh and try again.' };
+    }
+    try {
+      await this.matchingService.swipe(jobSeekerId, job.id, direction);
+    } catch (err: any) {
+      console.error('[JobSeekerService] swipe failed:', err);
+      return { ok: false, error: swipeErrorMessage(err) };
+    }
+    if (direction === 'like') {
+      const applied = await this.ensureApplication(job, jobSeekerId);
+      if (!applied.ok) return applied;
+      await this.refreshApplications(jobSeekerId);
+    }
+    this.swipedJobIds.update((set) => new Set(set).add(job.id));
+    return { ok: true };
+  }
+
+  /**
+   * Confirms the candidate's application for the job, creating it when missing.
+   * The 004 insert trigger rejects an existing application with 23514 before the
+   * unique index can raise 23505, so both codes trigger a re-read. An existing
+   * application counts only when its job and candidate ids match.
+   */
+  private async ensureApplication(job: Job, jobSeekerId: string): Promise<SwipeOutcome> {
+    const existing = await this.applicationsService.getApplicationForJob(job.id, jobSeekerId);
+    if (existing.error) {
+      console.error('[JobSeekerService] application lookup failed:', existing.error);
+      return { ok: false, error: applicationErrorMessage(null, null) };
+    }
+    let app = existing.data;
+    if (!app) {
+      const res = await this.applicationsService.applyToJob(job.id, jobSeekerId, job.company_id);
+      app = res.data;
+      if (!app && (res.code === '23505' || res.code === '23514')) {
+        app = (await this.applicationsService.getApplicationForJob(job.id, jobSeekerId)).data;
+      }
+      if (!app) {
+        console.error('[JobSeekerService] application failed:', res.code, res.error);
+        return { ok: false, error: applicationErrorMessage(res.code, res.error) };
+      }
+    }
+    if (app.job_id !== job.id || app.job_seeker_id !== jobSeekerId) {
+      console.error('[JobSeekerService] application does not match job/candidate', app.id);
+      return { ok: false, error: applicationErrorMessage(null, null) };
+    }
+    if (app.status === 'withdrawn') {
+      return { ok: false, error: 'You withdrew your application for this job.' };
+    }
+    return { ok: true };
+  }
+
+  /** Reloads the real applications list; a failure here never turns a confirmed Like into an error. */
+  private async refreshApplications(jobSeekerId: string): Promise<void> {
+    try {
+      const apps = await this.applicationsService.getJobSeekerApplications(jobSeekerId);
+      if (apps.length > 0) this.applications.set(apps.map(mapApplicationRow));
+    } catch (err) {
+      console.error('[JobSeekerService] refreshApplications failed:', err);
+    }
+  }
   // ── Saved Jobs Action Methods ────────────────────────────────────────────
 
   async saveJob(job: Job) {

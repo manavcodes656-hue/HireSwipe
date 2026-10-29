@@ -6,7 +6,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
         Job Discovery & Match Deck
       </h1>
-      <p class="page-sub">Swipe right to Like & Apply instantly, or swipe left to Pass. 95%+ matches trigger direct recruiter connections!</p>
+      <p class="page-sub">Like a job to apply to it, or Pass to skip it. Your application is only created once the Like is confirmed.</p>
     </div>
 
     <!-- Filter Controls -->
@@ -27,6 +27,8 @@
     </div>
   </div>
 
+  <div class="swipe-error-banner" role="alert" *ngIf="swipeError() as swipeErr">{{ swipeErr }}</div>
+
   <!-- DECK CONTAINER -->
   <div class="deck-stage" *ngIf="currentJob(); else emptyDeck">
     <!-- Active Swipe Card -->
@@ -37,7 +39,7 @@
     >
       <!-- Match score badge -->
       <div class="card-badge-row">
-        <span class="match-badge">
+        <span class="match-badge" *ngIf="currentJob()?.match_score">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
           {{ currentJob()?.match_score }} Match Score
         </span>
@@ -109,7 +111,7 @@
 
       <!-- SWIPE CONTROLS OVERLAY -->
       <div class="action-buttons-row">
-        <button class="swipe-btn pass-btn" (click)="handleSwipe('pass')" title="Pass (Swipe Left)">
+        <button class="swipe-btn pass-btn" [disabled]="swipePending()" (click)="handleSwipe('pass')" title="Pass (Swipe Left)">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           <span>PASS</span>
         </button>
@@ -118,7 +120,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
         </button>
 
-        <button class="swipe-btn like-btn" (click)="handleSwipe('like')" title="Like (Swipe Right)">
+        <button class="swipe-btn like-btn" [disabled]="swipePending()" (click)="handleSwipe('like')" title="Like (Swipe Right)">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           <span>LIKE</span>
         </button>
@@ -128,16 +130,32 @@
 
   <!-- EMPTY DECK STATE -->
   <ng-template #emptyDeck>
+    <div class="empty-deck-card" *ngIf="jobSeekerService.feedLoading(); else feedLoaded">
+      <h2>Loading jobs…</h2>
+      <p>Fetching open roles for you.</p>
+    </div>
+    <ng-template #feedLoaded>
+    <div class="empty-deck-card" *ngIf="jobSeekerService.feedError() as feedErr; else emptyFeed" role="alert">
+      <h2>Couldn't load jobs</h2>
+      <p>{{ feedErr }}</p>
+      <div class="empty-deck-actions">
+        <button class="primary-btn" (click)="reloadFeed()">Try again</button>
+      </div>
+    </div>
+    </ng-template>
+    <ng-template #emptyFeed>
     <div class="empty-deck-card">
       <div class="empty-icon-wrap">
         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
       </div>
-      <h2>You're all caught up! 🎉</h2>
-      <p>You have reviewed all available high-match jobs for your current filters.</p>
+      <h2 *ngIf="jobSeekerService.jobs().length === 0">No open jobs right now</h2>
+      <h2 *ngIf="jobSeekerService.jobs().length > 0">You're all caught up! 🎉</h2>
+      <p *ngIf="jobSeekerService.jobs().length === 0">There are no published jobs to show yet. Check back soon.</p>
+      <p *ngIf="jobSeekerService.jobs().length > 0">You have reviewed all available jobs for your current filters.</p>
       <div class="empty-deck-actions">
-        <button class="primary-btn" (click)="resetDeck()">
+        <button class="primary-btn" (click)="reloadFeed()">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-          Reload Jobs Deck
+          Reload Jobs
         </button>
         <a routerLink="/job-seeker/onboarding" class="secondary-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -145,6 +163,7 @@
         </a>
       </div>
     </div>
+    </ng-template>
   </ng-template>
 </div>
 
@@ -194,44 +213,9 @@
 
     <div class="job-modal-footer">
       <button class="secondary-btn" (click)="closeJobDetails()">Close</button>
-      <button class="primary-btn" (click)="handleSwipe('like'); closeJobDetails()">
+      <button class="primary-btn" [disabled]="swipePending()" (click)="handleSwipe('like'); closeJobDetails()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-        Like & Apply Now
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- MATCH CELEBRATION MODAL -->
-<div class="modal-backdrop match-celebration-backdrop" *ngIf="showMatchModal()">
-  <div class="match-celebration-box">
-    <div class="sparkles-icon-wrap">
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-    </div>
-
-    <h2 class="match-title">It's a Match! 🎉</h2>
-    <p class="match-subtitle">You and {{ recentMatchObj()?.company_name }} liked each other!</p>
-
-    <div class="match-avatars-row">
-      <img [src]="jobSeekerService.profile().avatar_url || 'default-avatar.svg'" (error)="$any($event.target).src = 'default-avatar.svg'" alt="Candidate avatar" class="match-avatar candidate" />
-      <div class="match-vs-heart">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-      </div>
-      <img [src]="recentMatchObj()?.company_logo" [alt]="recentMatchObj()?.company_name" class="match-avatar company" />
-    </div>
-
-    <div class="match-details-card">
-      <h3>{{ recentMatchObj()?.job_title }}</h3>
-      <span class="match-score-pill">{{ recentMatchObj()?.match_score }} Candidate Fit Score</span>
-    </div>
-
-    <div class="match-actions">
-      <button type="button" class="primary-btn complete-btn full-width" (click)="openMatchMessage()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-        Send Message to Recruiter
-      </button>
-      <button type="button" class="secondary-btn full-width mt-2" (click)="closeMatchModal()">
-        Keep Swiping
+        Like & Apply
       </button>
     </div>
   </div>

@@ -38,10 +38,14 @@ export class SavedJobsComponent {
     this.jobSeekerService.removeSavedJob(id);
   }
 
-  applyJob(savedJob: SavedJob) {
-    const jobObj = this.jobSeekerService.jobs().find((j) => j.id === savedJob.job_id);
-    if (jobObj) {
-      this.jobSeekerService.swipeJob(jobObj, 'like');
+  swipeError = signal<string | null>(null);
+
+  async applyJob(savedJob: SavedJob) {
+    this.swipeError.set(null);
+    const res = await this.jobSeekerService.applyToJobById(savedJob.job_id);
+    if (!res.ok) {
+      this.swipeError.set(res.error ?? 'Could not create your application. Please try again.');
+      return;
     }
     this.router.navigate(['/job-seeker/applications']);
   }

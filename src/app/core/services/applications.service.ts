@@ -191,7 +191,7 @@ export class ApplicationsService {
     companyId: string,
     resumeId?: string,
     coverLetter?: string
-  ): Promise<{ data: ApplicationRow | null; error: string | null }> {
+  ): Promise<{ data: ApplicationRow | null; error: string | null; code?: string | null }> {
     const { data, error } = await this.supabase.client
       .from('applications')
       .insert({
@@ -204,8 +204,40 @@ export class ApplicationsService {
       })
       .select()
       .single();
+    if (error) return { data: null, error: error.message, code: error.code ?? null };
+    return { data, error: null };
+  }
+
+  /**
+   * The candidate's application for one job, if any (unique on job_id + job_seeker_id).
+   */
+  async getApplicationForJob(
+    jobId: string,
+    jobSeekerId: string
+  ): Promise<{ data: ApplicationRow | null; error: string | null }> {
+    const { data, error } = await this.supabase.client
+      .from('applications')
+      .select()
+      .eq('job_id', jobId)
+      .eq('job_seeker_id', jobSeekerId)
+      .maybeSingle();
     if (error) return { data: null, error: error.message };
     return { data, error: null };
+  }
+
+  /**
+   * Job ids the candidate has an application for. Throws on database errors.
+   */
+  async getAppliedJobIds(jobSeekerId: string): Promise<string[]> {
+    const { data, error } = await this.supabase.client
+      .from('applications')
+      .select('job_id')
+      .eq('job_seeker_id', jobSeekerId);
+    if (error) {
+      console.error('[ApplicationsService] getAppliedJobIds:', error.message);
+      throw new Error(error.message);
+    }
+    return (data ?? []).map((row) => row.job_id);
   }
 
   /**
