@@ -98,6 +98,7 @@ Errors use one shape: `{ "error": { "code": "...", "message": "..." } }`
 | `GET /api/company/applications` | `company`, `admin` | The caller's company applications; optional `?jobId=` and `?status=` filters |
 | `GET /api/company/applications/:applicationId` | `company`, `admin` | One application with candidate, job, resume and status history |
 | `PATCH /api/company/applications/:applicationId/status` | `company`, `admin` | Update the application status and its review note |
+| `POST /api/company/applications/:applicationId/interest` | `company` | Record company interest in an application (idempotent). Returns 503 `COMPANY_INTEREST_UNAVAILABLE` unless `COMPANY_INTEREST_ENABLED=true`; requires the `public.company_interest` table (migration 006). Creates no match or conversation. |
 | `GET /api/company/interviews` | `company`, `admin` | The caller's company interviews; optional `?applicationId=`, `?jobId=` and `?status=` filters |
 | `GET /api/company/interviews/:interviewId` | `company`, `admin` | One interview with its application, candidate and job |
 | `POST /api/company/interviews` | `company`, `admin` | Schedule an interview on one of the caller's company applications |

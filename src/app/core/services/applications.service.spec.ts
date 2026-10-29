@@ -207,6 +207,80 @@ describe('ApplicationsService — Backend Integration Tests', () => {
     });
   });
 
+  describe('POST /api/company/applications/:applicationId/interest', () => {
+    const url = `${apiUrl}/company/applications/${applicationId}/interest`;
+    const interest = { id: 'i-1', application_id: applicationId, expressed_by: 'u-1', created_at: '2026-01-01T00:00:00Z' };
+
+    beforeEach(() => vi.spyOn(console, 'error').mockImplementation(() => {}));
+
+    it('posts to the real application id with the Bearer token and no body ids', async () => {
+      const promise = service.expressCompanyInterest(applicationId);
+      await new Promise((r) => setTimeout(r, 5));
+
+      const req = httpMock.expectOne(url);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Authorization')).toBe('Bearer mock-access-token-xyz');
+      expect(req.request.body).toEqual({});
+      req.flush({ status: 'ok', alreadyRecorded: false, interest }, { status: 201, statusText: 'Created' });
+
+      expect(await promise).toEqual({ interest, alreadyRecorded: false, error: null });
+    });
+
+    it('reports a repeated request as already recorded, not as an error', async () => {
+      const promise = service.expressCompanyInterest(applicationId);
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(url).flush({ status: 'ok', alreadyRecorded: true, interest });
+
+      expect(await promise).toEqual({ interest, alreadyRecorded: true, error: null });
+    });
+
+    it('returns the backend message for rejections and never reports success', async () => {
+      const cases: [number, string, string][] = [
+        [403, 'FORBIDDEN', 'Not an active member of this company'],
+        [404, 'APPLICATION_NOT_FOUND', 'Application not found'],
+        [409, 'APPLICATION_WITHDRAWN', 'The candidate withdrew this application'],
+        [409, 'JOB_NOT_PUBLISHED', 'This job is not published'],
+        [503, 'COMPANY_INTEREST_UNAVAILABLE', 'Company interest is not available yet.'],
+      ];
+      for (const [status, code, message] of cases) {
+        const promise = service.expressCompanyInterest(applicationId);
+        await new Promise((r) => setTimeout(r, 5));
+        httpMock.expectOne(url).flush({ error: { code, message } }, { status, statusText: code });
+
+        const result = await promise;
+        expect(result.error).toBe(message);
+        expect(result.interest).toBeNull();
+      }
+    });
+
+    it('gives a readable message when the server cannot be reached', async () => {
+      const promise = service.expressCompanyInterest(applicationId);
+      await new Promise((r) => setTimeout(r, 5));
+      httpMock.expectOne(url).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+
+      const result = await promise;
+      expect(result.error).toMatch(/Could not reach the server/);
+      expect(result.interest).toBeNull();
+    });
+
+    it('lists the application ids the company has expressed interest in', async () => {
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: [{ application_id: 'a1' }, { application_id: 'a2' }], error: null }),
+      });
+
+      expect(await service.getInterestedApplicationIds()).toEqual(['a1', 'a2']);
+      expect(mockSupabaseService.client.from).toHaveBeenCalledWith('company_interest');
+    });
+
+    it('returns an empty list when the interest read fails', async () => {
+      mockSupabaseService.client.from = vi.fn().mockReturnValue({
+        select: vi.fn().mockResolvedValue({ data: null, error: { message: 'permission denied' } }),
+      });
+
+      expect(await service.getInterestedApplicationIds()).toEqual([]);
+    });
+  });
+
   describe('Direct Supabase Job Seeker Operations', () => {
     it('preserves getJobSeekerApplications direct query for candidate dashboard', async () => {
       const result = await service.getJobSeekerApplications('seeker-1');

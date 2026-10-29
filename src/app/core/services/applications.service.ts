@@ -15,6 +15,14 @@ export interface CompanyApplicationsResponse {
   applications: any[];
 }
 
+export type CompanyInterestRow = Database['public']['Tables']['company_interest']['Row'];
+
+export interface CompanyInterestResponse {
+  status: string;
+  alreadyRecorded: boolean;
+  interest: CompanyInterestRow;
+}
+
 export interface CompanyApplicationResponse {
   status: string;
   application: any;
@@ -151,6 +159,47 @@ export class ApplicationsService {
       console.error('[ApplicationsService] updateApplicationStatus error:', message);
       return { error: message };
     }
+  }
+
+  /**
+   * Record the company's interest in an application.
+   * Calls Express backend POST /api/company/applications/:applicationId/interest,
+   * which checks membership and application state and is idempotent.
+   */
+  async expressCompanyInterest(
+    applicationId: string
+  ): Promise<{ interest: CompanyInterestRow | null; alreadyRecorded: boolean; error: string | null }> {
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await firstValueFrom(
+        this.http.post<CompanyInterestResponse>(
+          `${this.apiUrl}/company/applications/${applicationId}/interest`,
+          {},
+          { headers }
+        )
+      );
+      return { interest: response.interest ?? null, alreadyRecorded: response.alreadyRecorded === true, error: null };
+    } catch (err: any) {
+      const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
+      const message =
+        backendError?.message ||
+        (err instanceof HttpErrorResponse && err.status === 0
+          ? 'Could not reach the server. Check your connection and try again.'
+          : err.message) ||
+        'Failed to record company interest';
+      console.error('[ApplicationsService] expressCompanyInterest error:', message);
+      return { interest: null, alreadyRecorded: false, error: message };
+    }
+  }
+
+  /**
+   * Application ids the caller's company has already expressed interest in
+   * (RLS limits rows to applications of the caller's companies).
+   */
+  async getInterestedApplicationIds(): Promise<string[]> {
+    const { data, error } = await this.supabase.client.from('company_interest').select('application_id');
+    if (error) console.error('[ApplicationsService] getInterestedApplicationIds:', error.message);
+    return (data ?? []).map((row) => row.application_id);
   }
 
   // ── Job Seeker Applications (Direct Supabase) ─────────────────────────────
