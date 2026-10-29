@@ -5,15 +5,15 @@
       <p class="page-subtitle">Publish role requirements, salary band, and skills to receive matched candidates</p>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-secondary" routerLink="/company/jobs">Cancel</button>
-      <button type="button" class="btn-outline" (click)="saveJob('draft')" [disabled]="isSaving">Save as Draft</button>
-      <button type="button" class="btn-primary" (click)="saveJob('active')" [disabled]="isSaving">
-        {{ isEditMode ? 'Save & Publish Changes' : 'Publish Job Listing 🚀' }}
+      <button type="button" class="btn-secondary" routerLink="/company/jobs" [disabled]="isSaving()">Cancel</button>
+      <button type="button" class="btn-outline" (click)="saveJob('draft')" [disabled]="isSaving()">Save as Draft</button>
+      <button type="button" class="btn-primary" (click)="saveJob('active')" [disabled]="isSaving()">
+        {{ isSaving() ? 'Saving...' : (isEditMode ? 'Save & Publish Changes' : 'Publish Job Listing 🚀') }}
       </button>
     </div>
   </div>
 
-  <p class="form-error" *ngIf="saveError" role="alert">{{ saveError }}</p>
+  <p class="form-error" *ngIf="saveError()" role="alert">{{ saveError() }}</p>
 
   <form [formGroup]="jobForm" class="create-form-layout">
     <!-- Main Form Section -->
@@ -27,7 +27,7 @@
 
         <div class="form-group">
           <label>Job Title *</label>
-          <input type="text" formControlName="title" placeholder="e.g. Senior Full Stack Engineer (Angular & Node)" />
+          <input type="text" formControlName="title" placeholder="e.g. Senior Full Stack Engineer (Angular &amp; Node)" />
           <span class="err-text" *ngIf="jobForm.get('title')?.touched && jobForm.get('title')?.invalid">Title is required.</span>
         </div>
 
@@ -63,7 +63,7 @@
 
       <!-- Section 2: Compensation & Experience Range -->
       <div class="form-card">
-        <h3>2. Compensation & Experience Band</h3>
+        <h3>2. Compensation &amp; Experience Band</h3>
 
         <div class="grid-2">
           <div class="form-group">
@@ -102,10 +102,10 @@
 
       <!-- Section 3: Skills & Requirements -->
       <div class="form-card">
-        <h3>3. Required Skills & Key Requirements</h3>
+        <h3>3. Required Skills &amp; Key Requirements</h3>
 
         <div class="skills-selector">
-          <label>Required Tech Stack & Skills *</label>
+          <label>Required Tech Stack &amp; Skills *</label>
           <div class="skills-chips">
             <button
               type="button"
@@ -131,7 +131,7 @@
         </div>
 
         <div class="list-editor">
-          <label>Job Requirements & Qualifications</label>
+          <label>Job Requirements &amp; Qualifications</label>
           <div class="item-list">
             <div *ngFor="let req of requirementsList; let i = index" class="item-row">
               <span class="bullet">•</span>
@@ -153,7 +153,7 @@
         </div>
 
         <div class="list-editor">
-          <label>Perks & Benefits</label>
+          <label>Perks &amp; Benefits</label>
           <div class="item-list">
             <div *ngFor="let ben of benefitsList; let i = index" class="item-row">
               <span class="bullet" aria-hidden="true">
@@ -186,7 +186,7 @@
     <!-- Sidebar Settings -->
     <div class="form-sidebar">
       <div class="form-card">
-        <h3>Location & Openings</h3>
+        <h3>Location &amp; Openings</h3>
 
         <div class="form-group">
           <label>Display Location *</label>
@@ -223,10 +223,10 @@
         <h3>Publishing Actions</h3>
         <p class="pub-desc">Once published, candidates matching your criteria will be notified and can swipe to apply instantly.</p>
 
-        <button type="button" class="btn-primary full-width" (click)="saveJob('active')">
-          Publish Job Listing
+        <button type="button" class="btn-primary full-width" (click)="saveJob('active')" [disabled]="isSaving()">
+          {{ isSaving() ? 'Publishing...' : (isEditMode ? 'Save & Publish Changes' : 'Publish Job Listing') }}
         </button>
-        <button type="button" class="btn-outline full-width" (click)="saveJob('draft')">
+        <button type="button" class="btn-outline full-width" (click)="saveJob('draft')" [disabled]="isSaving()">
           Save Draft Only
         </button>
       </div>

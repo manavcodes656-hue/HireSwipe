@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -58,11 +58,16 @@ export class JobCreateComponent implements OnInit {
     { value: 'remote', label: 'Fully Remote' },
   ];
 
+  // Zoneless compatibility: signals ensure UI updates after asynchronous operations
+  readonly saveError: WritableSignal<string> = signal('');
+  readonly isSaving: WritableSignal<boolean> = signal(false);
+
   constructor(
     private fb: FormBuilder,
     private dataService: CompanyDataService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -133,6 +138,7 @@ export class JobCreateComponent implements OnInit {
       if (job.benefits) {
         this.benefitsList = job.benefits.map((b) => b.benefit_text || b.benefit || '').filter(Boolean);
       }
+      this.cdr.markForCheck();
     }
   }
 
@@ -180,12 +186,11 @@ export class JobCreateComponent implements OnInit {
     this.benefitsList.splice(index, 1);
   }
 
-  saveError = '';
-  isSaving = false;
-
   async saveJob(status: 'active' | 'draft'): Promise<void> {
     if (this.jobForm.invalid) {
       this.jobForm.markAllAsTouched();
+      this.saveError.set('Please fill out all required fields marked with * before publishing.');
+      this.cdr.markForCheck();
       return;
     }
 
@@ -197,36 +202,46 @@ export class JobCreateComponent implements OnInit {
       benefits: this.benefitsList.map((b, idx) => ({ id: `b-${idx}`, job_id: '', benefit_text: b })),
     };
 
-    this.isSaving = true;
-    this.saveError = '';
-    let error: string | null;
-    let saved: boolean;
-    if (this.isEditMode && this.editingJobId) {
-      const result = await this.dataService.updateJob(this.editingJobId, payload);
-      error = result.error;
-      // updateJob only reports child-row problems after the job row itself saved.
-      saved = !error || error.startsWith('Job saved');
-    } else {
-      const result = await this.dataService.createJob(payload);
-      error = result.error;
-      saved = !!result.jobId;
-      if (result.jobId && error) {
-        // The job row exists; further saves must update it, not insert a duplicate.
-        this.isEditMode = true;
-        this.editingJobId = result.jobId;
-      }
-    }
-    this.isSaving = false;
+    this.isSaving.set(true);
+    this.saveError.set('');
+    this.cdr.markForCheck();
 
-    if (!saved) {
-      this.saveError = error ?? 'The job could not be saved.';
-      return;
+    try {
+      let error: string | null;
+      let saved: boolean;
+      if (this.isEditMode && this.editingJobId) {
+        const result = await this.dataService.updateJob(this.editingJobId, payload);
+        error = result.error;
+        // updateJob only reports child-row problems after the job row itself saved.
+        saved = !error || error.startsWith('Job saved');
+      } else {
+        const result = await this.dataService.createJob(payload);
+        error = result.error;
+        saved = !!result.jobId;
+        if (result.jobId && error) {
+          // The job row exists; further saves must update it, not insert a duplicate.
+          this.isEditMode = true;
+          this.editingJobId = result.jobId;
+        }
+      }
+      this.isSaving.set(false);
+
+      if (!saved) {
+        this.saveError.set(error ?? 'The job could not be saved. Please try again.');
+        this.cdr.markForCheck();
+        return;
+      }
+      if (error) {
+        // Job row persisted but some details (e.g. unknown skills) did not; stay and tell the user.
+        this.saveError.set(error);
+        this.cdr.markForCheck();
+        return;
+      }
+      this.router.navigate(['/company/jobs']);
+    } catch (e: any) {
+      this.isSaving.set(false);
+      this.saveError.set(e?.message || 'An unexpected error occurred while saving the job.');
+      this.cdr.markForCheck();
     }
-    if (error) {
-      // Job row persisted but some details (e.g. unknown skills) did not; stay and tell the user.
-      this.saveError = error;
-      return;
-    }
-    this.router.navigate(['/company/jobs']);
   }
 }
