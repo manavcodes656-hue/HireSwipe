@@ -1,19 +1,65 @@
-import { Component, AfterViewInit, OnDestroy, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, ChangeDetectorRef, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { CarouselAutoplayController } from '../../core/services/carousel-autoplay.service';
 
 @Component({
   selector: 'app-hero',
-  imports: [RouterLink],
+  standalone: true,
+  imports: [CommonModule, RouterLink],
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.css',
 })
-export class HeroComponent implements AfterViewInit, OnDestroy {
+export class HeroComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly activeHeroIndex = signal(0);
+  private autoplay: CarouselAutoplayController | null = null;
+
   private heroBgEl: HTMLElement | null = null;
   private heroEl: HTMLElement | null = null;
   private scrollListener = () => this.onScroll();
   private observer: IntersectionObserver | null = null;
 
-  constructor(private host: ElementRef<HTMLElement>) {}
+  constructor(
+    private host: ElementRef<HTMLElement>,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.autoplay = new CarouselAutoplayController({
+      intervalMs: 5000,
+      onAdvance: (steps) => this.advanceHeroCard(steps),
+    });
+    this.autoplay.start();
+  }
+
+  advanceHeroCard(steps: number = 1): void {
+    this.activeHeroIndex.update((curr) => (curr + steps) % 3);
+    this.cdr.markForCheck();
+  }
+
+  getCardClass(cardIndex: number): string {
+    // 0 = Google, 1 = Microsoft, 2 = Amazon
+    const pos = (cardIndex - this.activeHeroIndex() + 3) % 3;
+    if (pos === 0) return 'card-front';
+    if (pos === 1) return 'card-left';
+    return 'card-right';
+  }
+
+  onHover(isHovered: boolean): void {
+    this.autoplay?.setHover(isHovered);
+  }
+
+  selectCard(cardIndex: number): void {
+    this.activeHeroIndex.set(cardIndex);
+    this.autoplay?.reset();
+    this.cdr.markForCheck();
+  }
+
+  onSwipeAction(action: 'pass' | 'like', event?: Event): void {
+    event?.stopPropagation();
+    this.advanceHeroCard(1);
+    this.autoplay?.reset();
+  }
 
   ngAfterViewInit(): void {
     this.heroEl = this.host.nativeElement.querySelector('.hero') as HTMLElement;
@@ -69,6 +115,7 @@ export class HeroComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.autoplay?.destroy();
     window.removeEventListener('scroll', this.scrollListener);
     this.observer?.disconnect();
   }
