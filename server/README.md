@@ -247,7 +247,9 @@ from Supabase.
 npm test        # from server/, or `npm run server:test` from the repository root
 ```
 
-Tests mock Supabase; they do not contact a database.
+Most tests mock Supabase and contact no database. `db-matching.test.js` runs migrations 001-007 on an in-process PostgreSQL (PGlite, a dev dependency; no Docker, no network) and checks the application -> match -> conversation -> message flow, duplicates and authorization at database level. It does not exercise a real Supabase project, Realtime or concurrent transactions.
+
+`db-concurrency.test.js` covers concurrent transactions (Like vs interest, withdrawal or job pause while a match is decided, deadlock) on a real PostgreSQL server. It is skipped unless `HIRESWIPE_REAL_PG=1` and the optional packages are installed (`npm install --no-save embedded-postgres pg`). PostgreSQL will not start from an administrator account, so run it from a normal shell; or point it at a server you already run with `HIRESWIPE_PG_PORT` (it creates and drops a throwaway database).
 
 ## Notes
 
