@@ -58,6 +58,7 @@ export const routes: Routes = [
       { path: 'jobs', component: JobListComponent },
       { path: 'jobs/create', component: JobCreateComponent },
       { path: 'jobs/:id/edit', component: JobCreateComponent },
+      { path: 'jobs/edit/:id', component: JobCreateComponent },
       { path: 'jobs/:id', component: JobDetailsComponent },
       { path: 'candidates', component: CandidatesComponent },
       { path: 'applications', component: CompanyApplicationsComponent },

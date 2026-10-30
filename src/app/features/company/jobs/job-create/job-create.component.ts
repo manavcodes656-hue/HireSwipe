@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef, signal, WritableSignal } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal, WritableSignal } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,10 +13,11 @@ import { Job, EmploymentType, ExperienceLevel, RemoteType } from '../../models/c
   templateUrl: './job-create.component.html',
   styleUrl: './job-create.component.css',
 })
-export class JobCreateComponent implements OnInit {
+export class JobCreateComponent implements OnInit, OnDestroy {
   isEditMode = false;
   editingJobId: string | null = null;
   jobForm!: FormGroup;
+  private subs = new Subscription();
 
   skillsList: string[] = ['Angular', 'TypeScript', 'Node.js', 'RxJS', 'PostgreSQL', 'AWS', 'Docker', 'Kubernetes', 'Figma', 'Python', 'PyTorch'];
   selectedSkills: string[] = ['Angular', 'TypeScript', 'Node.js'];
@@ -73,13 +75,19 @@ export class JobCreateComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
 
-    this.route.params.subscribe((params) => {
-      if (params['id']) {
-        this.isEditMode = true;
-        this.editingJobId = params['id'];
-        this.loadJobForEdit(params['id']);
-      }
-    });
+    this.subs.add(
+      this.route.params.subscribe((params) => {
+        if (params['id']) {
+          this.isEditMode = true;
+          this.editingJobId = params['id'];
+          void this.loadJobForEdit(params['id']);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.unsubscribe();
   }
 
   private initForm(): void {
@@ -103,43 +111,70 @@ export class JobCreateComponent implements OnInit {
     });
   }
 
-  private loadJobForEdit(id: string): void {
-    let job: Job | undefined;
-    this.dataService.jobs$.subscribe((jobs) => {
-      job = jobs.find((j) => j.id === id);
-    }).unsubscribe();
-
-    if (job) {
-      this.jobForm.patchValue({
-        title: job.title,
-        description: job.description,
-        employment_type: job.employment_type,
-        experience_level: job.experience_level,
-        experience_min: job.experience_min,
-        experience_max: job.experience_max,
-        salary_min: job.salary_min,
-        salary_max: job.salary_max,
-        salary_currency: job.salary_currency,
-        location: job.location,
-        city: job.city,
-        state: job.state,
-        country: job.country,
-        remote_type: job.remote_type,
-        openings: job.openings,
-        application_deadline: job.application_deadline,
-      });
-
-      if (job.skills) {
-        this.selectedSkills = job.skills.map((s) => s.skill_name || '').filter((name): name is string => !!name);
-      }
-      if (job.requirements) {
-        this.requirementsList = job.requirements.map((r) => r.requirement_text || r.requirement || '').filter(Boolean);
-      }
-      if (job.benefits) {
-        this.benefitsList = job.benefits.map((b) => b.benefit_text || b.benefit || '').filter(Boolean);
-      }
-      this.cdr.markForCheck();
+  private populateForm(job: Job): void {
+    let deadline = '';
+    if (job.application_deadline) {
+      deadline = job.application_deadline.includes('T')
+        ? job.application_deadline.split('T')[0]
+        : job.application_deadline;
     }
+
+    this.jobForm.patchValue({
+      title: job.title || '',
+      description: job.description || '',
+      employment_type: job.employment_type || 'full_time',
+      experience_level: job.experience_level || 'senior',
+      experience_min: job.experience_min ?? 0,
+      experience_max: job.experience_max ?? 0,
+      salary_min: job.salary_min ?? 0,
+      salary_max: job.salary_max ?? 0,
+      salary_currency: job.salary_currency || 'INR',
+      location: job.location || '',
+      city: job.city || '',
+      state: job.state || '',
+      country: job.country || '',
+      remote_type: job.remote_type || 'hybrid',
+      openings: job.openings ?? 1,
+      application_deadline: deadline,
+    });
+
+    if (job.skills && job.skills.length > 0) {
+      this.selectedSkills = job.skills.map((s) => s.skill_name || '').filter((name): name is string => Boolean(name));
+    }
+    if (job.requirements && job.requirements.length > 0) {
+      this.requirementsList = job.requirements.map((r) => r.requirement_text || r.requirement || '').filter(Boolean);
+    }
+    if (job.benefits && job.benefits.length > 0) {
+      this.benefitsList = job.benefits.map((b) => b.benefit_text || b.benefit || '').filter(Boolean);
+    }
+    this.cdr.markForCheck();
+  }
+
+  private async loadJobForEdit(id: string): Promise<void> {
+    const existing = this.dataService.currentJobs.find((j) => j.id === id);
+    if (existing) {
+      this.populateForm(existing);
+      return;
+    }
+
+    try {
+      const fetched = await this.dataService.getJobById(id);
+      if (fetched) {
+        this.populateForm(fetched);
+        return;
+      }
+    } catch (e) {
+      console.error('[JobCreateComponent] Error fetching job for edit:', e);
+    }
+
+    this.subs.add(
+      this.dataService.jobs$.subscribe((jobs) => {
+        const found = jobs.find((j) => j.id === id);
+        if (found) {
+          this.populateForm(found);
+        }
+      })
+    );
   }
 
   // Skills handlers
