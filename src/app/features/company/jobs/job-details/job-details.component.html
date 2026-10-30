@@ -4,7 +4,8 @@
     <div>
       <div class="breadcrumb">
         <a routerLink="/company/jobs">← Back to Jobs</a>
-        <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>
+        <p class="form-error" *ngIf="statusError()" role="alert">{{ statusError() }}</p>
+        <p class="form-success" *ngIf="statusSuccess()" role="status">{{ statusSuccess() }}</p>
       </div>
       <div class="title-row">
         <h1 class="page-title">{{ job.title }}</h1>
@@ -20,10 +21,10 @@
     </div>
 
     <div class="header-actions">
-      <a [routerLink]="['/company/jobs/edit', job.id]" class="btn-secondary">Edit Role</a>
-      <button *ngIf="job.status === 'active' || job.status === 'published'" class="btn-warning" (click)="changeStatus('paused')">Pause Listing</button>
-      <button *ngIf="job.status === 'paused' || job.status === 'draft'" class="btn-primary" (click)="changeStatus('published')">Publish Role</button>
-      <button *ngIf="job.status !== 'closed'" class="btn-danger" (click)="changeStatus('closed')">Close Listing</button>
+      <a [routerLink]="['/company/jobs', job.id, 'edit']" class="btn-secondary">Edit Role</a>
+      <button *ngIf="job.status === 'active' || job.status === 'published'" class="btn-warning" (click)="changeStatus('paused')" [disabled]="isUpdating()">Pause Listing</button>
+      <button *ngIf="job.status === 'paused' || job.status === 'draft'" class="btn-primary" (click)="changeStatus('active')" [disabled]="isUpdating()">Publish Role</button>
+      <button *ngIf="job.status !== 'closed'" class="btn-danger" (click)="changeStatus('closed')" [disabled]="isUpdating()">Close Listing</button>
     </div>
   </div>
 

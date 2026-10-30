@@ -13,27 +13,6 @@
         <span class="recruiter-badge">Job Seeker</span>
       </div>
 
-      <div class="company-switcher" routerLink="/job-seeker/profile">
-        <div class="avatar-box">
-          <img *ngIf="jobSeekerService.profile().avatar_url && !avatarError()"
-               [src]="jobSeekerService.profile().avatar_url"
-               [alt]="jobSeekerService.profile().full_name"
-               (error)="onAvatarError()"
-               class="company-mini-logo" />
-          <img *ngIf="!jobSeekerService.profile().avatar_url || avatarError()"
-               src="default-avatar.svg"
-               alt="Default avatar"
-               class="company-mini-logo" />
-        </div>
-        <div class="company-info-text">
-          <div class="company-name-row">
-            <span class="comp-name">{{ jobSeekerService.profile().full_name }}</span>
-            <span class="verified-icon" title="Verified Candidate">✓</span>
-          </div>
-          <span class="comp-completion">{{ jobSeekerService.jobSeekerProfile().profile_completion_pct }}% Profile Complete</span>
-        </div>
-      </div>
-
       <div class="header-right">
         <!-- Discover Jobs / Swipe Action Button -->
         <a routerLink="/job-seeker/swipe" class="btn-swipe" routerLinkActive="active" title="Explore and swipe job openings">

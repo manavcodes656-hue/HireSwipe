@@ -335,6 +335,20 @@ export class JobsService {
       );
       return { error: null };
     } catch (err: any) {
+      if (err instanceof HttpErrorResponse && err.status === 0) {
+        console.warn('[JobsService] updateJobStatus: backend unreachable, falling back to direct Supabase update.');
+        const dbStatus = status === 'active' ? 'published' : status;
+        const { error } = await this.supabase.client
+          .from('jobs')
+          .update({ status: dbStatus as any })
+          .eq('id', jobId);
+        if (error) {
+          console.error('[JobsService] direct Supabase update status error:', error.message);
+          return { error: error.message };
+        }
+        return { error: null };
+      }
+
       const backendError = err instanceof HttpErrorResponse ? err.error?.error : null;
       const message = backendError?.message || err.message || 'Failed to update job status';
       console.error('[JobsService] updateJobStatus error:', message);

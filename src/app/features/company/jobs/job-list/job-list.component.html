@@ -4,7 +4,8 @@
     <div>
       <h1 class="page-title">Company Job Openings</h1>
       <p class="page-subtitle">Manage active postings, review draft roles, and monitor applicant engagement</p>
-      <p class="form-error" *ngIf="statusError" role="alert">{{ statusError }}</p>
+      <p class="form-error" *ngIf="statusError()" role="alert">{{ statusError() }}</p>
+      <p class="form-success" *ngIf="statusSuccess()" role="status">{{ statusSuccess() }}</p>
     </div>
     <a routerLink="/company/jobs/create" class="btn-primary">
       <span>+ Post New Job</span>
@@ -114,16 +115,16 @@
 
       <div class="jc-actions">
         <a [routerLink]="['/company/jobs', job.id]" class="btn-action">View Details</a>
-        <a [routerLink]="['/company/jobs/edit', job.id]" class="btn-action">Edit</a>
+        <a [routerLink]="['/company/jobs', job.id, 'edit']" class="btn-action">Edit</a>
 
         <div class="dropdown-actions">
-          <button *ngIf="job.status === 'draft' || job.status === 'paused'" class="btn-action publish" (click)="changeStatus(job, 'active', $event)">
+          <button *ngIf="job.status === 'draft' || job.status === 'paused'" class="btn-action publish" (click)="changeStatus(job, 'active', $event)" [disabled]="isUpdating()">
             Publish
           </button>
-          <button *ngIf="job.status === 'active'" class="btn-action pause" (click)="changeStatus(job, 'paused', $event)">
+          <button *ngIf="job.status === 'active' || job.status === 'published'" class="btn-action pause" (click)="changeStatus(job, 'paused', $event)" [disabled]="isUpdating()">
             Pause
           </button>
-          <button *ngIf="job.status !== 'closed'" class="btn-action close" (click)="changeStatus(job, 'closed', $event)">
+          <button *ngIf="job.status !== 'closed'" class="btn-action close" (click)="changeStatus(job, 'closed', $event)" [disabled]="isUpdating()">
             Close
           </button>
         </div>

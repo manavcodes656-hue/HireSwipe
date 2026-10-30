@@ -862,6 +862,19 @@ export class CompanyDataService {
     return children;
   }
 
+
+  get currentJobs(): Job[] {
+    return this.jobsSubject.value;
+  }
+
+  async getJobById(jobId: string): Promise<Job | null> {
+    const existing = this.jobsSubject.value.find((j) => j.id === jobId);
+    if (existing) return existing;
+    const raw = await this.jobsService.getJob(jobId);
+    if (!raw) return null;
+    return this.mapJob(raw);
+  }
+
   async updateJobStatus(jobId: string, status: JobStatus): Promise<{ error: string | null }> {
     const dbStatus = status === 'active' ? 'published' : status;
     const { error } = await this.jobsService.updateJobStatus(jobId, dbStatus as any);
@@ -874,6 +887,9 @@ export class CompanyDataService {
       j.id === jobId ? { ...j, status: uiStatus, updated_at: new Date().toISOString() } : j
     );
     this.jobsSubject.next(jobs);
+    if (this._companyId) {
+      void this.loadJobs(this._companyId);
+    }
     return { error: null };
   }
 
